@@ -53,6 +53,8 @@ namespace LCU.State.API.IoTEnsemble.State
         #endregion
 
         #region Fields
+        protected readonly string deviceIdModifier;
+
         protected readonly string telemetryRoot;
 
         protected readonly string warmTelemetryContainer;
@@ -67,6 +69,8 @@ namespace LCU.State.API.IoTEnsemble.State
         public IoTEnsembleSharedStateHarness(IoTEnsembleSharedState state, ILogger logger)
             : base(state ?? new IoTEnsembleSharedState(), logger)
         {
+            deviceIdModifier = Environment.GetEnvironmentVariable("LCU-DEVICE-ID-MODIFIER") ?? String.Empty;
+
             telemetryRoot = Environment.GetEnvironmentVariable("LCU-TELEMETRY-ROOT");
 
             if (telemetryRoot.IsNullOrEmpty())
@@ -89,7 +93,14 @@ namespace LCU.State.API.IoTEnsemble.State
             {
                 enrollResp = await appArch.EnrollDevice(new EnrollDeviceRequest()
                 {
-                    DeviceID = $"{State.UserEnterpriseLookup}-{device.DeviceName}"
+                    DeviceID = $"{deviceIdModifier}{State.UserEnterpriseLookup}-{device.DeviceName}",
+                    EnrollmentOptions = new
+                    {
+                        Tags = new Dictionary<string, string>()
+                        {
+                            { "DeviceIDModifier", deviceIdModifier }
+                        }
+                    }.JSONConvert<MetadataModel>()
                 }, State.UserEnterpriseLookup, DeviceAttestationTypes.SymmetricKey, DeviceEnrollmentTypes.Individual, envLookup: null);
 
                 status = enrollResp.Status;
@@ -383,7 +394,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
 
-                    devInfo.DeviceName = devInfo.DeviceID.Replace($"{State.UserEnterpriseLookup}-", String.Empty);
+                    devInfo.DeviceName = devInfo.DeviceID.Replace($"{deviceIdModifier}{State.UserEnterpriseLookup}-", String.Empty);
 
                     return devInfo;
 
