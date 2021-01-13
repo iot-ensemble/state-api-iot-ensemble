@@ -35,6 +35,8 @@ using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Net;
 using CsvHelper;
+using Fathym.Design;
+using Gremlin.Net.Driver.Exceptions;
 
 namespace LCU.State.API.IoTEnsemble.State
 {
@@ -909,40 +911,78 @@ namespace LCU.State.API.IoTEnsemble.State
             if (pageSize < 1)
                 pageSize = 1;
 
-            Uri colUri = UriFactory.CreateDocumentCollectionUri(warmTelemetryDatabase, warmTelemetryContainer);
-
-            IQueryable<IoTEnsembleTelemetryPayload> docsQueryBldr =
-                client.CreateDocumentQuery<IoTEnsembleTelemetryPayload>(colUri, new FeedOptions()
-                {
-                    EnableCrossPartitionQuery = true
-                })
-                .Where(payload => payload.EnterpriseLookup == entLookup || (emulatedEnabled && payload.EnterpriseLookup == "EMULATED"));
-
-            if (!selectedDeviceIds.IsNullOrEmpty())
-                docsQueryBldr = docsQueryBldr.Where(payload => selectedDeviceIds.Contains(payload.DeviceID));
-
             var payloads = new Pageable<IoTEnsembleTelemetryPayload>();
 
-            docsQueryBldr = docsQueryBldr
-                .OrderByDescending(payload => payload._ts);
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        Uri colUri = UriFactory.CreateDocumentCollectionUri(warmTelemetryDatabase, warmTelemetryContainer);
 
-            if (count)
-            {
-                payloads.TotalRecords = await docsQueryBldr.CountAsync();
-            }
+                        IQueryable<IoTEnsembleTelemetryPayload> docsQueryBldr =
+                            client.CreateDocumentQuery<IoTEnsembleTelemetryPayload>(colUri, new FeedOptions()
+                            {
+                                EnableCrossPartitionQuery = true
+                            })
+                            .Where(payload => payload.EnterpriseLookup == entLookup || (emulatedEnabled && payload.EnterpriseLookup == "EMULATED"));
 
-            docsQueryBldr = docsQueryBldr
-                .Skip((pageSize * page) - pageSize)
-                .Take(pageSize);
+                        if (!selectedDeviceIds.IsNullOrEmpty())
+                            docsQueryBldr = docsQueryBldr.Where(payload => selectedDeviceIds.Contains(payload.DeviceID));
 
-            var docsQuery = docsQueryBldr.AsDocumentQuery();
+                        docsQueryBldr = docsQueryBldr
+                            .OrderByDescending(payload => payload._ts);
 
-            var tempPayloads = new List<IoTEnsembleTelemetryPayload>();
+                        if (count)
+                        {
+                            payloads.TotalRecords = await docsQueryBldr.CountAsync();
+                        }
 
-            while (docsQuery.HasMoreResults)
-                tempPayloads.AddRange(await docsQuery.ExecuteNextAsync<IoTEnsembleTelemetryPayload>());
+                        docsQueryBldr = docsQueryBldr
+                            .Skip((pageSize * page) - pageSize)
+                            .Take(pageSize);
 
-            payloads.Items = tempPayloads;
+                        var docsQuery = docsQueryBldr.AsDocumentQuery();
+
+                        var tempPayloads = new List<IoTEnsembleTelemetryPayload>();
+
+                        while (docsQuery.HasMoreResults)
+                            tempPayloads.AddRange(await docsQuery.ExecuteNextAsync<IoTEnsembleTelemetryPayload>());
+
+                        payloads.Items = tempPayloads;
+
+                        return false;
+                    }
+                    catch (Exception ex)
+                    {
+                        var retriable = false;
+
+                        var retriableExceptionCodes = new List<int>() { 409, 412, 429, 1007, 1008 };
+
+                        if (ex is ResponseException rex)
+                        {
+                            var code = rex.StatusAttributes["x-ms-status-code"].As<int>();
+
+                            retriable = retriableExceptionCodes.Contains(code);
+
+                            if (retriable && rex.StatusAttributes.ContainsKey("x-ms-retry-after-ms"))
+                            {
+                                var retryMsWait = rex.StatusAttributes["x-ms-retry-after-ms"].As<int>();
+
+                                await Task.Delay(retryMsWait);
+                            }
+                        }
+
+                        if (!retriable)
+                            throw;
+
+                        return retriable;
+                    }
+                })
+                .SetCycles(10)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
 
             return payloads;
         }
