@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Fathym;
 using LCU.Graphs.Registry.Enterprises;
+using LCU.Graphs.Registry.Enterprises.Identity;
 using LCU.Personas.Client.Applications;
 using LCU.Personas.Client.Enterprises;
 using LCU.Personas.Client.Identity;
@@ -65,10 +67,12 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
             var refData = new List<IoTEnsembleEnterpriseReferenceData>();
 
-            if (childEnts.Status)
+            var licenses = await idMgr.ListLicenseAccessTokens(parentEntLookup, new List<string>() { "iot" });
+
+            if (childEnts.Status && licenses.Status)
                 await childEnts.Model.Each(async childEnt =>
                 {
-                    var metadata = await processChildEnt(childEnt);
+                    var metadata = await processChildEnt(childEnt, licenses.Model);
 
                     lock (refData)
                         refData.AddRange(metadata);
@@ -77,7 +81,8 @@ namespace LCU.State.API.IoTEnsemble.Shared
             return refData;
         }
 
-        protected virtual async Task<List<IoTEnsembleEnterpriseReferenceData>> processChildEnt(Enterprise childEnt)
+        protected virtual async Task<List<IoTEnsembleEnterpriseReferenceData>> processChildEnt(Enterprise childEnt,
+            List<LicenseAccessToken> licenses)
         {
             var refData = new List<IoTEnsembleEnterpriseReferenceData>();
 
@@ -91,12 +96,14 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                     var username = hostLookupParts[1];
 
-                    var license = await idMgr.HasLicenseAccess(parentLookup, username, Personas.AllAnyTypes.All, new List<string>() { "iot" });
+                    var license = licenses.FirstOrDefault(lic => lic.Username == username); 
+                    
+                    //await idMgr.HasLicenseAccess(parentLookup, username, Personas.AllAnyTypes.All, new List<string>() { "iot" });
 
                     IoTEnsembleEnterpriseReferenceData refd;
 
-                    if (license.Status && license.Model != null)
-                        refd = license.Model.JSONConvert<IoTEnsembleEnterpriseReferenceData>();
+                    if (license != null)
+                        refd = license.Details.JSONConvert<IoTEnsembleEnterpriseReferenceData>();
                     else
                         refd = new IoTEnsembleEnterpriseReferenceData()
                         {
