@@ -199,7 +199,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     State.Emulated.Enabled = true;
 
-                    await ToggleEmulatedEnabled(starter, stateDetails, exActReq, secMgr, client);
+                    await ToggleEmulatedEnabled(starter, stateDetails, exActReq, secMgr, client, skipTelem: true);
                 }
             }
             else
@@ -455,19 +455,18 @@ namespace LCU.State.API.IoTEnsemble.State
         {
             await EnsureUserEnterprise(entArch, entMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
 
-            await LoadDevices(appArch);
-
-            await HasLicenseAccess(idMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
-
+            await Task.WhenAll(
+                LoadDevices(appArch),
+                HasLicenseAccess(idMgr, stateDetails.EnterpriseLookup, stateDetails.Username),
+                EnsureEmulatedDeviceInfo(starter, stateDetails, exActReq, secMgr, client)
+            );
             await Task.WhenAll(
                 EnsureAPISubscription(entArch, stateDetails.EnterpriseLookup, stateDetails.Username),
                 EnsureDevicesDashboard(secMgr),
                 EnsureDrawersConfig(secMgr),
-                EnsureEmulatedDeviceInfo(starter, stateDetails, exActReq, secMgr, client),
-                LoadAPIOptions()
+                LoadAPIOptions(),
+                EnsureTelemetry(starter, stateDetails, exActReq, secMgr, client)
             );
-
-            await EnsureTelemetry(starter, stateDetails, exActReq, secMgr, client);
 
             State.Loading = false;
 
@@ -527,7 +526,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task ToggleEmulatedEnabled(IDurableOrchestrationClient starter, StateDetails stateDetails,
-            ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient client)
+            ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient client, bool skipTelem = false)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -542,7 +541,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     State.Emulated.Enabled = enabled;
 
-                    if (State.Devices.Devices.IsNullOrEmpty())
+                    if (State.Devices.Devices.IsNullOrEmpty() && !skipTelem)
                     {
                         await setTelemetryEnabled(secMgr, enabled);
 

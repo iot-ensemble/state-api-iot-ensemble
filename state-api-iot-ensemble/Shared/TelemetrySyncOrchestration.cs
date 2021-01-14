@@ -104,9 +104,6 @@ namespace LCU.State.API.IoTEnsemble.Shared
                 {
                     log.LogInformation($"Setting Loading device telemetry from sync state...");
 
-                    if (harness.State.Telemetry == null)
-                        harness.State.Telemetry = new IoTEnsembleTelemetry();
-
                     harness.State.Telemetry.Loading = true;
 
                     return Status.Success;
@@ -137,9 +134,6 @@ namespace LCU.State.API.IoTEnsemble.Shared
                 stateCtxt.ActionRequest, signalRMessages, log, async (harness, reqData) =>
                 {
                     log.LogInformation($"Setting device telemetry disabled...");
-
-                    if (harness.State.Telemetry == null)
-                        harness.State.Telemetry = new IoTEnsembleTelemetry();
 
                     harness.State.Telemetry.Enabled = false;
 
