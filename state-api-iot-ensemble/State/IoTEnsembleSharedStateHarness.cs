@@ -932,7 +932,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                         bytes = await zipFileContent(bytes, fileName, fileExtension);
 
-                        fileExtension = "zip";
+                        fileName = fileName.Replace($".{fileExtension}", "zip");
 
                         contentType = "application/zip";
                     }
