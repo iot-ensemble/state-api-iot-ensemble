@@ -867,7 +867,7 @@ namespace LCU.State.API.IoTEnsemble.State
             {
                 State.Telemetry.RefreshRate = refreshRate;
 
-                State.Telemetry.PageSize = page;
+                State.Telemetry.Page = page;
 
                 State.Telemetry.PageSize = pageSize;
 
