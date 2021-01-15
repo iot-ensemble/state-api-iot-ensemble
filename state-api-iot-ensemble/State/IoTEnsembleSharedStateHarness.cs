@@ -861,11 +861,13 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
-        public virtual async Task UpdateTelemetrySync(SecurityManagerClient secMgr, DocumentClient client, int refreshRate, int pageSize)
+        public virtual async Task UpdateTelemetrySync(SecurityManagerClient secMgr, DocumentClient client, int refreshRate, int page, int pageSize)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
                 State.Telemetry.RefreshRate = refreshRate;
+
+                State.Telemetry.Page = page;
 
                 State.Telemetry.PageSize = pageSize;
 
