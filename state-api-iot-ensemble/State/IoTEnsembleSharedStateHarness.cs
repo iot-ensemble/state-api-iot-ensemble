@@ -53,7 +53,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #endregion
 
         #region Fields
-        protected readonly string deviceIdModifier;
+        protected readonly string deviceEnv;
 
         protected readonly string telemetryRoot;
 
@@ -69,7 +69,7 @@ namespace LCU.State.API.IoTEnsemble.State
         public IoTEnsembleSharedStateHarness(IoTEnsembleSharedState state, ILogger logger)
             : base(state ?? new IoTEnsembleSharedState(), logger)
         {
-            deviceIdModifier = Environment.GetEnvironmentVariable("LCU-DEVICE-ID-MODIFIER") ?? String.Empty;
+            deviceEnv = Environment.GetEnvironmentVariable("LCU-DEVICE-ENVIRONMENT") ?? String.Empty;
 
             telemetryRoot = Environment.GetEnvironmentVariable("LCU-TELEMETRY-ROOT");
 
@@ -89,7 +89,6 @@ namespace LCU.State.API.IoTEnsemble.State
 
             var status = new Status();
 
-
             if (State.Devices.Devices.Count() < State.Devices.MaxDevicesCount)
             {
                 await DesignOutline.Instance.Retry()
@@ -99,12 +98,12 @@ namespace LCU.State.API.IoTEnsemble.State
                         {
                             enrollResp = await appArch.EnrollDevice(new EnrollDeviceRequest()
                             {
-                                DeviceID = $"{deviceIdModifier}{State.UserEnterpriseLookup}-{device.DeviceName}",
+                                DeviceID = $"{State.UserEnterpriseLookup}-{device.DeviceName}",
                                 EnrollmentOptions = new
                                 {
                                     Tags = new Dictionary<string, string>()
                                     {
-                                        { "DeviceIDModifier", deviceIdModifier }
+                                        { "Environment", deviceEnv }
                                     }
                                 }.JSONConvert<MetadataModel>()
                             }, State.UserEnterpriseLookup, DeviceAttestationTypes.SymmetricKey, DeviceEnrollmentTypes.Individual, envLookup: null);
@@ -394,6 +393,11 @@ namespace LCU.State.API.IoTEnsemble.State
                         {
                             var hostLookup = $"{parentEntLookup}|{username}";
 
+                            if (deviceEnv != "prd")
+                                hostLookup += $"|{deviceEnv}";
+
+                            log.LogInformation($"Ensuring user enterprise for {hostLookup}...");
+
                             var getResp = await entMgr.ResolveHost(hostLookup, false);
 
                             if (!getResp.Status || getResp.Model == null)
@@ -595,7 +599,7 @@ namespace LCU.State.API.IoTEnsemble.State
                             {
                                 var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
 
-                                devInfo.DeviceName = devInfo.DeviceID.Replace($"{deviceIdModifier}{State.UserEnterpriseLookup}-", String.Empty);
+                                devInfo.DeviceName = devInfo.DeviceID.Replace($"{State.UserEnterpriseLookup}-", String.Empty);
 
                                 return devInfo;
 
