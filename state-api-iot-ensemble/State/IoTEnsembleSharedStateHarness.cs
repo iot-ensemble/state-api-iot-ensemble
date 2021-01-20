@@ -151,7 +151,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     }
                     catch (Exception ex)
                     {
-                        log.LogError(ex, "Failed setting telemetry");
+                        log.LogError(ex, "Failed ensuring API subscription");
 
                         return true;
                     }
@@ -182,7 +182,18 @@ namespace LCU.State.API.IoTEnsemble.State
 
                                 if (tpd.Status && tpd.Model.ContainsKey(DEVICE_DASHBOARD_FREEBOARD_CONFIG) && !tpd.Model[DEVICE_DASHBOARD_FREEBOARD_CONFIG].IsNullOrEmpty())
                                     State.Dashboard.FreeboardConfig = tpd.Model[DEVICE_DASHBOARD_FREEBOARD_CONFIG].FromJSON<MetadataModel>();
-                                else
+
+                                if (State.Dashboard.FreeboardConfig != null)
+                                    return State.Dashboard.FreeboardConfig == null;
+                            }
+                            catch (Exception ex)
+                            {
+                                log.LogError(ex, "Failed loading freeboard");
+                            }
+
+                            if (State.Dashboard.FreeboardConfig == null)
+                            {
+                                try
                                 {
                                     var freeboardConfig = loadDefaultFreeboardConfig();
 
@@ -194,15 +205,13 @@ namespace LCU.State.API.IoTEnsemble.State
                                     if (resp.Status)
                                         State.Dashboard.FreeboardConfig = freeboardConfig;
                                 }
-
-                                return State.Dashboard.FreeboardConfig == null;
+                                catch (Exception ex)
+                                {
+                                    log.LogError(ex, "Failed setting default freeboard");
+                                }
                             }
-                            catch (Exception ex)
-                            {
-                                log.LogError(ex, "Failed setting telemetry");
 
-                                return true;
-                            }
+                            return State.Dashboard.FreeboardConfig == null;
                         })
                         .SetCycles(5)
                         .SetThrottle(25)
@@ -247,7 +256,7 @@ namespace LCU.State.API.IoTEnsemble.State
                         }
                         catch (Exception ex)
                         {
-                            log.LogError(ex, "Failed setting telemetry");
+                            log.LogError(ex, "Failed setting details pane");
 
                             return true;
                         }
@@ -289,7 +298,7 @@ namespace LCU.State.API.IoTEnsemble.State
                         }
                         catch (Exception ex)
                         {
-                            log.LogError(ex, "Failed setting telemetry");
+                            log.LogError(ex, "Failed setting emulated device enabled");
 
                             return true;
                         }
@@ -307,13 +316,7 @@ namespace LCU.State.API.IoTEnsemble.State
             ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient docClient)
         {
             if (State.Telemetry == null)
-                State.Telemetry = new IoTEnsembleTelemetry()
-                {
-                    RefreshRate = 30,
-                    PageSize = 10,
-                    Page = 1,
-                    Payloads = new List<IoTEnsembleTelemetryPayload>()
-                };
+                State.Telemetry = new IoTEnsembleTelemetry();
 
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -333,7 +336,7 @@ namespace LCU.State.API.IoTEnsemble.State
                         }
                         catch (Exception ex)
                         {
-                            log.LogError(ex, "Failed setting telemetry");
+                            log.LogError(ex, "Failed setting telemetry sync enabled");
 
                             return true;
                         }
@@ -462,7 +465,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     }
                     catch (Exception ex)
                     {
-                        log.LogError(ex, "Failed setting telemetry");
+                        log.LogError(ex, "Failed checking has license access type");
 
                         return true;
                     }
@@ -497,7 +500,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     }
                     catch (Exception ex)
                     {
-                        log.LogError(ex, "Failed setting telemetry");
+                        log.LogError(ex, "Failed issuing device SAS Token");
 
                         return true;
                     }
@@ -534,7 +537,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     }
                     catch (Exception ex)
                     {
-                        log.LogError(ex, "Failed setting telemetry");
+                        log.LogError(ex, "Failed loading API Keys");
 
                         return true;
                     }
@@ -583,11 +586,12 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     try
                     {
-                        var devicesResp = await appArch.ListEnrolledDevices(State.UserEnterpriseLookup, envLookup: null);
+                        var devicesResp = await appArch.ListEnrolledDevices(State.UserEnterpriseLookup, envLookup: null,
+                            page: State.Devices.Page.Value, pageSize: State.Devices.PageSize);
 
                         if (devicesResp.Status)
                         {
-                            State.Devices.Devices = devicesResp.Model?.Select(m =>
+                            State.Devices.Devices = devicesResp.Model?.Items?.Select(m =>
                             {
                                 var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
 
@@ -596,6 +600,8 @@ namespace LCU.State.API.IoTEnsemble.State
                                 return devInfo;
 
                             }).JSONConvert<List<IoTEnsembleDeviceInfo>>() ?? new List<IoTEnsembleDeviceInfo>();
+
+                            State.Devices.TotalDevices = devicesResp.Model.TotalRecords;
 
                             State.Devices.SASTokens = null;
                         }
@@ -606,7 +612,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     }
                     catch (Exception ex)
                     {
-                        log.LogError(ex, "Failed setting telemetry");
+                        log.LogError(ex, "Failed loading devices");
 
                         return true;
                     }
@@ -701,7 +707,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     }
                     catch (Exception ex)
                     {
-                        log.LogError(ex, "Failed setting telemetry");
+                        log.LogError(ex, "Failed revoking device enrollment");
 
                         return true;
                     }
@@ -738,7 +744,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     }
                     catch (Exception ex)
                     {
-                        log.LogError(ex, "Failed setting telemetry");
+                        log.LogError(ex, "Failed sending device message");
 
                         return true;
                     }
@@ -779,7 +785,7 @@ namespace LCU.State.API.IoTEnsemble.State
                         }
                         catch (Exception ex)
                         {
-                            log.LogError(ex, "Failed setting telemetry");
+                            log.LogError(ex, "Failed toggling details pane");
 
                             return true;
                         }
@@ -818,7 +824,7 @@ namespace LCU.State.API.IoTEnsemble.State
                         }
                         catch (Exception ex)
                         {
-                            log.LogError(ex, "Failed setting telemetry");
+                            log.LogError(ex, "Failed toggling emulated enabled");
 
                             return true;
                         }
@@ -1084,7 +1090,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     }
                     catch (Exception ex)
                     {
-                        log.LogError(ex, "Failed setting telemetry");
+                        log.LogError(ex, "Failed downloading telemetry");
 
                         return true;
                     }
@@ -1330,7 +1336,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     }
                     catch (Exception ex)
                     {
-                        log.LogError(ex, "Failed setting telemetry");
+                        log.LogError(ex, "Failed setting telemetry enabled");
 
                         return true;
                     }

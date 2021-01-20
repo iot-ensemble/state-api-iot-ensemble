@@ -47,14 +47,14 @@ namespace LCU.State.API.IoTEnsemble.Host
             SecurityManagerClient secMgr)
         {
             this.appArch = appArch;
-            
+
             this.entArch = entArch;
-            
+
             this.entMgr = entMgr;
 
             this.idMgr = idMgr;
-            
-            this.secMgr = secMgr;           
+
+            this.secMgr = secMgr;
         }
 
         [FunctionName("Refresh")]
