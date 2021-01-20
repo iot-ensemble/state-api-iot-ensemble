@@ -35,6 +35,8 @@ using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Net;
 using CsvHelper;
+using Fathym.Design;
+using Gremlin.Net.Driver.Exceptions;
 
 namespace LCU.State.API.IoTEnsemble.State
 {
@@ -51,6 +53,8 @@ namespace LCU.State.API.IoTEnsemble.State
         #endregion
 
         #region Fields
+        protected readonly string deviceEnv;
+
         protected readonly string telemetryRoot;
 
         protected readonly string warmTelemetryContainer;
@@ -65,6 +69,8 @@ namespace LCU.State.API.IoTEnsemble.State
         public IoTEnsembleSharedStateHarness(IoTEnsembleSharedState state, ILogger logger)
             : base(state ?? new IoTEnsembleSharedState(), logger)
         {
+            deviceEnv = Environment.GetEnvironmentVariable("LCU-DEVICE-ENVIRONMENT") ?? String.Empty;
+
             telemetryRoot = Environment.GetEnvironmentVariable("LCU-TELEMETRY-ROOT");
 
             if (telemetryRoot.IsNullOrEmpty())
@@ -85,12 +91,38 @@ namespace LCU.State.API.IoTEnsemble.State
 
             if (State.Devices.Devices.Count() < State.Devices.MaxDevicesCount)
             {
-                enrollResp = await appArch.EnrollDevice(new EnrollDeviceRequest()
-                {
-                    DeviceID = $"{State.UserEnterpriseLookup}-{device.DeviceName}"
-                }, State.UserEnterpriseLookup, DeviceAttestationTypes.SymmetricKey, DeviceEnrollmentTypes.Individual, envLookup: null);
+                await DesignOutline.Instance.Retry()
+                    .SetActionAsync(async () =>
+                    {
+                        try
+                        {
+                            enrollResp = await appArch.EnrollDevice(new EnrollDeviceRequest()
+                            {
+                                DeviceID = $"{State.UserEnterpriseLookup}-{device.DeviceName}",
+                                EnrollmentOptions = new
+                                {
+                                    Tags = new Dictionary<string, string>()
+                                    {
+                                        { "Environment", deviceEnv }
+                                    }
+                                }.JSONConvert<MetadataModel>()
+                            }, State.UserEnterpriseLookup, DeviceAttestationTypes.SymmetricKey, DeviceEnrollmentTypes.Individual, envLookup: null);
 
-                status = enrollResp.Status;
+                            status = enrollResp.Status;
+
+                            return !status;
+                        }
+                        catch (Exception ex)
+                        {
+                            log.LogError(ex, "Failed enrollling device");
+
+                            return true;
+                        }
+                    })
+                    .SetCycles(5)
+                    .SetThrottle(25)
+                    .SetThrottleScale(2)
+                    .Run();
             }
             else
                 status = Status.Conflict.Clone("Max Device Count Reached");
@@ -102,12 +134,31 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task<Status> EnsureAPISubscription(EnterpriseArchitectClient entArch, string entLookup, string username)
         {
-            var response = await entArch.EnsureAPISubscription(new EnsureAPISubscriptionRequset()
-            {
-                SubscriptionType = $"{State.AccessLicenseType}-{State.AccessPlanGroup}".ToLower()
-            }, entLookup, username);
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        var resp = await entArch.EnsureAPISubscription(new EnsureAPISubscriptionRequset()
+                        {
+                            SubscriptionType = $"{State.AccessLicenseType}-{State.AccessPlanGroup}".ToLower()
+                        }, entLookup, username);
 
-            //  TODO:  Handle API error
+                        //  TODO:  Handle API error
+
+                        return !resp.Status;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError(ex, "Failed ensuring API subscription");
+
+                        return true;
+                    }
+                })
+                .SetCycles(5)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
 
             return await LoadAPIKeys(entArch, entLookup, username);
         }
@@ -121,23 +172,50 @@ namespace LCU.State.API.IoTEnsemble.State
             {
                 if (State.Dashboard.FreeboardConfig == null)
                 {
-                    var tpd = await secMgr.RetrieveEnterpriseThirdPartyData(State.UserEnterpriseLookup, DEVICE_DASHBOARD_FREEBOARD_CONFIG);
-
-                    if (tpd.Status && tpd.Model.ContainsKey(DEVICE_DASHBOARD_FREEBOARD_CONFIG) && !tpd.Model[DEVICE_DASHBOARD_FREEBOARD_CONFIG].IsNullOrEmpty())
-                        State.Dashboard.FreeboardConfig = tpd.Model[DEVICE_DASHBOARD_FREEBOARD_CONFIG].FromJSON<MetadataModel>();
-                    else
-                    {
-                        var freeboardConfig = loadDefaultFreeboardConfig();
-
-                        var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                    await DesignOutline.Instance.Retry()
+                        .SetActionAsync(async () =>
                         {
-                            { DEVICE_DASHBOARD_FREEBOARD_CONFIG, freeboardConfig.ToJSON() }
-                        });
+                            try
+                            {
+                                var tpd = await secMgr.RetrieveEnterpriseThirdPartyData(State.UserEnterpriseLookup, DEVICE_DASHBOARD_FREEBOARD_CONFIG);
 
-                        if (resp.Status)
-                            State.Dashboard.FreeboardConfig = freeboardConfig;
-                    }
+                                if (tpd.Status && tpd.Model.ContainsKey(DEVICE_DASHBOARD_FREEBOARD_CONFIG) && !tpd.Model[DEVICE_DASHBOARD_FREEBOARD_CONFIG].IsNullOrEmpty())
+                                    State.Dashboard.FreeboardConfig = tpd.Model[DEVICE_DASHBOARD_FREEBOARD_CONFIG].FromJSON<MetadataModel>();
 
+                                if (State.Dashboard.FreeboardConfig != null)
+                                    return State.Dashboard.FreeboardConfig == null;
+                            }
+                            catch (Exception ex)
+                            {
+                                log.LogError(ex, "Failed loading freeboard");
+                            }
+
+                            if (State.Dashboard.FreeboardConfig == null)
+                            {
+                                try
+                                {
+                                    var freeboardConfig = loadDefaultFreeboardConfig();
+
+                                    var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                                    {
+                                        { DEVICE_DASHBOARD_FREEBOARD_CONFIG, freeboardConfig.ToJSON() }
+                                    });
+
+                                    if (resp.Status)
+                                        State.Dashboard.FreeboardConfig = freeboardConfig;
+                                }
+                                catch (Exception ex)
+                                {
+                                    log.LogError(ex, "Failed setting default freeboard");
+                                }
+                            }
+
+                            return State.Dashboard.FreeboardConfig == null;
+                        })
+                        .SetCycles(5)
+                        .SetThrottle(25)
+                        .SetThrottleScale(2)
+                        .Run();
                 }
             }
             else
@@ -151,20 +229,41 @@ namespace LCU.State.API.IoTEnsemble.State
 
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
-                var tpd = await secMgr.RetrieveEnterpriseThirdPartyData(State.UserEnterpriseLookup, DETAILS_PANE_ENABLED);
-
-                if (tpd.Status && tpd.Model.ContainsKey(DETAILS_PANE_ENABLED) && !tpd.Model[DETAILS_PANE_ENABLED].IsNullOrEmpty())
-                    State.Drawers.DetailsActive = tpd.Model[DETAILS_PANE_ENABLED].As<bool>();
-                else
-                {
-                    var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                await DesignOutline.Instance.Retry()
+                    .SetActionAsync(async () =>
                     {
-                        { DETAILS_PANE_ENABLED, true.ToString() }
-                    });
+                        try
+                        {
+                            var tpd = await secMgr.RetrieveEnterpriseThirdPartyData(State.UserEnterpriseLookup, DETAILS_PANE_ENABLED);
 
-                    if (resp.Status)
-                        State.Drawers.DetailsActive = true;
-                }
+                            if (tpd.Status && tpd.Model.ContainsKey(DETAILS_PANE_ENABLED) && !tpd.Model[DETAILS_PANE_ENABLED].IsNullOrEmpty())
+                                State.Drawers.DetailsActive = tpd.Model[DETAILS_PANE_ENABLED].As<bool>();
+                            else
+                            {
+                                var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                                {
+                                    { DETAILS_PANE_ENABLED, true.ToString() }
+                                });
+
+                                if (resp.Status)
+                                    State.Drawers.DetailsActive = true;
+                                else
+                                    return true;
+                            }
+
+                            return false;
+                        }
+                        catch (Exception ex)
+                        {
+                            log.LogError(ex, "Failed setting details pane");
+
+                            return true;
+                        }
+                    })
+                    .SetCycles(5)
+                    .SetThrottle(25)
+                    .SetThrottleScale(2)
+                    .Run();
             }
             else
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
@@ -178,16 +277,35 @@ namespace LCU.State.API.IoTEnsemble.State
 
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
-                var tpd = await secMgr.RetrieveEnterpriseThirdPartyData(State.UserEnterpriseLookup, EMULATED_DEVICE_ENABLED);
+                await DesignOutline.Instance.Retry()
+                    .SetActionAsync(async () =>
+                    {
+                        try
+                        {
+                            var tpd = await secMgr.RetrieveEnterpriseThirdPartyData(State.UserEnterpriseLookup, EMULATED_DEVICE_ENABLED);
 
-                if (tpd.Status && tpd.Model.ContainsKey(EMULATED_DEVICE_ENABLED) && !tpd.Model[EMULATED_DEVICE_ENABLED].IsNullOrEmpty())
-                    State.Emulated.Enabled = tpd.Model[EMULATED_DEVICE_ENABLED].As<bool>();
-                else
-                {
-                    State.Emulated.Enabled = true;
+                            if (tpd.Status && tpd.Model.ContainsKey(EMULATED_DEVICE_ENABLED) && !tpd.Model[EMULATED_DEVICE_ENABLED].IsNullOrEmpty())
+                                State.Emulated.Enabled = tpd.Model[EMULATED_DEVICE_ENABLED].As<bool>();
+                            else
+                            {
+                                State.Emulated.Enabled = true;
 
-                    await ToggleEmulatedEnabled(starter, stateDetails, exActReq, secMgr, client);
-                }
+                                await ToggleEmulatedEnabled(starter, stateDetails, exActReq, secMgr, client, skipTelem: true);
+                            }
+
+                            return false;
+                        }
+                        catch (Exception ex)
+                        {
+                            log.LogError(ex, "Failed setting emulated device enabled");
+
+                            return true;
+                        }
+                    })
+                    .SetCycles(5)
+                    .SetThrottle(25)
+                    .SetThrottleScale(2)
+                    .Run();
             }
             else
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
@@ -197,22 +315,35 @@ namespace LCU.State.API.IoTEnsemble.State
             ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient docClient)
         {
             if (State.Telemetry == null)
-                State.Telemetry = new IoTEnsembleTelemetry()
-                {
-                    RefreshRate = 30,
-                    PageSize = 10,
-                    Page = 1,
-                    Payloads = new List<IoTEnsembleTelemetryPayload>()
-                };
+                State.Telemetry = new IoTEnsembleTelemetry();
 
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
-                var tpd = await secMgr.RetrieveEnterpriseThirdPartyData(State.UserEnterpriseLookup, TELEMETRY_SYNC_ENABLED);
+                await DesignOutline.Instance.Retry()
+                    .SetActionAsync(async () =>
+                    {
+                        try
+                        {
+                            var tpd = await secMgr.RetrieveEnterpriseThirdPartyData(State.UserEnterpriseLookup, TELEMETRY_SYNC_ENABLED);
 
-                if (tpd.Status && tpd.Model.ContainsKey(TELEMETRY_SYNC_ENABLED) && !tpd.Model[TELEMETRY_SYNC_ENABLED].IsNullOrEmpty())
-                    State.Telemetry.Enabled = tpd.Model[TELEMETRY_SYNC_ENABLED].As<bool>();
-                else
-                    State.Telemetry.Enabled = false;
+                            if (tpd.Status && tpd.Model.ContainsKey(TELEMETRY_SYNC_ENABLED) && !tpd.Model[TELEMETRY_SYNC_ENABLED].IsNullOrEmpty())
+                                State.Telemetry.Enabled = tpd.Model[TELEMETRY_SYNC_ENABLED].As<bool>();
+                            else
+                                State.Telemetry.Enabled = false;
+
+                            return false;
+                        }
+                        catch (Exception ex)
+                        {
+                            log.LogError(ex, "Failed setting telemetry sync enabled");
+
+                            return true;
+                        }
+                    })
+                    .SetCycles(5)
+                    .SetThrottle(25)
+                    .SetThrottleScale(2)
+                    .Run();
 
                 await setTelemetryEnabled(secMgr, State.Telemetry.Enabled);
 
@@ -255,24 +386,48 @@ namespace LCU.State.API.IoTEnsemble.State
         {
             if (State.UserEnterpriseLookup.IsNullOrEmpty())
             {
-                var hostLookup = $"{parentEntLookup}|{username}";
-
-                var getResp = await entMgr.ResolveHost(hostLookup, false);
-
-                if (!getResp.Status || getResp.Model == null)
-                {
-                    var createResp = await entArch.CreateEnterprise(new CreateEnterpriseRequest()
+                await DesignOutline.Instance.Retry()
+                    .SetActionAsync(async () =>
                     {
-                        Name = username,
-                        Description = username,
-                        Host = hostLookup
-                    }, parentEntLookup, username);
+                        try
+                        {
+                            var hostLookup = $"{parentEntLookup}|{username}";
 
-                    if (createResp.Status)
-                        State.UserEnterpriseLookup = createResp.Model.EnterpriseLookup;
-                }
-                else
-                    State.UserEnterpriseLookup = getResp.Model.EnterpriseLookup;
+                            if (deviceEnv != "prd")
+                                hostLookup += $"|{deviceEnv}";
+
+                            log.LogInformation($"Ensuring user enterprise for {hostLookup}...");
+
+                            var getResp = await entMgr.ResolveHost(hostLookup, false);
+
+                            if (!getResp.Status || getResp.Model == null)
+                            {
+                                var createResp = await entArch.CreateEnterprise(new CreateEnterpriseRequest()
+                                {
+                                    Name = username,
+                                    Description = username,
+                                    Host = hostLookup
+                                }, parentEntLookup, username);
+
+                                if (createResp.Status)
+                                    State.UserEnterpriseLookup = createResp.Model.EnterpriseLookup;
+                            }
+                            else
+                                State.UserEnterpriseLookup = getResp.Model.EnterpriseLookup;
+
+                            return State.UserEnterpriseLookup.IsNullOrEmpty();
+                        }
+                        catch (Exception ex)
+                        {
+                            log.LogError(ex, "Failed ensuring user enterprise");
+
+                            return true;
+                        }
+                    })
+                    .SetCycles(5)
+                    .SetThrottle(25)
+                    .SetThrottleScale(2)
+                    .Run();
             }
 
             if (State.UserEnterpriseLookup.IsNullOrEmpty())
@@ -281,45 +436,83 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task<Status> HasLicenseAccess(IdentityManagerClient idMgr, string entLookup, string username)
         {
-            var hasAccess = await idMgr.HasLicenseAccess(entLookup, username, Personas.AllAnyTypes.All, new List<string>() { "iot" });
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        var hasAccess = await idMgr.HasLicenseAccess(entLookup, username, Personas.AllAnyTypes.All, new List<string>() { "iot" });
 
-            State.HasAccess = hasAccess.Status;
+                        State.HasAccess = hasAccess.Status;
 
-            if (State.HasAccess)
-            {
-                if (hasAccess.Model.Metadata.ContainsKey("LicenseType"))
-                    State.AccessLicenseType = hasAccess.Model.Metadata["LicenseType"].ToString();
+                        if (State.HasAccess)
+                        {
+                            if (hasAccess.Model.Metadata.ContainsKey("LicenseType"))
+                                State.AccessLicenseType = hasAccess.Model.Metadata["LicenseType"].ToString();
 
-                if (hasAccess.Model.Metadata.ContainsKey("PlanGroup"))
-                    State.AccessPlanGroup = hasAccess.Model.Metadata["PlanGroup"].ToString();
+                            if (hasAccess.Model.Metadata.ContainsKey("PlanGroup"))
+                                State.AccessPlanGroup = hasAccess.Model.Metadata["PlanGroup"].ToString();
 
-                if (hasAccess.Model.Metadata.ContainsKey("Devices"))
-                    State.Devices.MaxDevicesCount = hasAccess.Model.Metadata["Devices"].ToString().As<int>();
-            }
-            else
-            {
-                State.AccessLicenseType = "iot";
+                            if (hasAccess.Model.Metadata.ContainsKey("Devices"))
+                                State.Devices.MaxDevicesCount = hasAccess.Model.Metadata["Devices"].ToString().As<int>();
+                        }
+                        else
+                        {
+                            State.AccessLicenseType = "iot";
 
-                State.AccessPlanGroup = "explorer";
+                            State.AccessPlanGroup = "explorer";
 
-                State.Devices.MaxDevicesCount = 1;
-            }
+                            State.Devices.MaxDevicesCount = 1;
+                        }
+
+                        return false;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError(ex, "Failed checking has license access type");
+
+                        return true;
+                    }
+                })
+                .SetCycles(5)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
 
             return Status.Success;
         }
 
         public virtual async Task IssueDeviceSASToken(ApplicationArchitectClient appArch, string deviceName, int expiryInSeconds)
         {
-            var deviceSasResp = await appArch.IssueDeviceSASToken(State.UserEnterpriseLookup, deviceName, expiryInSeconds: expiryInSeconds,
-                envLookup: null);
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        var deviceSasResp = await appArch.IssueDeviceSASToken(State.UserEnterpriseLookup, deviceName, expiryInSeconds: expiryInSeconds,
+                            envLookup: null);
 
-            if (deviceSasResp.Status)
-            {
-                if (State.Devices.SASTokens == null)
-                    State.Devices.SASTokens = new Dictionary<string, string>();
+                        if (deviceSasResp.Status)
+                        {
+                            if (State.Devices.SASTokens == null)
+                                State.Devices.SASTokens = new Dictionary<string, string>();
 
-                State.Devices.SASTokens[deviceName] = deviceSasResp.Model;
-            }
+                            State.Devices.SASTokens[deviceName] = deviceSasResp.Model;
+                        }
+
+                        return State.Devices.SASTokens == null;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError(ex, "Failed issuing device SAS Token");
+
+                        return true;
+                    }
+                })
+                .SetCycles(5)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
         }
 
         public virtual async Task<Status> LoadAPIKeys(EnterpriseArchitectClient entArch, string entLookup, string username)
@@ -329,15 +522,34 @@ namespace LCU.State.API.IoTEnsemble.State
 
             State.Storage.APIKeys = new List<IoTEnsembleAPIKeyData>();
 
-            var response = await entArch.LoadAPIKeys(entLookup, username);
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        var resp = await entArch.LoadAPIKeys(entLookup, username);
 
-            //  TODO:  Handle API error
+                        //  TODO:  Handle API error
 
-            State.Storage.APIKeys = response.Model?.Metadata.Select(m => new IoTEnsembleAPIKeyData()
-            {
-                Key = m.Value.ToString(),
-                KeyName = m.Key
-            }).ToList();
+                        State.Storage.APIKeys = resp.Model?.Metadata.Select(m => new IoTEnsembleAPIKeyData()
+                        {
+                            Key = m.Value.ToString(),
+                            KeyName = m.Key
+                        }).ToList();
+
+                        return !resp.Status;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError(ex, "Failed loading API Keys");
+
+                        return true;
+                    }
+                })
+                .SetCycles(5)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
 
             return Status.Success;
         }
@@ -373,24 +585,46 @@ namespace LCU.State.API.IoTEnsemble.State
             if (State.Devices == null)
                 State.Devices = new IoTEnsembleConnectedDevicesConfig();
 
-            var devicesResp = await appArch.ListEnrolledDevices(State.UserEnterpriseLookup, envLookup: null);
-
-            if (devicesResp.Status)
-            {
-                State.Devices.Devices = devicesResp.Model?.Select(m =>
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
                 {
-                    var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
+                    try
+                    {
+                        var devicesResp = await appArch.ListEnrolledDevices(State.UserEnterpriseLookup, envLookup: null,
+                            page: State.Devices.Page.Value, pageSize: State.Devices.PageSize);
 
-                    devInfo.DeviceName = devInfo.DeviceID.Replace($"{State.UserEnterpriseLookup}-", String.Empty);
+                        if (devicesResp.Status)
+                        {
+                            State.Devices.Devices = devicesResp.Model?.Items?.Select(m =>
+                            {
+                                var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
 
-                    return devInfo;
+                                devInfo.DeviceName = devInfo.DeviceID.Replace($"{State.UserEnterpriseLookup}-", String.Empty);
 
-                }).JSONConvert<List<IoTEnsembleDeviceInfo>>() ?? new List<IoTEnsembleDeviceInfo>();
+                                return devInfo;
 
-                State.Devices.SASTokens = null;
-            }
-            else if (State.Devices.Devices.IsNullOrEmpty() || devicesResp.Status == Status.NotLocated)
-                State.Devices.Devices = new List<IoTEnsembleDeviceInfo>();
+                            }).JSONConvert<List<IoTEnsembleDeviceInfo>>() ?? new List<IoTEnsembleDeviceInfo>();
+
+                            State.Devices.TotalDevices = devicesResp.Model.TotalRecords;
+
+                            State.Devices.SASTokens = null;
+                        }
+                        else if (State.Devices.Devices.IsNullOrEmpty() || devicesResp.Status == Status.NotLocated)
+                            State.Devices.Devices = new List<IoTEnsembleDeviceInfo>();
+
+                        return !devicesResp.Status && devicesResp.Status != Status.NotLocated;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError(ex, "Failed loading devices");
+
+                        return true;
+                    }
+                })
+                .SetCycles(5)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
         }
 
         public virtual async Task<Status> LoadTelemetry(SecurityManagerClient secMgr, DocumentClient client)
@@ -442,19 +676,18 @@ namespace LCU.State.API.IoTEnsemble.State
         {
             await EnsureUserEnterprise(entArch, entMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
 
-            await LoadDevices(appArch);
-
-            await HasLicenseAccess(idMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
-
+            await Task.WhenAll(
+                LoadDevices(appArch),
+                HasLicenseAccess(idMgr, stateDetails.EnterpriseLookup, stateDetails.Username),
+                EnsureEmulatedDeviceInfo(starter, stateDetails, exActReq, secMgr, client)
+            );
             await Task.WhenAll(
                 EnsureAPISubscription(entArch, stateDetails.EnterpriseLookup, stateDetails.Username),
                 EnsureDevicesDashboard(secMgr),
                 EnsureDrawersConfig(secMgr),
-                EnsureEmulatedDeviceInfo(starter, stateDetails, exActReq, secMgr, client),
-                LoadAPIOptions()
+                LoadAPIOptions(),
+                EnsureTelemetry(starter, stateDetails, exActReq, secMgr, client)
             );
-
-            await EnsureTelemetry(starter, stateDetails, exActReq, secMgr, client);
 
             State.Loading = false;
 
@@ -467,9 +700,26 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task<bool> RevokeDeviceEnrollment(ApplicationArchitectClient appArch, string deviceId)
         {
-            var revokeResp = await appArch.RevokeDeviceEnrollment(deviceId, State.UserEnterpriseLookup, envLookup: null);
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        var revokeResp = await appArch.RevokeDeviceEnrollment(deviceId, State.UserEnterpriseLookup, envLookup: null);
 
-            var status = revokeResp.Status;
+                        return !revokeResp.Status;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError(ex, "Failed revoking device enrollment");
+
+                        return true;
+                    }
+                })
+                .SetCycles(5)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
 
             await LoadDevices(appArch);
 
@@ -482,54 +732,117 @@ namespace LCU.State.API.IoTEnsemble.State
             if (payload.Metadata.ContainsKey("id"))
                 payload.Metadata.Remove("id");
 
-            var sendResp = await appArch.SendDeviceMessage(payload, State.UserEnterpriseLookup,
-                deviceName, envLookup: null);
+            var status = Status.Initialized;
 
-            if (sendResp.Status)
-            {
-                await Task.Delay(2500);
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        var sendResp = await appArch.SendDeviceMessage(payload, State.UserEnterpriseLookup,
+                            deviceName, envLookup: null);
 
-                await LoadTelemetry(secMgr, client);
-            }
+                        status = sendResp.Status;
 
-            return sendResp.Status;
+                        return !status;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError(ex, "Failed sending device message");
+
+                        return true;
+                    }
+                })
+                .SetCycles(5)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
+
+            // if (sendResp.Status)
+            // {
+            //     await LoadTelemetry(secMgr, client);
+            // }
+
+            return status;
         }
 
         public virtual async Task ToggleDetailsPane(SecurityManagerClient secMgr)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
-                var active = !State.Drawers.DetailsActive;
+                await DesignOutline.Instance.Retry()
+                    .SetActionAsync(async () =>
+                    {
+                        try
+                        {
+                            var active = !State.Drawers.DetailsActive;
 
-                var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
-                {
-                    { DETAILS_PANE_ENABLED, active.ToString() }
-                });
+                            var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                            {
+                                { DETAILS_PANE_ENABLED, active.ToString() }
+                            });
 
-                if (resp.Status)
-                    State.Drawers.DetailsActive = active;
+                            if (resp.Status)
+                                State.Drawers.DetailsActive = active;
+
+                            return !resp.Status;
+                        }
+                        catch (Exception ex)
+                        {
+                            log.LogError(ex, "Failed toggling details pane");
+
+                            return true;
+                        }
+                    })
+                    .SetCycles(5)
+                    .SetThrottle(25)
+                    .SetThrottleScale(2)
+                    .Run();
             }
             else
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
         public virtual async Task ToggleEmulatedEnabled(IDurableOrchestrationClient starter, StateDetails stateDetails,
-            ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient client)
+            ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient client, bool skipTelem = false)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
+                var status = Status.Initialized;
+
                 var enabled = !State.Emulated.Enabled;
 
-                var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
-                {
-                    { EMULATED_DEVICE_ENABLED, enabled.ToString() }
-                });
+                await DesignOutline.Instance.Retry()
+                    .SetActionAsync(async () =>
+                    {
+                        try
+                        {
+                            var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                            {
+                                { EMULATED_DEVICE_ENABLED, enabled.ToString() }
+                            });
 
-                if (resp.Status)
+                            status = resp.Status;
+
+                            return !status;
+                        }
+                        catch (Exception ex)
+                        {
+                            log.LogError(ex, "Failed toggling emulated enabled");
+
+                            return true;
+                        }
+                    })
+                    .SetCycles(5)
+                    .SetThrottle(25)
+                    .SetThrottleScale(2)
+                    .Run();
+
+                if (status)
                 {
                     State.Emulated.Enabled = enabled;
 
-                    if (State.Devices.Devices.IsNullOrEmpty())
+                    if (State.Devices.Devices.IsNullOrEmpty() && !skipTelem)
                     {
                         await setTelemetryEnabled(secMgr, enabled);
 
@@ -548,6 +861,9 @@ namespace LCU.State.API.IoTEnsemble.State
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
+                if (State.Telemetry == null)
+                    State.Telemetry = new IoTEnsembleTelemetry();
+
                 await setTelemetryEnabled(secMgr, !State.Telemetry.Enabled);
 
                 await EnsureTelemetrySyncState(starter, stateDetails, exActReq);
@@ -558,11 +874,13 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
-        public virtual async Task UpdateTelemetrySync(SecurityManagerClient secMgr, DocumentClient client, int refreshRate, int pageSize)
+        public virtual async Task UpdateTelemetrySync(SecurityManagerClient secMgr, DocumentClient client, int refreshRate, int page, int pageSize)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
                 State.Telemetry.RefreshRate = refreshRate;
+
+                State.Telemetry.Page = page;
 
                 State.Telemetry.PageSize = pageSize;
 
@@ -572,10 +890,12 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
-        public virtual async Task UpdateConnectedDevicesSync(int pageSize)
+        public virtual async Task UpdateConnectedDevicesSync(int page, int pageSize)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
+                State.Devices.Page = page;
+
                 State.Devices.PageSize = pageSize;
             }
             else
@@ -629,7 +949,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                         bytes = await zipFileContent(bytes, fileName, fileExtension);
 
-                        fileExtension = "zip";
+                        fileName = fileName.Replace($".{fileExtension}", "zip");
 
                         contentType = "application/zip";
                     }
@@ -733,40 +1053,61 @@ namespace LCU.State.API.IoTEnsemble.State
 
             var downloadedData = new List<JObject>();
 
-            do
-            {
-                var dataTypeColdBlob = coldBlob.GetDirectoryReference(dataType.ToString().ToLower());
-
-                var entColdBlob = dataTypeColdBlob.GetDirectoryReference(State.UserEnterpriseLookup);
-
-                log.LogInformation($"Listing blob segments...");
-
-                var blobSeg = await entColdBlob.ListBlobsSegmentedAsync(true, BlobListingDetails.Metadata, null, contToken, null, null);
-
-                contToken = blobSeg.ContinuationToken;
-
-                // foreach (var item in blobSeg.Results)
-                await blobSeg.Results.Each(async item =>
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
                 {
-                    var blob = (CloudBlockBlob)item;
-
-                    await blob.FetchAttributesAsync();
-
-                    var minTime = DateTime.Parse(blob.Metadata["MinTime"]);
-
-                    var maxTime = DateTime.Parse(blob.Metadata["MaxTime"]);
-
-                    if ((startDate <= minTime && minTime <= endDate) || (startDate <= maxTime && maxTime <= endDate))
+                    try
                     {
-                        var blobContents = await blob.DownloadTextAsync();
+                        downloadedData = new List<JObject>();
 
-                        var blobData = JsonConvert.DeserializeObject<JArray>(blobContents);
+                        do
+                        {
+                            var dataTypeColdBlob = coldBlob.GetDirectoryReference(dataType.ToString().ToLower());
 
-                        if (downloadedData.Count == 0)
-                            downloadedData.AddRange(blobData.ToObject<List<JObject>>());
+                            var entColdBlob = dataTypeColdBlob.GetDirectoryReference(State.UserEnterpriseLookup);
+
+                            log.LogInformation($"Listing blob segments...");
+
+                            var blobSeg = await entColdBlob.ListBlobsSegmentedAsync(true, BlobListingDetails.Metadata, null, contToken, null, null);
+
+                            contToken = blobSeg.ContinuationToken;
+
+                            // foreach (var item in blobSeg.Results)
+                            await blobSeg.Results.Each(async item =>
+                            {
+                                var blob = (CloudBlockBlob)item;
+
+                                await blob.FetchAttributesAsync();
+
+                                var minTime = DateTime.Parse(blob.Metadata["MinTime"]);
+
+                                var maxTime = DateTime.Parse(blob.Metadata["MaxTime"]);
+
+                                if ((startDate <= minTime && minTime <= endDate) || (startDate <= maxTime && maxTime <= endDate))
+                                {
+                                    var blobContents = await blob.DownloadTextAsync();
+
+                                    var blobData = JsonConvert.DeserializeObject<JArray>(blobContents);
+
+                                    if (downloadedData.Count == 0)
+                                        downloadedData.AddRange(blobData.ToObject<List<JObject>>());
+                                }
+                            }, parallel: true);
+                        } while (contToken != null);
+
+                        return false;
                     }
-                }, parallel: true);
-            } while (contToken != null);
+                    catch (Exception ex)
+                    {
+                        log.LogError(ex, "Failed downloading telemetry");
+
+                        return true;
+                    }
+                })
+                .SetCycles(5)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
 
             return downloadedData;
         }
@@ -909,53 +1250,110 @@ namespace LCU.State.API.IoTEnsemble.State
             if (pageSize < 1)
                 pageSize = 1;
 
-            Uri colUri = UriFactory.CreateDocumentCollectionUri(warmTelemetryDatabase, warmTelemetryContainer);
-
-            IQueryable<IoTEnsembleTelemetryPayload> docsQueryBldr =
-                client.CreateDocumentQuery<IoTEnsembleTelemetryPayload>(colUri, new FeedOptions()
-                {
-                    EnableCrossPartitionQuery = true
-                })
-                .Where(payload => payload.EnterpriseLookup == entLookup || (emulatedEnabled && payload.EnterpriseLookup == "EMULATED"));
-
-            if (!selectedDeviceIds.IsNullOrEmpty())
-                docsQueryBldr = docsQueryBldr.Where(payload => selectedDeviceIds.Contains(payload.DeviceID));
-
             var payloads = new Pageable<IoTEnsembleTelemetryPayload>();
 
-            docsQueryBldr = docsQueryBldr
-                .OrderByDescending(payload => payload._ts);
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        Uri colUri = UriFactory.CreateDocumentCollectionUri(warmTelemetryDatabase, warmTelemetryContainer);
 
-            if (count)
-            {
-                payloads.TotalRecords = await docsQueryBldr.CountAsync();
-            }
+                        IQueryable<IoTEnsembleTelemetryPayload> docsQueryBldr =
+                            client.CreateDocumentQuery<IoTEnsembleTelemetryPayload>(colUri, new FeedOptions()
+                            {
+                                EnableCrossPartitionQuery = true
+                            })
+                            .Where(payload => payload.EnterpriseLookup == entLookup || (emulatedEnabled && payload.EnterpriseLookup == "EMULATED"));
 
-            docsQueryBldr = docsQueryBldr
-                .Skip((pageSize * page) - pageSize)
-                .Take(pageSize);
+                        if (!selectedDeviceIds.IsNullOrEmpty())
+                            docsQueryBldr = docsQueryBldr.Where(payload => selectedDeviceIds.Contains(payload.DeviceID));
 
-            var docsQuery = docsQueryBldr.AsDocumentQuery();
+                        docsQueryBldr = docsQueryBldr
+                            .OrderByDescending(payload => payload._ts);
 
-            var tempPayloads = new List<IoTEnsembleTelemetryPayload>();
+                        if (count)
+                        {
+                            payloads.TotalRecords = await docsQueryBldr.CountAsync();
+                        }
 
-            while (docsQuery.HasMoreResults)
-                tempPayloads.AddRange(await docsQuery.ExecuteNextAsync<IoTEnsembleTelemetryPayload>());
+                        docsQueryBldr = docsQueryBldr
+                            .Skip((pageSize * page) - pageSize)
+                            .Take(pageSize);
 
-            payloads.Items = tempPayloads;
+                        var docsQuery = docsQueryBldr.AsDocumentQuery();
+
+                        var tempPayloads = new List<IoTEnsembleTelemetryPayload>();
+
+                        while (docsQuery.HasMoreResults)
+                            tempPayloads.AddRange(await docsQuery.ExecuteNextAsync<IoTEnsembleTelemetryPayload>());
+
+                        payloads.Items = tempPayloads;
+
+                        return false;
+                    }
+                    catch (Exception ex)
+                    {
+                        var retriable = false;
+
+                        var retriableExceptionCodes = new List<int>() { 409, 412, 429, 1007, 1008 };
+
+                        if (ex is ResponseException rex)
+                        {
+                            var code = rex.StatusAttributes["x-ms-status-code"].As<int>();
+
+                            retriable = retriableExceptionCodes.Contains(code);
+
+                            if (retriable && rex.StatusAttributes.ContainsKey("x-ms-retry-after-ms"))
+                            {
+                                var retryMsWait = rex.StatusAttributes["x-ms-retry-after-ms"].As<int>();
+
+                                await Task.Delay(retryMsWait);
+                            }
+                        }
+
+                        if (!retriable)
+                            throw;
+
+                        return retriable;
+                    }
+                })
+                .SetCycles(10)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
 
             return payloads;
         }
 
         protected virtual async Task setTelemetryEnabled(SecurityManagerClient secMgr, bool enabled)
         {
-            var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
-            {
-                { TELEMETRY_SYNC_ENABLED, enabled.ToString() }
-            });
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                        {
+                            { TELEMETRY_SYNC_ENABLED, enabled.ToString() }
+                        });
 
-            if (resp.Status)
-                State.Telemetry.Enabled = enabled;
+                        if (resp.Status)
+                            State.Telemetry.Enabled = enabled;
+
+                        return !resp.Status;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError(ex, "Failed setting telemetry enabled");
+
+                        return true;
+                    }
+                })
+                .SetCycles(5)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
         }
 
         protected virtual async Task<byte[]> zipFileContent(byte[] response, string fileName, string fileExtension)

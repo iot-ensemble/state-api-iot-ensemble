@@ -125,13 +125,27 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual int MaxDevicesCount { get; set; }
 
         [DataMember]
-        public virtual string Page { get; set; }
+        public virtual int? Page { get; set; }
 
         [DataMember]
         public virtual int PageSize { get; set; }
 
         [DataMember]
         public virtual Dictionary<string, string> SASTokens { get; set; }
+
+        [DataMember]
+        public virtual long TotalDevices { get; set; }
+
+        #region Constructors
+        public IoTEnsembleConnectedDevicesConfig()
+        {
+            MaxDevicesCount = 1;
+
+            Page = 1;
+
+            PageSize = 10;
+        }
+        #endregion
     }
 
     [Serializable]
@@ -186,6 +200,19 @@ namespace LCU.State.API.IoTEnsemble.State
 
         [DataMember]
         public virtual long TotalPayloads { get; set; }
+
+        #region Constructors
+        public IoTEnsembleTelemetry()
+        {
+            RefreshRate = 30;
+
+            PageSize = 10;
+
+            Page = 1;
+
+            Payloads = new List<IoTEnsembleTelemetryPayload>();
+        }
+        #endregion
     }
 
     [Serializable]

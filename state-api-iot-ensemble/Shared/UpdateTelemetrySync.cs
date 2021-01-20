@@ -35,6 +35,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
         [DataMember]
         public virtual int RefreshRate { get; set; }
 
+         [DataMember]
+        public virtual int Page { get; set; }
+
         [DataMember]
         public virtual int PageSize { get; set; }
     }
@@ -63,9 +66,6 @@ namespace LCU.State.API.IoTEnsemble.Shared
                 {
                     log.LogInformation($"Setting Loading device telemetry from UpdateTelemetrySync...");
 
-                    if (harness.State.Telemetry == null)
-                        harness.State.Telemetry = new IoTEnsembleTelemetry();
-
                     harness.State.Telemetry.Loading = true;
 
                     return Status.Success;
@@ -79,7 +79,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                         var stateDetails = StateUtils.LoadStateDetails(req);
 
-                        await harness.UpdateTelemetrySync(secMgr, docClient, dataReq.RefreshRate, dataReq.PageSize);
+                        await harness.UpdateTelemetrySync(secMgr, docClient, dataReq.RefreshRate, dataReq.Page, dataReq.PageSize);
 
                         harness.State.Telemetry.Loading = false;
 
