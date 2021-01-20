@@ -857,6 +857,9 @@ namespace LCU.State.API.IoTEnsemble.State
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
+                if (State.Telemetry == null)
+                    State.Telemetry = new IoTEnsembleTelemetry();
+
                 await setTelemetryEnabled(secMgr, !State.Telemetry.Enabled);
 
                 await EnsureTelemetrySyncState(starter, stateDetails, exActReq);
