@@ -34,6 +34,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
     {
 
         [DataMember]
+        public virtual int Page { get; set; }
+
+        [DataMember]
         public virtual int PageSize { get; set; }
     }
 
@@ -68,7 +71,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                await harness.UpdateConnectedDevicesSync(dataReq.PageSize);
+                await harness.UpdateConnectedDevicesSync(dataReq.Page, dataReq.PageSize);
 
                 harness.State.Devices.Loading = false;
 
