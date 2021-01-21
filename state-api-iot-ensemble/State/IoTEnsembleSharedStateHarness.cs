@@ -89,6 +89,8 @@ namespace LCU.State.API.IoTEnsemble.State
 
             var deviceId = $"{State.UserEnterpriseLookup}-{device.DeviceName}";
 
+            log.LogInformation($"Enrolling new device with id {deviceId}");
+
             if (State.Devices.Devices.Count() < State.Devices.MaxDevicesCount)
             {
                 await DesignOutline.Instance.Retry()
@@ -96,8 +98,6 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         try
                         {
-                            log.LogInformation($"Enrolling new device with id {deviceId}");
-
                             enrollResp = await appArch.EnrollDevice(new EnrollDeviceRequest()
                             {
                                 DeviceID = deviceId,

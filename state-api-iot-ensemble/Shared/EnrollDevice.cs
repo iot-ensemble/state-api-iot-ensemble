@@ -48,7 +48,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
             var status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, EnrollDeviceRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
                 async (harness, dataReq, actReq) =>
                 {
-                    log.LogInformation($"Setting Loading device telemetry from UpdateTelemetrySync...");
+                    log.LogInformation($"Setting Loading for enroll device...");
 
                     harness.State.Devices.Loading = true;
 
