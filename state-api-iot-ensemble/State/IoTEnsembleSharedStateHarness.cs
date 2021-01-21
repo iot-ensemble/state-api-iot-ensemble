@@ -91,7 +91,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
             log.LogInformation($"Enrolling new device with id {deviceId}");
 
-            if (State.Devices.Devices.Count() < State.Devices.MaxDevicesCount)
+            if (State.Devices.Devices.IsNullOrEmpty() || State.Devices.Devices.Count() < State.Devices.MaxDevicesCount)
             {
                 await DesignOutline.Instance.Retry()
                     .SetActionAsync(async () =>
@@ -134,6 +134,8 @@ namespace LCU.State.API.IoTEnsemble.State
 
                 log.LogInformation($"Max Device Count Reached while enrolling {deviceId}");
             }
+
+            await Task.Delay(1000);
 
             await LoadDevices(appArch);
 
@@ -730,6 +732,8 @@ namespace LCU.State.API.IoTEnsemble.State
                 .SetThrottle(25)
                 .SetThrottleScale(2)
                 .Run();
+
+            await Task.Delay(1000);
 
             await LoadDevices(appArch);
 

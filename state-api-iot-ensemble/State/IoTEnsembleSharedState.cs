@@ -130,6 +130,7 @@ namespace LCU.State.API.IoTEnsemble.State
         [DataMember]
         public virtual int PageSize { get; set; }
 
+        [DataMember]
         public virtual Dictionary<string, string> SASTokens { get; set; }
         
         [DataMember]
