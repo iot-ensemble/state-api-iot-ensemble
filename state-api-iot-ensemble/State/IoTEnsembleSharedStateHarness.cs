@@ -87,7 +87,7 @@ namespace LCU.State.API.IoTEnsemble.State
         {
             var enrollResp = new EnrollDeviceResponse();
 
-            var status = new Status();
+            var deviceId = $"{State.UserEnterpriseLookup}-{device.DeviceName}";
 
             if (State.Devices.Devices.Count() < State.Devices.MaxDevicesCount)
             {
@@ -96,9 +96,11 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         try
                         {
+                            log.LogInformation($"Enrolling new device with id {deviceId}");
+
                             enrollResp = await appArch.EnrollDevice(new EnrollDeviceRequest()
                             {
-                                DeviceID = $"{State.UserEnterpriseLookup}-{device.DeviceName}",
+                                DeviceID = deviceId,
                                 EnrollmentOptions = new
                                 {
                                     Tags = new Dictionary<string, string>()
@@ -108,9 +110,11 @@ namespace LCU.State.API.IoTEnsemble.State
                                 }.JSONConvert<MetadataModel>()
                             }, State.UserEnterpriseLookup, DeviceAttestationTypes.SymmetricKey, DeviceEnrollmentTypes.Individual, envLookup: null);
 
-                            status = enrollResp.Status;
+                            State.Devices.Status = enrollResp.Status;
 
-                            return !status;
+                            log.LogInformation($"Enroll device status {State.Devices.Status.ToJSON()}");
+
+                            return !State.Devices.Status;
                         }
                         catch (Exception ex)
                         {
@@ -125,7 +129,11 @@ namespace LCU.State.API.IoTEnsemble.State
                     .Run();
             }
             else
-                status = Status.Conflict.Clone("Max Device Count Reached");
+            {
+                State.Devices.Status = Status.Conflict.Clone("Max Device Count Reached");
+
+                log.LogInformation($"Max Device Count Reached while enrolling {deviceId}");
+            }
 
             await LoadDevices(appArch);
 
@@ -611,6 +619,8 @@ namespace LCU.State.API.IoTEnsemble.State
                         }
                         else if (State.Devices.Devices.IsNullOrEmpty() || devicesResp.Status == Status.NotLocated)
                             State.Devices.Devices = new List<IoTEnsembleDeviceInfo>();
+
+                        log.LogInformation($"Load devices status {devicesResp.Status.ToJSON()}");
 
                         return !devicesResp.Status && devicesResp.Status != Status.NotLocated;
                     }
