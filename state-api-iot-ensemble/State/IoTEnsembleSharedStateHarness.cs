@@ -620,7 +620,11 @@ namespace LCU.State.API.IoTEnsemble.State
                             State.Devices.SASTokens = null;
                         }
                         else if (State.Devices.Devices.IsNullOrEmpty() || devicesResp.Status == Status.NotLocated)
+                        {
                             State.Devices.Devices = new List<IoTEnsembleDeviceInfo>();
+
+                            State.Devices.TotalDevices = 0;
+                        }
 
                         log.LogInformation($"Load devices status {devicesResp.Status.ToJSON()}");
 
