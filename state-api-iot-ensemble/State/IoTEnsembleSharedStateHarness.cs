@@ -135,7 +135,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 log.LogInformation($"Max Device Count Reached while enrolling {deviceId}");
             }
 
-            await Task.Delay(1000);
+            await Task.Delay(2500);
 
             await LoadDevices(appArch);
 
@@ -737,7 +737,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 .SetThrottleScale(2)
                 .Run();
 
-            await Task.Delay(1000);
+            await Task.Delay(2500);
 
             await LoadDevices(appArch);
 
