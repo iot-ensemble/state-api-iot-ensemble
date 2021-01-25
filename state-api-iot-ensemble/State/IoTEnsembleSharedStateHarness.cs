@@ -571,12 +571,18 @@ namespace LCU.State.API.IoTEnsemble.State
 
             State.Storage.APIOptions = new List<IoTEnsembleAPIOption>();
 
+            var signInPath = "https://fathym-prd.portal.azure-api.net/signin?ReturnUrl=";
+
+            var coldQueryPath = WebUtility.UrlEncode("/docs/services/iot-ensemble-state-api/operations/coldquery");
+
+            var warmQueryPath = WebUtility.UrlEncode("/docs/services/iot-ensemble-state-api/operations/warmquery");
+
             State.Storage.APIOptions.Add(new IoTEnsembleAPIOption()
             {
                 Name = "Cold Query",
                 Description = "The cold query is used to access the records in your cold storage.",
                 Method = "GET",
-                Path = "https://fathym-prd.portal.azure-api.net/docs/services/iot-ensemble-state-api/operations/coldquery",
+                Path = $"{signInPath}{coldQueryPath}"
             });
 
             State.Storage.APIOptions.Add(new IoTEnsembleAPIOption()
@@ -584,7 +590,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 Name = "Warm Query",
                 Description = "The warm query is used to access the telemetry records in your warm storage.",
                 Method = "GET",
-                Path = "https://fathym-prd.portal.azure-api.net/docs/services/iot-ensemble-state-api/operations/warmquery",
+                Path = $"{signInPath}{warmQueryPath}"
             });
 
             return Status.Success;
