@@ -116,7 +116,7 @@ namespace LCU.State.API.IoTEnsemble.State
     public class IoTEnsembleConnectedDevicesConfig
     {
         [DataMember]
-        public virtual int EnterprisesDeviceCount { get; set; }
+        public virtual int EnterpriseDevicesCount { get; set; }
         
         [DataMember]
         public virtual List<IoTEnsembleDeviceInfo> Devices { get; set; }
@@ -150,6 +150,8 @@ namespace LCU.State.API.IoTEnsemble.State
             Page = 1;
 
             PageSize = 10;
+
+            EnterpriseDevicesCount = 50;
         }
         #endregion
     }

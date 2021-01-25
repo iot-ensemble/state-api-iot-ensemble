@@ -601,9 +601,6 @@ namespace LCU.State.API.IoTEnsemble.State
             if (State.DevicesConfig == null)
                 State.DevicesConfig = new IoTEnsembleConnectedDevicesConfig();
 
-                //TODO make this daynamic may not be the best place for this
-                State.DevicesConfig.EnterprisesDeviceCount = 50;
-
             await DesignOutline.Instance.Retry()
                 .SetActionAsync(async () =>
                 {
