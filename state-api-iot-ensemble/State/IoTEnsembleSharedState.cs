@@ -39,7 +39,7 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual IoTEnsembleDashboardConfiguration Dashboard { get; set; }
 
         [DataMember]
-        public virtual IoTEnsembleConnectedDevicesConfig Devices { get; set; }
+        public virtual IoTEnsembleConnectedDevicesConfig DevicesConfig { get; set; }
 
         [DataMember]
         public virtual IoTEnsembleDrawersConfig Drawers { get; set; }
@@ -115,6 +115,9 @@ namespace LCU.State.API.IoTEnsemble.State
     [DataContract]
     public class IoTEnsembleConnectedDevicesConfig
     {
+        [DataMember]
+        public virtual int EnterprisesDeviceCount { get; set; }
+        
         [DataMember]
         public virtual List<IoTEnsembleDeviceInfo> Devices { get; set; }
 

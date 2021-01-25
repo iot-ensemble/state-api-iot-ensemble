@@ -91,7 +91,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
             log.LogInformation($"Enrolling new device with id {deviceId}");
 
-            if (State.Devices.Devices.IsNullOrEmpty() || State.Devices.Devices.Count() < State.Devices.MaxDevicesCount)
+            if (State.DevicesConfig.Devices.IsNullOrEmpty() || State.DevicesConfig.Devices.Count() < State.DevicesConfig.MaxDevicesCount)
             {
                 await DesignOutline.Instance.Retry()
                     .SetActionAsync(async () =>
@@ -110,11 +110,11 @@ namespace LCU.State.API.IoTEnsemble.State
                                 }.JSONConvert<MetadataModel>()
                             }, State.UserEnterpriseLookup, DeviceAttestationTypes.SymmetricKey, DeviceEnrollmentTypes.Individual, envLookup: null);
 
-                            State.Devices.Status = enrollResp.Status;
+                            State.DevicesConfig.Status = enrollResp.Status;
 
-                            log.LogInformation($"Enroll device status {State.Devices.Status.ToJSON()}");
+                            log.LogInformation($"Enroll device status {State.DevicesConfig.Status.ToJSON()}");
 
-                            return !State.Devices.Status;
+                            return !State.DevicesConfig.Status;
                         }
                         catch (Exception ex)
                         {
@@ -130,7 +130,7 @@ namespace LCU.State.API.IoTEnsemble.State
             }
             else
             {
-                State.Devices.Status = Status.Conflict.Clone("Max Device Count Reached");
+                State.DevicesConfig.Status = Status.Conflict.Clone("Max Device Count Reached");
 
                 log.LogInformation($"Max Device Count Reached while enrolling {deviceId}");
             }
@@ -464,7 +464,7 @@ namespace LCU.State.API.IoTEnsemble.State
                                 State.AccessPlanGroup = hasAccess.Model.Metadata["PlanGroup"].ToString();
 
                             if (hasAccess.Model.Metadata.ContainsKey("Devices"))
-                                State.Devices.MaxDevicesCount = hasAccess.Model.Metadata["Devices"].ToString().As<int>();
+                                State.DevicesConfig.MaxDevicesCount = hasAccess.Model.Metadata["Devices"].ToString().As<int>();
                         }
                         else
                         {
@@ -472,7 +472,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                             State.AccessPlanGroup = "explorer";
 
-                            State.Devices.MaxDevicesCount = 1;
+                            State.DevicesConfig.MaxDevicesCount = 1;
                         }
 
                         return false;
@@ -504,13 +504,13 @@ namespace LCU.State.API.IoTEnsemble.State
 
                         if (deviceSasResp.Status)
                         {
-                            if (State.Devices.SASTokens == null)
-                                State.Devices.SASTokens = new Dictionary<string, string>();
+                            if (State.DevicesConfig.SASTokens == null)
+                                State.DevicesConfig.SASTokens = new Dictionary<string, string>();
 
-                            State.Devices.SASTokens[deviceName] = deviceSasResp.Model;
+                            State.DevicesConfig.SASTokens[deviceName] = deviceSasResp.Model;
                         }
 
-                        return State.Devices.SASTokens == null;
+                        return State.DevicesConfig.SASTokens == null;
                     }
                     catch (Exception ex)
                     {
@@ -598,8 +598,11 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task LoadDevices(ApplicationArchitectClient appArch)
         {
-            if (State.Devices == null)
-                State.Devices = new IoTEnsembleConnectedDevicesConfig();
+            if (State.DevicesConfig == null)
+                State.DevicesConfig = new IoTEnsembleConnectedDevicesConfig();
+
+                //TODO make this daynamic may not be the best place for this
+                State.DevicesConfig.EnterprisesDeviceCount = 50;
 
             await DesignOutline.Instance.Retry()
                 .SetActionAsync(async () =>
@@ -607,11 +610,11 @@ namespace LCU.State.API.IoTEnsemble.State
                     try
                     {
                         var devicesResp = await appArch.ListEnrolledDevices(State.UserEnterpriseLookup, envLookup: null,
-                            page: State.Devices.Page.Value, pageSize: State.Devices.PageSize);
+                            page: State.DevicesConfig.Page.Value, pageSize: State.DevicesConfig.PageSize);
 
                         if (devicesResp.Status)
                         {
-                            State.Devices.Devices = devicesResp.Model?.Items?.Select(m =>
+                            State.DevicesConfig.Devices = devicesResp.Model?.Items?.Select(m =>
                             {
                                 var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
 
@@ -621,15 +624,15 @@ namespace LCU.State.API.IoTEnsemble.State
 
                             }).JSONConvert<List<IoTEnsembleDeviceInfo>>() ?? new List<IoTEnsembleDeviceInfo>();
 
-                            State.Devices.TotalDevices = devicesResp.Model.TotalRecords;
+                            State.DevicesConfig.TotalDevices = devicesResp.Model.TotalRecords;
 
-                            State.Devices.SASTokens = null;
+                            State.DevicesConfig.SASTokens = null;
                         }
-                        else if (State.Devices.Devices.IsNullOrEmpty() || devicesResp.Status == Status.NotLocated)
+                        else if (State.DevicesConfig.Devices.IsNullOrEmpty() || devicesResp.Status == Status.NotLocated)
                         {
-                            State.Devices.Devices = new List<IoTEnsembleDeviceInfo>();
+                            State.DevicesConfig.Devices = new List<IoTEnsembleDeviceInfo>();
 
-                            State.Devices.TotalDevices = 0;
+                            State.DevicesConfig.TotalDevices = 0;
                         }
 
                         log.LogInformation($"Load devices status {devicesResp.Status.ToJSON()}");
@@ -713,7 +716,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
             State.Loading = false;
 
-            State.Devices.Loading = false;
+            State.DevicesConfig.Loading = false;
 
             State.Emulated.Loading = false;
 
@@ -866,7 +869,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     State.Emulated.Enabled = enabled;
 
-                    if (State.Devices.Devices.IsNullOrEmpty() && !skipTelem)
+                    if (State.DevicesConfig.Devices.IsNullOrEmpty() && !skipTelem)
                     {
                         await setTelemetryEnabled(secMgr, enabled);
 
@@ -918,9 +921,9 @@ namespace LCU.State.API.IoTEnsemble.State
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
-                State.Devices.Page = page;
+                State.DevicesConfig.Page = page;
 
-                State.Devices.PageSize = pageSize;
+                State.DevicesConfig.PageSize = pageSize;
             }
             else
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
