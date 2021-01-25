@@ -50,7 +50,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                 {
                     log.LogInformation($"Setting Loading for enroll device...");
 
-                    harness.State.Devices.Loading = true;
+                    harness.State.DevicesConfig.Loading = true;
 
                     return Status.Success;
                 }, preventStatusException: true);
@@ -65,7 +65,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                         await harness.EnrollDevice(appArch, enrollReq.Device);
 
-                        harness.State.Devices.Loading = false;
+                        harness.State.DevicesConfig.Loading = false;
 
                         return Status.Success;
                     });
