@@ -128,7 +128,7 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual int MaxDevicesCount { get; set; }
 
         [DataMember]
-        public virtual int? Page { get; set; }
+        public virtual int Page { get; set; }
 
         [DataMember]
         public virtual int PageSize { get; set; }

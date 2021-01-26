@@ -585,7 +585,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     try
                     {
                         var devicesResp = await appArch.ListEnrolledDevices(State.UserEnterpriseLookup, envLookup: null,
-                            page: State.DevicesConfig.Page.Value, pageSize: State.DevicesConfig.PageSize);
+                            page: State.DevicesConfig.Page, pageSize: State.DevicesConfig.PageSize);
 
                         if (devicesResp.Status)
                         {
@@ -889,13 +889,15 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
-        public virtual async Task UpdateConnectedDevicesSync(int page, int pageSize)
+        public virtual async Task UpdateConnectedDevicesSync(ApplicationArchitectClient appArch, int page, int pageSize)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
                 State.DevicesConfig.Page = page;
 
                 State.DevicesConfig.PageSize = pageSize;
+
+                await LoadDevices(appArch);
             }
             else
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
