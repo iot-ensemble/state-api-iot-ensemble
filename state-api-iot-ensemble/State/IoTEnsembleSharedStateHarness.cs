@@ -848,6 +848,8 @@ namespace LCU.State.API.IoTEnsemble.State
                         await EnsureTelemetrySyncState(starter, stateDetails, exActReq);
                     }
                 }
+
+                await LoadTelemetry(secMgr, client);
             }
             else
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
