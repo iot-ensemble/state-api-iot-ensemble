@@ -139,7 +139,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
                         dataReq.Zip);
 
                     return Status.Success;
-                }, preventStatusException: true);
+                }, preventStatusException: true, withLock: false);
 
             return queried;
         }

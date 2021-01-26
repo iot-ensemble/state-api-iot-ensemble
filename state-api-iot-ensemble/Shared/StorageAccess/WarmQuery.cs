@@ -103,7 +103,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
                         dataReq.IncludeEmulated, dataReq.StartDate, dataReq.EndDate);
 
                     return queried.Status;
-                }, preventStatusException: true);
+                }, preventStatusException: true, withLock: false);
 
             var statusCode = status ? HttpStatusCode.OK : HttpStatusCode.InternalServerError;
 
