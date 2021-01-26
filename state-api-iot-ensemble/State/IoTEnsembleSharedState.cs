@@ -289,7 +289,7 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual List<IoTEnsembleAPIKeyData> APIKeys { get; set; }
 
         [DataMember]
-        public virtual List<IoTEnsembleAPIOption> APIOptions { get; set; }
+        public virtual string OpenAPISource { get; set; }
     }
 
     [Serializable]
@@ -301,23 +301,6 @@ namespace LCU.State.API.IoTEnsemble.State
 
         [DataMember]
         public virtual string KeyName { get; set; }
-    }
-
-    [Serializable]
-    [DataContract]
-    public class IoTEnsembleAPIOption
-    {
-        [DataMember]
-        public virtual string Description { get; set; }
-
-        [DataMember]
-        public virtual string Method { get; set; }
-
-        [DataMember]
-        public virtual string Name { get; set; }
-
-        [DataMember]
-        public virtual string Path { get; set; }
     }
 
     [Serializable]
