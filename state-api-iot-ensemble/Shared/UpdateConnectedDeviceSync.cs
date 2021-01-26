@@ -43,6 +43,14 @@ namespace LCU.State.API.IoTEnsemble.Shared
     public class UpdateConnectedDevicesSync
     {
 
+        protected ApplicationArchitectClient appArch;
+
+        public UpdateConnectedDevicesSync(ApplicationArchitectClient appArch)
+        {
+            this.appArch = appArch;
+        }
+
+
         [FunctionName("UpdateConnectedDevicesSync")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
             [DurableClient] IDurableOrchestrationClient starter,
@@ -71,7 +79,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                await harness.UpdateConnectedDevicesSync(dataReq.Page, dataReq.PageSize);
+                await harness.UpdateConnectedDevicesSync(appArch, dataReq.Page, dataReq.PageSize);
 
                 harness.State.DevicesConfig.Loading = false;
 
