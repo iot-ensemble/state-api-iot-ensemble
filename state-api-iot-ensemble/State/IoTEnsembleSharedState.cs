@@ -39,7 +39,7 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual IoTEnsembleDashboardConfiguration Dashboard { get; set; }
 
         [DataMember]
-        public virtual IoTEnsembleConnectedDevicesConfig Devices { get; set; }
+        public virtual IoTEnsembleConnectedDevicesConfig DevicesConfig { get; set; }
 
         [DataMember]
         public virtual IoTEnsembleDrawersConfig Drawers { get; set; }
@@ -116,6 +116,9 @@ namespace LCU.State.API.IoTEnsemble.State
     public class IoTEnsembleConnectedDevicesConfig
     {
         [DataMember]
+        public virtual int EnterpriseDevicesCount { get; set; }
+        
+        [DataMember]
         public virtual List<IoTEnsembleDeviceInfo> Devices { get; set; }
 
         [DataMember]
@@ -147,6 +150,8 @@ namespace LCU.State.API.IoTEnsemble.State
             Page = 1;
 
             PageSize = 10;
+
+            EnterpriseDevicesCount = 50;
         }
         #endregion
     }
@@ -284,7 +289,7 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual List<IoTEnsembleAPIKeyData> APIKeys { get; set; }
 
         [DataMember]
-        public virtual List<IoTEnsembleAPIOption> APIOptions { get; set; }
+        public virtual string OpenAPISource { get; set; }
     }
 
     [Serializable]
@@ -296,23 +301,6 @@ namespace LCU.State.API.IoTEnsemble.State
 
         [DataMember]
         public virtual string KeyName { get; set; }
-    }
-
-    [Serializable]
-    [DataContract]
-    public class IoTEnsembleAPIOption
-    {
-        [DataMember]
-        public virtual string Description { get; set; }
-
-        [DataMember]
-        public virtual string Method { get; set; }
-
-        [DataMember]
-        public virtual string Name { get; set; }
-
-        [DataMember]
-        public virtual string Path { get; set; }
     }
 
     [Serializable]
