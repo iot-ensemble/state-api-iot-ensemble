@@ -60,9 +60,14 @@ namespace LCU.State.API.IoTEnsemble.State
         #region API Methods
         public virtual async Task LoadChildEnterprises(EnterpriseManagerClient entMgr, string parentEntLookup)
         {
-            var childEnts = await entMgr.ListChildEnterprises(parentEntLookup);
+            var childEntsResp = await entMgr.ListChildEnterprises(parentEntLookup);
 
-            // State.ChildEnterprises = childEnts.Model ?? new List<Graphs.Registry.Enterprises.Enterprise>();
+            var childEnts = childEntsResp.Model ?? new List<Graphs.Registry.Enterprises.Enterprise>();
+
+            State.Enterprise.ChildEnterprises = childEnts.Select(ce => new IoTEnsembleChildEnterprise()
+            {
+                Name = ce.Name
+            }).ToList();
 
             State.Loading = false;
         }
@@ -97,9 +102,11 @@ namespace LCU.State.API.IoTEnsemble.State
             State.Loading = false;
         }
 
-        public virtual async Task SetActiveEnterprise(string entLookup)
+        public virtual async Task SetActiveEnterprise(ApplicationArchitectClient appArch, string entLookup)
         {
             State.Enterprise.ActiveEnterpriseLookup = entLookup;
+
+            await LoadActiveEnterpriseDetails(appArch);
 
             State.Loading = false;
         }

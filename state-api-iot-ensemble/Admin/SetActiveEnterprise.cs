@@ -33,8 +33,12 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
     public class SetActiveEnterprise
     {
-        public SetActiveEnterprise()
-        { }
+        protected ApplicationArchitectClient appArch;
+
+        public SetActiveEnterprise(ApplicationArchitectClient appArch)
+        {
+            this.appArch = appArch;
+         }
 
         [FunctionName("SetActiveEnterprise")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
@@ -46,7 +50,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
             {
                 log.LogInformation($"SetActiveEnterprise");
 
-                await harness.SetActiveEnterprise(dataReq.Lookup);
+                await harness.SetActiveEnterprise(appArch, dataReq.Lookup);
 
                 return Status.Success;
             });
