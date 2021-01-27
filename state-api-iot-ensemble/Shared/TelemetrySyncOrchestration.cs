@@ -92,7 +92,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         [FunctionName("TelemetrySyncOrchestration_Sync")]
         public virtual async Task<Status> Sync([ActivityTrigger] StateActionContext stateCtxt, ILogger log,
-            [SignalR(HubName = IoTEnsembleSharedState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
+            [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{stateCtxt.StateDetails.EnterpriseLookup}/{stateCtxt.StateDetails.HubName}/{stateCtxt.StateDetails.Username}/{stateCtxt.StateDetails.StateKey}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             [CosmosDB(
                 databaseName: "%LCU-WARM-STORAGE-DATABASE%",
@@ -130,7 +130,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         [FunctionName("TelemetrySyncOrchestration_Disabled")]
         public virtual async Task<Status> Disabled([ActivityTrigger] StateActionContext stateCtxt, ILogger log,
-            [SignalR(HubName = IoTEnsembleSharedState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
+            [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{stateCtxt.StateDetails.EnterpriseLookup}/{stateCtxt.StateDetails.HubName}/{stateCtxt.StateDetails.Username}/{stateCtxt.StateDetails.StateKey}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
             var status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, TelemetrySyncRequest, IoTEnsembleSharedStateHarness>(stateCtxt.StateDetails,

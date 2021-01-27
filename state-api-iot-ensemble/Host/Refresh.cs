@@ -60,24 +60,39 @@ namespace LCU.State.API.IoTEnsemble.Host
         [FunctionName("Refresh")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
             [DurableClient] IDurableOrchestrationClient starter,
-            [SignalR(HubName = IoTEnsembleSharedState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
+            [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             [CosmosDB(
                 databaseName: "%LCU-WARM-STORAGE-DATABASE%",
                 collectionName: "%LCU-WARM-STORAGE-TELEMETRY-CONTAINER%",
                 ConnectionStringSetting = "LCU-WARM-STORAGE-CONNECTION-STRING")]DocumentClient docClient)
         {
-            return await stateBlob.WithStateHarness<IoTEnsembleSharedState, RefreshRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
-                async (harness, refreshReq, actReq) =>
-            {
-                log.LogInformation($"Refresh");
+            var stateDetails = StateUtils.LoadStateDetails(req);
 
-                var stateDetails = StateUtils.LoadStateDetails(req);
+            if (stateDetails.StateKey.StartsWith("admin"))
+                return await stateBlob.WithStateHarness<IoTEnsembleAdminState, RefreshRequest, IoTEnsembleAdminStateHarness>(req, signalRMessages, log,
+                    async (harness, refreshReq, actReq) =>
+                {
+                    log.LogInformation($"Refreshing admin state");
 
-                await harness.Refresh(starter, stateDetails, actReq, appArch, entArch, entMgr, idMgr, secMgr, docClient);
+                    var stateDetails = StateUtils.LoadStateDetails(req);
 
-                return Status.Success;
-            });
+                    await harness.Refresh(entMgr);
+
+                    return Status.Success;
+                });
+            else
+                return await stateBlob.WithStateHarness<IoTEnsembleSharedState, RefreshRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
+                    async (harness, refreshReq, actReq) =>
+                {
+                    log.LogInformation($"Refreshing Shared State");
+
+                    var stateDetails = StateUtils.LoadStateDetails(req);
+
+                    await harness.Refresh(starter, stateDetails, actReq, appArch, entArch, entMgr, idMgr, secMgr, docClient);
+
+                    return Status.Success;
+                });
         }
     }
 }

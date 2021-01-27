@@ -25,10 +25,6 @@ namespace LCU.State.API.IoTEnsemble.State
     [DataContract]
     public class IoTEnsembleSharedState
     {
-        #region Constants
-        public const string HUB_NAME = "iotensemble";
-        #endregion
-
         [DataMember]
         public virtual string AccessLicenseType { get; set; }
 
