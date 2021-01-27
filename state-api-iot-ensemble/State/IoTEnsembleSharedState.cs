@@ -162,65 +162,6 @@ namespace LCU.State.API.IoTEnsemble.State
 
     [Serializable]
     [DataContract]
-    public class IoTEnsembleDeviceInfo : DeviceInfo
-    {
-        [DataMember]
-        public virtual string AuthenticationType { get; set; }
-
-        [DataMember]
-        public virtual int CloudToDeviceMessageCount { get; set; }
-
-        [DataMember]
-        public virtual string DeviceName { get; set; }
-
-        [DataMember]
-        public virtual Status LastStatusUpdate { get; set; }
-    }
-
-    [Serializable]
-    [DataContract]
-    public class IoTEnsembleTelemetry
-    {
-        [DataMember]
-        public virtual bool Enabled { get; set; }
-
-        [DataMember]
-        public virtual DateTime LastSyncedAt { get; set; }
-
-        [DataMember]
-        public virtual bool Loading { get; set; }
-
-        [DataMember]
-        public virtual List<IoTEnsembleTelemetryPayload> Payloads { get; set; }
-
-        [DataMember]
-        public virtual int Page { get; set; }
-
-        [DataMember]
-        public virtual int PageSize { get; set; }
-
-        [DataMember]
-        public virtual int RefreshRate { get; set; }
-
-        [DataMember]
-        public virtual long TotalPayloads { get; set; }
-
-        #region Constructors
-        public IoTEnsembleTelemetry()
-        {
-            RefreshRate = 30;
-
-            PageSize = 10;
-
-            Page = 1;
-
-            Payloads = new List<IoTEnsembleTelemetryPayload>();
-        }
-        #endregion
-    }
-
-    [Serializable]
-    [DataContract]
     public class IoTEnsembleTelemetryResponse : BaseResponse
     {
         [DataMember]

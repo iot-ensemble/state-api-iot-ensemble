@@ -80,7 +80,7 @@ namespace LCU.State.API.IoTEnsemble.State
         {
             var childEnts = await entMgr.ListChildEnterprises(parentEntLookup);
 
-            State.ChildEnterprises = childEnts.Model ?? new List<Graphs.Registry.Enterprises.Enterprise>();
+            // State.ChildEnterprises = childEnts.Model ?? new List<Graphs.Registry.Enterprises.Enterprise>();
 
             State.Loading = false;
         }

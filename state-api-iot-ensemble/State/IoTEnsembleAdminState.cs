@@ -27,9 +27,23 @@ namespace LCU.State.API.IoTEnsemble.State
     public class IoTEnsembleAdminState
     {
         [DataMember]
-        public virtual List<Enterprise> ChildEnterprises { get; set; }
+        public virtual List<IoTEnsembleChildEnterprise> ChildEnterprises { get; set; }
 
         [DataMember]
         public virtual bool Loading { get; set; }
+    }
+    
+    [Serializable]
+    [DataContract]
+    public class IoTEnsembleChildEnterprise
+    {
+        [DataMember]
+        public virtual int DeviceCount { get; set; }
+        
+        [DataMember]
+        public virtual List<IoTEnsembleDeviceInfo> Devices { get; set; }
+        
+        [DataMember]
+        public virtual string Name { get; set; }
     }
 }
