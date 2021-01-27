@@ -68,6 +68,23 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual string Name { get; set; }
 
         [DataMember]
+        public virtual int Page { get; set; }
+
+        [DataMember]
+        public virtual int PageSize { get; set; }
+
+        [DataMember]
         public virtual DateTime SignUpDate { get; set; }
+
+        #region Constructors
+        public IoTEnsembleChildEnterprise()
+        {
+            Devices = new List<IoTEnsembleDeviceInfo>();
+            
+            Page = 1;
+
+            PageSize = 10;
+        }
+        #endregion
     }
 }

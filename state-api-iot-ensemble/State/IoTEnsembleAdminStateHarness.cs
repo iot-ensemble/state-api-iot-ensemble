@@ -58,29 +58,41 @@ namespace LCU.State.API.IoTEnsemble.State
         #endregion
 
         #region API Methods
-        public virtual async Task LoadChildEnterprises(EnterpriseManagerClient entMgr, string parentEntLookup, ApplicationArchitectClient appArch)
+        public virtual async Task LoadChildEnterprises(EnterpriseManagerClient entMgr, string parentEntLookup,
+            ApplicationArchitectClient appArch)
         {
             var childEntsResp = await entMgr.ListChildEnterprises(parentEntLookup);
 
-            var childEnts = childEntsResp.Model ?? new List<Graphs.Registry.Enterprises.Enterprise>();
+            //  Paging impl, could eventually shift this all the way down to the DB, probably preferable, but this is better to start
+            var pagedChildEnts = childEntsResp.Model?.Page(State.Enterprise.Page, State.Enterprise.PageSize);
 
-            State.Enterprise.ChildEnterprises = childEnts.Select(ce => new IoTEnsembleChildEnterprise()
+            var childEnts = new List<IoTEnsembleChildEnterprise>();
+
+            //  using each iterator from our internal library so we can still support async/await to free up threads during api calls
+            await pagedChildEnts.Each(async childEnt =>
             {
-                Name = ce.Name,
+                //  The main issue that you were having was the missing await operator, similar to how async/await work in TS
+                //      with Promises, except in C3# its tasks
+                var devicesResp = await appArch.ListEnrolledDevices(childEnt.EnterpriseLookup);
 
-                Lookup = ce.EnterpriseLookup,
+                var iotChildEnt = new IoTEnsembleChildEnterprise()
+                {
+                    Name = childEnt.Name,
+                    Lookup = childEnt.EnterpriseLookup,
+                    DeviceCount = devicesResp.Model?.TotalRecords ?? 0
+                };
 
-                Devices = appArch.ListEnrolledDevices(ce.EnterpriseLookup).Model.Items.Select(m =>
-                            {
-                                var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
+                iotChildEnt.Devices = devicesResp.Model?.Items?.Select(device =>
+                {
+                    var devInfo = device.JSONConvert<IoTEnsembleDeviceInfo>();
 
-                                devInfo.DeviceName = devInfo.DeviceID.Replace($"{ce.EnterpriseLookup}-", String.Empty);
+                    devInfo.DeviceName = devInfo.DeviceID.Replace($"{childEnt.EnterpriseLookup}-", String.Empty);
+                }).ToList();
 
-                                return devInfo;
+                childEnts.Add(childEnt);
+            });
 
-                            }).ToList()
-
-            }).ToList();
+            State.Enterprise.ChildEnterprises = childEnts;
 
             State.Loading = false;
         }
