@@ -58,7 +58,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #endregion
 
         #region API Methods
-        public virtual async Task LoadChildEnterprises(EnterpriseManagerClient entMgr, string parentEntLookup)
+        public virtual async Task LoadChildEnterprises(EnterpriseManagerClient entMgr, string parentEntLookup, ApplicationArchitectClient appArch)
         {
             var childEntsResp = await entMgr.ListChildEnterprises(parentEntLookup);
 
@@ -66,7 +66,20 @@ namespace LCU.State.API.IoTEnsemble.State
 
             State.Enterprise.ChildEnterprises = childEnts.Select(ce => new IoTEnsembleChildEnterprise()
             {
-                Name = ce.Name
+                Name = ce.Name,
+
+                Lookup = ce.EnterpriseLookup,
+
+                Devices = appArch.ListEnrolledDevices(ce.EnterpriseLookup).Model.Items.Select(m =>
+                            {
+                                var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
+
+                                devInfo.DeviceName = devInfo.DeviceID.Replace($"{ce.EnterpriseLookup}-", String.Empty);
+
+                                return devInfo;
+
+                            }).ToList()
+
             }).ToList();
 
             State.Loading = false;
@@ -82,7 +95,15 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     var activeEnt = State.Enterprise.ChildEnterprises.FirstOrDefault(ce => ce.Lookup == State.Enterprise.ActiveEnterpriseLookup);
 
-                    // activeEnt.Devices = enrolledDevices.Model.Items.Select(..see shared logic..).ToList();
+                    activeEnt.Devices = enrolledDevices.Model.Items.Select(m =>
+                            {
+                                var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
+
+                                devInfo.DeviceName = devInfo.DeviceID.Replace($"{State.Enterprise.ActiveEnterpriseLookup}-", String.Empty);
+
+                                return devInfo;
+
+                            }).ToList();
 
                     activeEnt.DeviceCount = enrolledDevices.Model.TotalRecords;
                 }

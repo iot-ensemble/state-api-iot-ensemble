@@ -66,5 +66,8 @@ namespace LCU.State.API.IoTEnsemble.State
         
         [DataMember]
         public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual DateTime SignUpDate { get; set; }
     }
 }
