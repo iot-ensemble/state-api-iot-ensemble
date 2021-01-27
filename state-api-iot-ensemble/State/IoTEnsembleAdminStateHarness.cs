@@ -40,19 +40,12 @@ using Gremlin.Net.Driver.Exceptions;
 
 namespace LCU.State.API.IoTEnsemble.State
 {
-    public class IoTEnsembleAdminStateHarness : LCUStateHarness<IoTEnsembleAdminState>
+    public class IoTEnsembleAdminStateHarness : IoTEnsembleStateHarness<IoTEnsembleAdminState>
     {
         #region Constants
         #endregion
 
         #region Fields
-        protected readonly string deviceEnv;
-
-        protected readonly string telemetryRoot;
-
-        protected readonly string warmTelemetryContainer;
-
-        protected readonly string warmTelemetryDatabase;
         #endregion
 
         #region Properties
@@ -61,18 +54,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #region Constructors
         public IoTEnsembleAdminStateHarness(IoTEnsembleAdminState state, ILogger logger)
             : base(state ?? new IoTEnsembleAdminState(), logger)
-        {
-            deviceEnv = Environment.GetEnvironmentVariable("LCU-DEVICE-ENVIRONMENT") ?? String.Empty;
-
-            telemetryRoot = Environment.GetEnvironmentVariable("LCU-TELEMETRY-ROOT");
-
-            if (telemetryRoot.IsNullOrEmpty())
-                telemetryRoot = String.Empty;
-
-            warmTelemetryContainer = Environment.GetEnvironmentVariable("LCU-WARM-STORAGE-TELEMETRY-CONTAINER");
-
-            warmTelemetryDatabase = Environment.GetEnvironmentVariable("LCU-WARM-STORAGE-DATABASE");
-        }
+        { }
         #endregion
 
         #region API Methods
@@ -84,9 +66,40 @@ namespace LCU.State.API.IoTEnsemble.State
 
             State.Loading = false;
         }
-        
-        public virtual async Task Refresh(EnterpriseManagerClient entMgr)
+
+        public virtual async Task LoadActiveEnterpriseDetails(ApplicationArchitectClient appArch)
         {
+            if (!State.Enterprise.ActiveEnterpriseLookup.IsNullOrEmpty())
+            {
+                var enrolledDevices = await appArch.ListEnrolledDevices(State.Enterprise.ActiveEnterpriseLookup);
+
+                if (enrolledDevices.Status)
+                {
+                    var activeEnt = State.Enterprise.ChildEnterprises.FirstOrDefault(ce => ce.Lookup == State.Enterprise.ActiveEnterpriseLookup);
+
+                    // activeEnt.Devices = enrolledDevices.Model.Items.Select(..see shared logic..).ToList();
+
+                    activeEnt.DeviceCount = enrolledDevices.Model.TotalRecords;
+                }
+                else
+                {
+                    log.LogError($"Unable to load LoadActiveEnterpriseDetails: {enrolledDevices.Status}");
+                }
+            }
+        }
+
+        public virtual async Task Refresh(ApplicationArchitectClient appArch, EnterpriseManagerClient entMgr, string parentEntLookup)
+        {
+            await LoadChildEnterprises(entMgr, parentEntLookup);
+
+            await LoadActiveEnterpriseDetails(appArch);
+
+            State.Loading = false;
+        }
+
+        public virtual async Task SetActiveEnterprise(string entLookup)
+        {
+            State.Enterprise.ActiveEnterpriseLookup = entLookup;
 
             State.Loading = false;
         }

@@ -77,7 +77,7 @@ namespace LCU.State.API.IoTEnsemble.Host
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
 
-                    await harness.Refresh(entMgr);
+                    await harness.Refresh(appArch, entMgr, stateDetails.EnterpriseLookup);
 
                     return Status.Success;
                 });

@@ -40,7 +40,7 @@ using Gremlin.Net.Driver.Exceptions;
 
 namespace LCU.State.API.IoTEnsemble.State
 {
-    public class IoTEnsembleSharedStateHarness : LCUStateHarness<IoTEnsembleSharedState>
+    public class IoTEnsembleSharedStateHarness : IoTEnsembleStateHarness<IoTEnsembleSharedState>
     {
         #region Constants
         const string DETAILS_PANE_ENABLED = "IoTEnsemble:DetailsPaneEnabled";
@@ -53,13 +53,6 @@ namespace LCU.State.API.IoTEnsemble.State
         #endregion
 
         #region Fields
-        protected readonly string deviceEnv;
-
-        protected readonly string telemetryRoot;
-
-        protected readonly string warmTelemetryContainer;
-
-        protected readonly string warmTelemetryDatabase;
         #endregion
 
         #region Properties
@@ -68,18 +61,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #region Constructors
         public IoTEnsembleSharedStateHarness(IoTEnsembleSharedState state, ILogger logger)
             : base(state ?? new IoTEnsembleSharedState(), logger)
-        {
-            deviceEnv = Environment.GetEnvironmentVariable("LCU-DEVICE-ENVIRONMENT") ?? String.Empty;
-
-            telemetryRoot = Environment.GetEnvironmentVariable("LCU-TELEMETRY-ROOT");
-
-            if (telemetryRoot.IsNullOrEmpty())
-                telemetryRoot = String.Empty;
-
-            warmTelemetryContainer = Environment.GetEnvironmentVariable("LCU-WARM-STORAGE-TELEMETRY-CONTAINER");
-
-            warmTelemetryDatabase = Environment.GetEnvironmentVariable("LCU-WARM-STORAGE-DATABASE");
-        }
+        { }
         #endregion
 
         #region API Methods
