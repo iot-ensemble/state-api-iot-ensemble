@@ -116,7 +116,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task Refresh(ApplicationArchitectClient appArch, EnterpriseManagerClient entMgr, string parentEntLookup)
         {
-            await LoadChildEnterprises(entMgr, parentEntLookup);
+            await LoadChildEnterprises(entMgr, parentEntLookup, appArch);
 
             await LoadActiveEnterpriseDetails(appArch);
 
