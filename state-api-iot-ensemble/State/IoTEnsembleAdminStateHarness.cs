@@ -64,7 +64,7 @@ namespace LCU.State.API.IoTEnsemble.State
             var childEntsResp = await entMgr.ListChildEnterprises(parentEntLookup);
 
             //  Paging impl, could eventually shift this all the way down to the DB, probably preferable, but this is better to start
-            var pagedChildEnts = childEntsResp.Model?.Page(State.Enterprise.Page, State.Enterprise.PageSize);
+            var pagedChildEnts = childEntsResp.Model?.Page(State.EnterpriseConfig.Page, State.EnterpriseConfig.PageSize);
 
             var childEnts = new List<IoTEnsembleChildEnterprise>();
 
@@ -92,26 +92,26 @@ namespace LCU.State.API.IoTEnsemble.State
                 childEnts.Add(childEnt);
             });
 
-            State.Enterprise.ChildEnterprises = childEnts;
+            State.EnterpriseConfig.ChildEnterprises = childEnts;
 
             State.Loading = false;
         }
 
         public virtual async Task LoadActiveEnterpriseDetails(ApplicationArchitectClient appArch)
         {
-            if (!State.Enterprise.ActiveEnterpriseLookup.IsNullOrEmpty())
+            if (!State.EnterpriseConfig.ActiveEnterpriseLookup.IsNullOrEmpty())
             {
-                var enrolledDevices = await appArch.ListEnrolledDevices(State.Enterprise.ActiveEnterpriseLookup);
+                var enrolledDevices = await appArch.ListEnrolledDevices(State.EnterpriseConfig.ActiveEnterpriseLookup);
 
                 if (enrolledDevices.Status)
                 {
-                    var activeEnt = State.Enterprise.ChildEnterprises.FirstOrDefault(ce => ce.Lookup == State.Enterprise.ActiveEnterpriseLookup);
+                    var activeEnt = State.EnterpriseConfig.ChildEnterprises.FirstOrDefault(ce => ce.Lookup == State.EnterpriseConfig.ActiveEnterpriseLookup);
 
                     activeEnt.Devices = enrolledDevices.Model.Items.Select(m =>
                             {
                                 var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
 
-                                devInfo.DeviceName = devInfo.DeviceID.Replace($"{State.Enterprise.ActiveEnterpriseLookup}-", String.Empty);
+                                devInfo.DeviceName = devInfo.DeviceID.Replace($"{State.EnterpriseConfig.ActiveEnterpriseLookup}-", String.Empty);
 
                                 return devInfo;
 
@@ -137,7 +137,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task SetActiveEnterprise(ApplicationArchitectClient appArch, string entLookup)
         {
-            State.Enterprise.ActiveEnterpriseLookup = entLookup;
+            State.EnterpriseConfig.ActiveEnterpriseLookup = entLookup;
 
             await LoadActiveEnterpriseDetails(appArch);
 

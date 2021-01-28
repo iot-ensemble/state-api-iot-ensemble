@@ -27,7 +27,7 @@ namespace LCU.State.API.IoTEnsemble.State
     public class IoTEnsembleAdminState
     {
         [DataMember]
-        public virtual IoTEnsembleEnterpriseConfig Enterprise { get; set; }
+        public virtual IoTEnsembleEnterpriseConfig EnterpriseConfig { get; set; }
 
         [DataMember]
         public virtual bool Loading { get; set; }
@@ -35,7 +35,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #region Constructors
         public IoTEnsembleAdminState()
         {
-            Enterprise = new IoTEnsembleEnterpriseConfig();
+            EnterpriseConfig = new IoTEnsembleEnterpriseConfig();
         }
         #endregion
     }
@@ -49,6 +49,21 @@ namespace LCU.State.API.IoTEnsemble.State
         
         [DataMember]
         public virtual List<IoTEnsembleChildEnterprise> ChildEnterprises { get; set; }
+
+        [DataMember]
+        public virtual int Page { get; set; }
+
+        [DataMember]
+        public virtual int PageSize { get; set; }
+
+        #region Constructors
+        public IoTEnsembleEnterpriseConfig()
+        {            
+            Page = 1;
+
+            PageSize = 10;
+        }
+        #endregion
     }
     
     [Serializable]
@@ -68,22 +83,14 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual string Name { get; set; }
 
         [DataMember]
-        public virtual int Page { get; set; }
-
-        [DataMember]
-        public virtual int PageSize { get; set; }
-
-        [DataMember]
         public virtual DateTime SignUpDate { get; set; }
+
 
         #region Constructors
         public IoTEnsembleChildEnterprise()
         {
             Devices = new List<IoTEnsembleDeviceInfo>();
             
-            Page = 1;
-
-            PageSize = 10;
         }
         #endregion
     }
