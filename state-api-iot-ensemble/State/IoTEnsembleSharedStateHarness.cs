@@ -991,7 +991,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 page = 1;
 
             if (!pageSize.HasValue || pageSize.Value < 1)
-                pageSize = 1;
+                pageSize = 10;
 
             try
             {
@@ -999,6 +999,8 @@ namespace LCU.State.API.IoTEnsemble.State
                     page.Value, includeEmulated);
 
                 response.Payloads = payloads.Items.ToList();
+
+                response.TotalPayloads = payloads.TotalRecords;
 
                 response.Status = Status.Success;
             }
