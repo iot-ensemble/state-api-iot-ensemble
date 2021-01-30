@@ -81,6 +81,9 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
 
+                    if (dataReq == null)
+                        dataReq = new WarmQueryRequest();
+
                     if (req.Query.ContainsKey("endDate"))
                         dataReq.EndDate = req.Query["endDate"].ToString().As<DateTime>();
 
