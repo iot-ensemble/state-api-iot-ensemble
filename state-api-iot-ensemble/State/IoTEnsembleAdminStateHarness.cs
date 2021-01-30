@@ -66,10 +66,10 @@ namespace LCU.State.API.IoTEnsemble.State
             //  Paging impl, could eventually shift this all the way down to the DB, probably preferable, but this is better to start
             var pagedChildEnts = childEntsResp.Model?.Page(State.EnterpriseConfig.Page, State.EnterpriseConfig.PageSize);
 
-            var childEnts = new List<IoTEnsembleChildEnterprise>();
+            var iotChildEnts = new List<IoTEnsembleChildEnterprise>();
 
             //  using each iterator from our internal library so we can still support async/await to free up threads during api calls
-            await pagedChildEnts.Each(async childEnt =>
+            await pagedChildEnts.Items.Each(async childEnt =>
             {
                 //  The main issue that you were having was the missing await operator, similar to how async/await work in TS
                 //      with Promises, except in C3# its tasks
@@ -87,12 +87,14 @@ namespace LCU.State.API.IoTEnsemble.State
                     var devInfo = device.JSONConvert<IoTEnsembleDeviceInfo>();
 
                     devInfo.DeviceName = devInfo.DeviceID.Replace($"{childEnt.EnterpriseLookup}-", String.Empty);
+
+                    return devInfo;
                 }).ToList();
 
-                childEnts.Add(childEnt);
+                iotChildEnts.Add(iotChildEnt);
             });
 
-            State.EnterpriseConfig.ChildEnterprises = childEnts;
+            State.EnterpriseConfig.ChildEnterprises = iotChildEnts;
 
             State.Loading = false;
         }
