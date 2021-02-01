@@ -1085,14 +1085,14 @@ namespace LCU.State.API.IoTEnsemble.State
 
                                         var blobData = JsonConvert.DeserializeObject<JArray>(blobContents);
 
-                                        // if (downloadedData.Count == 0)
-                                        downloadedDataDict.Add(maxTime, blobData.ToObject<List<JObject>>());
+                                        lock (downloadedDataDict)
+                                            downloadedDataDict.Add(maxTime, blobData.ToObject<List<JObject>>());
                                     }
                                 }, parallel: true);
                             } while (contToken != null);
-                        });
+                        }, parallel: true);
 
-                        downloadedData = downloadedDataDict.OrderBy(dd => dd.Key).SelectMany(dd => dd. Value).ToList();
+                        downloadedData = downloadedDataDict.OrderBy(dd => dd.Key).SelectMany(dd => dd.Value).ToList();
 
                         return false;
                     }
