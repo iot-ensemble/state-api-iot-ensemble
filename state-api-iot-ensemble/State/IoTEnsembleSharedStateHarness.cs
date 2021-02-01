@@ -888,7 +888,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #region Storage Access
         public virtual async Task<HttpResponseMessage> ColdQuery(CloudBlobDirectory coldBlob, List<string> selectedDeviceIds, int pageSize, int page,
             bool includeEmulated, DateTime? startDate, DateTime? endDate, ColdQueryResultTypes resultType, bool flatten,
-            ColdQueryDataTypes dataType, bool zip)
+            ColdQueryDataTypes dataType, bool zip, bool asFile)
         {
             var status = Status.GeneralError;
 
@@ -902,9 +902,14 @@ namespace LCU.State.API.IoTEnsemble.State
 
                     var fileName = buildFileName(dataType, startDate.Value, endDate.Value, fileExtension);
 
-                    log.LogInformation($"Loaded {fileName} with extension {fileExtension}");
+                    log.LogInformation($"Loading {fileName} with extension {fileExtension}");
 
-                    var downloadedData = await downloadData(coldBlob, dataType, State.UserEnterpriseLookup, startDate, endDate);
+                    var entLookups = new List<string>() { State.UserEnterpriseLookup };
+
+                    if (includeEmulated)
+                        entLookups.Add("EMULATED");
+
+                    var downloadedData = await downloadData(coldBlob, dataType, entLookups, startDate, endDate);
 
                     log.LogInformation($"Downloaded data records: {downloadedData.Count}");
 
@@ -939,9 +944,13 @@ namespace LCU.State.API.IoTEnsemble.State
 
                     content = new ByteArrayContent(bytes);
 
-                    content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+                    if (asFile)
+                    {
+                        content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
 
-                    content.Headers.ContentDisposition.FileName = fileName;
+                        content.Headers.ContentDisposition.FileName = fileName;
+
+                    }
 
                     content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
 
@@ -1031,7 +1040,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return fileName;
         }
 
-        protected virtual async Task<List<JObject>> downloadData(CloudBlobDirectory coldBlob, ColdQueryDataTypes dataType, string entLookup,
+        protected virtual async Task<List<JObject>> downloadData(CloudBlobDirectory coldBlob, ColdQueryDataTypes dataType, List<string> entLookups,
             DateTime? startDate, DateTime? endDate)
         {
             BlobContinuationToken contToken = null;
@@ -1043,42 +1052,47 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     try
                     {
-                        downloadedData = new List<JObject>();
+                        var downloadedDataDict = new Dictionary<DateTime, List<JObject>>();
 
-                        do
+                        await entLookups.Each(async entLookup =>
                         {
-                            var dataTypeColdBlob = coldBlob.GetDirectoryReference(dataType.ToString().ToLower());
-
-                            var entColdBlob = dataTypeColdBlob.GetDirectoryReference(State.UserEnterpriseLookup);
-
-                            log.LogInformation($"Listing blob segments...");
-
-                            var blobSeg = await entColdBlob.ListBlobsSegmentedAsync(true, BlobListingDetails.Metadata, null, contToken, null, null);
-
-                            contToken = blobSeg.ContinuationToken;
-
-                            // foreach (var item in blobSeg.Results)
-                            await blobSeg.Results.Each(async item =>
+                            do
                             {
-                                var blob = (CloudBlockBlob)item;
+                                var dataTypeColdBlob = coldBlob.GetDirectoryReference(dataType.ToString().ToLower());
 
-                                await blob.FetchAttributesAsync();
+                                var entColdBlob = dataTypeColdBlob.GetDirectoryReference(entLookup);
 
-                                var minTime = DateTime.Parse(blob.Metadata["MinTime"]);
+                                log.LogInformation($"Listing blob segments...");
 
-                                var maxTime = DateTime.Parse(blob.Metadata["MaxTime"]);
+                                var blobSeg = await entColdBlob.ListBlobsSegmentedAsync(true, BlobListingDetails.Metadata, null, contToken, null, null);
 
-                                if ((startDate <= minTime && minTime <= endDate) || (startDate <= maxTime && maxTime <= endDate))
+                                contToken = blobSeg.ContinuationToken;
+
+                                // foreach (var item in blobSeg.Results)
+                                await blobSeg.Results.Each(async item =>
                                 {
-                                    var blobContents = await blob.DownloadTextAsync();
+                                    var blob = (CloudBlockBlob)item;
 
-                                    var blobData = JsonConvert.DeserializeObject<JArray>(blobContents);
+                                    await blob.FetchAttributesAsync();
 
-                                    if (downloadedData.Count == 0)
-                                        downloadedData.AddRange(blobData.ToObject<List<JObject>>());
-                                }
-                            }, parallel: true);
-                        } while (contToken != null);
+                                    var minTime = DateTime.Parse(blob.Metadata["MinTime"]);
+
+                                    var maxTime = DateTime.Parse(blob.Metadata["MaxTime"]);
+
+                                    if ((startDate <= minTime && minTime <= endDate) || (startDate <= maxTime && maxTime <= endDate))
+                                    {
+                                        var blobContents = await blob.DownloadTextAsync();
+
+                                        var blobData = JsonConvert.DeserializeObject<JArray>(blobContents);
+
+                                        // if (downloadedData.Count == 0)
+                                        downloadedDataDict.Add(maxTime, blobData.ToObject<List<JObject>>());
+                                    }
+                                }, parallel: true);
+                            } while (contToken != null);
+                        });
+
+                        downloadedData = downloadedDataDict.OrderBy(dd => dd.Key).SelectMany(dd => dd. Value).ToList();
 
                         return false;
                     }

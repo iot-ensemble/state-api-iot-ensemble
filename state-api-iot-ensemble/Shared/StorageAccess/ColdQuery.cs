@@ -37,6 +37,9 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
     public class ColdQueryRequest : BaseRequest
     {
         [DataMember]
+        public virtual bool AsFile { get; set; }
+
+        [DataMember]
         [JsonConverter(typeof(StringEnumConverter))]
         public virtual ColdQueryDataTypes DataType { get; set; }
 
@@ -96,6 +99,9 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
                     if (dataReq == null)
                         dataReq = new ColdQueryRequest();
 
+                    if (req.Query.ContainsKey("asFile"))
+                        dataReq.AsFile = req.Query["asFile"].ToString().As<bool>();
+
                     if (req.Query.ContainsKey("dataType"))
                         dataReq.DataType = req.Query["dataType"].ToString().As<ColdQueryDataTypes>(ColdQueryDataTypes.Telemetry);
 
@@ -136,7 +142,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
 
                     queried = await harness.ColdQuery(coldBlob, dataReq.SelectedDeviceIDs, dataReq.PageSize, dataReq.Page,
                         dataReq.IncludeEmulated, dataReq.StartDate, dataReq.EndDate, dataReq.ResultType, dataReq.Flatten, dataReq.DataType,
-                        dataReq.Zip);
+                        dataReq.Zip, dataReq.AsFile);
 
                     return Status.Success;
                 }, preventStatusException: true, withLock: false);
