@@ -140,6 +140,8 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
                     if (dataReq.EndDate == null)
                         dataReq.EndDate = now;
 
+                    log.LogInformation($"Running cold query with: {dataReq.ToJSON()}");
+
                     queried = await harness.ColdQuery(coldBlob, dataReq.SelectedDeviceIDs, dataReq.PageSize, dataReq.Page,
                         dataReq.IncludeEmulated, dataReq.StartDate, dataReq.EndDate, dataReq.ResultType, dataReq.Flatten, dataReq.DataType,
                         dataReq.Zip, dataReq.AsFile);

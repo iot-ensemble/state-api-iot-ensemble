@@ -1062,7 +1062,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                                 var entColdBlob = dataTypeColdBlob.GetDirectoryReference(entLookup);
 
-                                log.LogInformation($"Listing blob segments...");
+                                log.LogInformation($"Listing blob segments for {entLookup} and continuation {contToken}...");
 
                                 var blobSeg = await entColdBlob.ListBlobsSegmentedAsync(true, BlobListingDetails.Metadata, null, contToken, null, null);
 
@@ -1081,6 +1081,8 @@ namespace LCU.State.API.IoTEnsemble.State
 
                                     if ((startDate <= minTime && minTime <= endDate) || (startDate <= maxTime && maxTime <= endDate))
                                     {
+                                        log.LogInformation($"Adding blobs for {entLookup} and continuation {contToken} to downloads at {minTime}/{maxTime}");
+
                                         var blobContents = await blob.DownloadTextAsync();
 
                                         var blobData = JsonConvert.DeserializeObject<JArray>(blobContents);
