@@ -1088,7 +1088,12 @@ namespace LCU.State.API.IoTEnsemble.State
                                         var blobData = JsonConvert.DeserializeObject<JArray>(blobContents);
 
                                         lock (downloadedDataDict)
-                                            downloadedDataDict.Add(maxTime, blobData.ToObject<List<JObject>>());
+                                        {
+                                            if (downloadedDataDict.ContainsKey(maxTime))
+                                                downloadedDataDict[maxTime].AddRange(blobData.ToObject<List<JObject>>());
+                                            else
+                                                downloadedDataDict.Add(maxTime, blobData.ToObject<List<JObject>>());
+                                        }
                                     }
                                 }, parallel: true);
                             } while (contToken != null);
