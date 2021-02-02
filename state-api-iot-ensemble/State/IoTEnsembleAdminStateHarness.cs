@@ -96,6 +96,11 @@ namespace LCU.State.API.IoTEnsemble.State
 
             State.EnterpriseConfig.ChildEnterprises = iotChildEnts;
 
+            var activeEnt = State.EnterpriseConfig.ChildEnterprises.FirstOrDefault(ce => ce.Lookup == State.EnterpriseConfig.ActiveEnterpriseLookup);
+
+            if (activeEnt == null)
+                State.EnterpriseConfig.ActiveEnterpriseLookup = null;
+
             State.Loading = false;
         }
 
