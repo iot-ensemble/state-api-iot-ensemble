@@ -101,7 +101,6 @@ namespace LCU.State.API.IoTEnsemble.State
             if (activeEnt == null)
                 State.EnterpriseConfig.ActiveEnterpriseLookup = null;
 
-            State.Loading = false;
         }
 
         public virtual async Task LoadActiveEnterpriseDetails(ApplicationArchitectClient appArch)
@@ -126,7 +125,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                     activeEnt.DeviceCount = enrolledDevices.Model.TotalRecords;
 
-                    State.Loading = false;
+                    
                 }
                 else
                 {
@@ -150,7 +149,6 @@ namespace LCU.State.API.IoTEnsemble.State
 
             await LoadActiveEnterpriseDetails(appArch);
 
-            State.Loading = false;
         }
 
         public virtual async Task UpdateEnterprisesSync(EnterpriseManagerClient entMgr,
@@ -165,7 +163,6 @@ namespace LCU.State.API.IoTEnsemble.State
 
             await LoadChildEnterprises(entMgr, Environment.GetEnvironmentVariable("LCU-ENTERPRISE-LOOKUP"), appArch);
     
-            State.Loading = false;
 
             }
 
