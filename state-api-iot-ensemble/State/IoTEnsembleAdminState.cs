@@ -51,6 +51,9 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual List<IoTEnsembleChildEnterprise> ChildEnterprises { get; set; }
 
         [DataMember]
+        public virtual int? TotalChildEnterprisesCount { get; set; }
+
+        [DataMember]
         public virtual int Page { get; set; }
 
         [DataMember]
@@ -62,6 +65,7 @@ namespace LCU.State.API.IoTEnsemble.State
             Page = 1;
 
             PageSize = 10;
+
         }
         #endregion
     }

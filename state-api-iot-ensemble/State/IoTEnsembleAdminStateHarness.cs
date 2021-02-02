@@ -63,16 +63,15 @@ namespace LCU.State.API.IoTEnsemble.State
         {
             var childEntsResp = await entMgr.ListChildEnterprises(parentEntLookup);
 
-            //  Paging impl, could eventually shift this all the way down to the DB, probably preferable, but this is better to start
+            State.EnterpriseConfig.TotalChildEnterprisesCount = childEntsResp.Model?.Count;
+
             var pagedChildEnts = childEntsResp.Model?.Page(State.EnterpriseConfig.Page, State.EnterpriseConfig.PageSize);
 
             var iotChildEnts = new List<IoTEnsembleChildEnterprise>();
 
-            //  using each iterator from our internal library so we can still support async/await to free up threads during api calls
             await pagedChildEnts.Items.Each(async childEnt =>
             {
-                //  The main issue that you were having was the missing await operator, similar to how async/await work in TS
-                //      with Promises, except in C3# its tasks
+                
                 var devicesResp = await appArch.ListEnrolledDevices(childEnt.EnterpriseLookup);
 
                 var iotChildEnt = new IoTEnsembleChildEnterprise()
@@ -149,6 +148,26 @@ namespace LCU.State.API.IoTEnsemble.State
             await LoadActiveEnterpriseDetails(appArch);
 
             State.Loading = false;
+        }
+
+        public virtual async Task UpdateEnterprisesSync(EnterpriseManagerClient entMgr, string parentEntLookup,
+            ApplicationArchitectClient appArch, int page, int pageSize){
+
+            if (State.EnterpriseConfig != null)
+            {
+            
+            State.EnterpriseConfig.Page = page;
+
+            State.EnterpriseConfig.PageSize = pageSize;
+
+            await LoadChildEnterprises(entMgr, parentEntLookup, appArch);
+
+            State.Loading = false;
+
+            }
+
+            else
+                throw new Exception("Unable to load the enterprise config, please try again or contact support.");
         }
         #endregion
 
