@@ -43,14 +43,12 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
         protected string parentEntLookup;
 
-        public UpdateEnterprisesSync(EnterpriseManagerClient entMgr, string parentEntLookup,
+        public UpdateEnterprisesSync(EnterpriseManagerClient entMgr, 
             ApplicationArchitectClient appArch)
         {
             this.appArch = appArch;
 
             this.entMgr = entMgr;
-
-            this.parentEntLookup = parentEntLookup;
          }
 
         [FunctionName("UpdateEnterprisesSync")]
@@ -63,7 +61,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
             {
                 log.LogInformation($"UpdateEnterprisesSync");
 
-                await harness.UpdateEnterprisesSync(entMgr, parentEntLookup, appArch, dataReq.Page, dataReq.PageSize);
+                await harness.UpdateEnterprisesSync(entMgr, appArch, dataReq.Page, dataReq.PageSize);
 
                 return Status.Success;
             });

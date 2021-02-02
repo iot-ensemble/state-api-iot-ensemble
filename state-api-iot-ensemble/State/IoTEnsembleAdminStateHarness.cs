@@ -150,7 +150,7 @@ namespace LCU.State.API.IoTEnsemble.State
             State.Loading = false;
         }
 
-        public virtual async Task UpdateEnterprisesSync(EnterpriseManagerClient entMgr, string parentEntLookup,
+        public virtual async Task UpdateEnterprisesSync(EnterpriseManagerClient entMgr,
             ApplicationArchitectClient appArch, int page, int pageSize){
 
             if (State.EnterpriseConfig != null)
@@ -160,8 +160,8 @@ namespace LCU.State.API.IoTEnsemble.State
 
             State.EnterpriseConfig.PageSize = pageSize;
 
-            await LoadChildEnterprises(entMgr, parentEntLookup, appArch);
-
+            await LoadChildEnterprises(entMgr, Environment.GetEnvironmentVariable("LCU-ENTERPRISE-LOOKUP"), appArch);
+    
             State.Loading = false;
 
             }
