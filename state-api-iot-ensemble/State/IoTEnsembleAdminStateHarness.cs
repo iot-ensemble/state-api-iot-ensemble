@@ -78,7 +78,8 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     Name = childEnt.Name,
                     Lookup = childEnt.EnterpriseLookup,
-                    DeviceCount = devicesResp.Model?.TotalRecords ?? 0
+                    DeviceCount = devicesResp.Model?.TotalRecords ?? 0,
+                    
                 };
 
                 iotChildEnt.Devices = devicesResp.Model?.Items?.Select(device =>
@@ -124,6 +125,8 @@ namespace LCU.State.API.IoTEnsemble.State
                     }).ToList();
 
                     activeEnt.DeviceCount = enrolledDevices.Model.TotalRecords;
+
+                    State.Loading = false;
                 }
                 else
                 {
