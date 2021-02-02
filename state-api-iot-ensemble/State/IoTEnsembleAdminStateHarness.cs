@@ -110,14 +110,14 @@ namespace LCU.State.API.IoTEnsemble.State
                     var activeEnt = State.EnterpriseConfig.ChildEnterprises.FirstOrDefault(ce => ce.Lookup == State.EnterpriseConfig.ActiveEnterpriseLookup);
 
                     activeEnt.Devices = enrolledDevices.Model.Items.Select(m =>
-                            {
-                                var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
+                    {
+                        var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
 
-                                devInfo.DeviceName = devInfo.DeviceID.Replace($"{State.EnterpriseConfig.ActiveEnterpriseLookup}-", String.Empty);
+                        devInfo.DeviceName = devInfo.DeviceID.Replace($"{State.EnterpriseConfig.ActiveEnterpriseLookup}-", String.Empty);
 
-                                return devInfo;
+                        return devInfo;
 
-                            }).ToList();
+                    }).ToList();
 
                     activeEnt.DeviceCount = enrolledDevices.Model.TotalRecords;
                 }
