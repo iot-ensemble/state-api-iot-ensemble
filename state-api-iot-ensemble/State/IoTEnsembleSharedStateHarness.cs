@@ -728,6 +728,10 @@ namespace LCU.State.API.IoTEnsemble.State
 
                         status = sendResp.Status;
 
+                        State.DevicesConfig.Devices.Find(device => device.DeviceName == deviceName).LastStatusUpdate =  status;
+
+
+
                         return !status;
                     }
                     catch (Exception ex)
