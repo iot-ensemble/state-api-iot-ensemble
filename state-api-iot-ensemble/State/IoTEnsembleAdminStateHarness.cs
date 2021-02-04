@@ -171,6 +171,11 @@ namespace LCU.State.API.IoTEnsemble.State
             return revoked;
         }
 
+        public virtual async Task RemoveChildEnterprise(ApplicationArchitectClient appArch, string ChildEntLookup)
+        {
+
+        }
+
         public virtual async Task SetActiveEnterprise(ApplicationArchitectClient appArch, string entLookup)
         {
             State.EnterpriseConfig.ActiveEnterpriseLookup = entLookup;
