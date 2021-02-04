@@ -619,35 +619,30 @@ namespace LCU.State.API.IoTEnsemble.State
             if (State.Telemetry.PageSize < 1)
                 State.Telemetry.PageSize = 10;
 
-            if (State.Telemetry.Enabled)
+            State.Telemetry.Payloads = new List<IoTEnsembleTelemetryPayload>();
+
+            try
             {
-                State.Telemetry.Payloads = new List<IoTEnsembleTelemetryPayload>();
+                var payloads = await queryTelemetryPayloads(client, State.UserEnterpriseLookup,
+                        State.SelectedDeviceIDs, State.Telemetry.PageSize, State.Telemetry.Page, State.Emulated.Enabled);
 
-                try
-                {
-                    var payloads = await queryTelemetryPayloads(client, State.UserEnterpriseLookup,
-                            State.SelectedDeviceIDs, State.Telemetry.PageSize, State.Telemetry.Page, State.Emulated.Enabled);
+                if (!payloads.Items.IsNullOrEmpty())
+                    State.Telemetry.Payloads.AddRange(payloads.Items);
 
-                    if (!payloads.Items.IsNullOrEmpty())
-                        State.Telemetry.Payloads.AddRange(payloads.Items);
+                State.Telemetry.TotalPayloads = payloads.TotalRecords;
 
-                    State.Telemetry.TotalPayloads = payloads.TotalRecords;
+                status.Metadata["RefreshRate"] = State.Telemetry.RefreshRate >= 10 ? State.Telemetry.RefreshRate : 30;
 
-                    status.Metadata["RefreshRate"] = State.Telemetry.RefreshRate >= 10 ? State.Telemetry.RefreshRate : 30;
+                State.Telemetry.RefreshRate = status.Metadata["RefreshRate"].ToString().As<int>();
 
-                    State.Telemetry.RefreshRate = status.Metadata["RefreshRate"].ToString().As<int>();
-
-                    State.Telemetry.LastSyncedAt = DateTime.Now;
-                }
-                catch (Exception ex)
-                {
-                    log.LogError(ex, "There was an issue loading your device telemetry.");
-
-                    status = Status.GeneralError.Clone("There was an issue loading your device telemetry.");
-                }
+                State.Telemetry.LastSyncedAt = DateTime.Now;
             }
-            else
-                status = Status.GeneralError.Clone("Device Telemetry is Disabled");
+            catch (Exception ex)
+            {
+                log.LogError(ex, "There was an issue loading your device telemetry.");
+
+                status = Status.GeneralError.Clone("There was an issue loading your device telemetry.");
+            }
 
             return status;
         }
