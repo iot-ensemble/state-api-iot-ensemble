@@ -87,7 +87,7 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual string Name { get; set; }
 
         [DataMember]
-        public virtual DateTime SignUpDate { get; set; }
+        public virtual DateTime? SignUpDate { get; set; }
 
 
         #region Constructors

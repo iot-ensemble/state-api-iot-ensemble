@@ -20,6 +20,7 @@ using System.Security.Claims;
 using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
+using LCU.Personas.Client.Identity;
 
 namespace LCU.State.API.IoTEnsemble.Admin
 {
@@ -41,14 +42,17 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
         protected EnterpriseManagerClient entMgr;
 
-        protected string parentEntLookup;
+        protected IdentityManagerClient idMgr;
+
 
         public UpdateEnterprisesSync(EnterpriseManagerClient entMgr, 
-            ApplicationArchitectClient appArch)
+            ApplicationArchitectClient appArch, IdentityManagerClient idMgr)
         {
             this.appArch = appArch;
 
             this.entMgr = entMgr;
+
+            this.idMgr = idMgr;
          }
 
         [FunctionName("UpdateEnterprisesSync")]
@@ -61,7 +65,9 @@ namespace LCU.State.API.IoTEnsemble.Admin
             {
                 log.LogInformation($"UpdateEnterprisesSync");
 
-                await harness.UpdateEnterprisesSync(entMgr, appArch, dataReq.Page, dataReq.PageSize);
+                var stateDetails = StateUtils.LoadStateDetails(req);
+
+                await harness.UpdateEnterprisesSync(entMgr, appArch, idMgr, stateDetails.EnterpriseLookup, dataReq.Page, dataReq.PageSize);
 
                 return Status.Success;
             });

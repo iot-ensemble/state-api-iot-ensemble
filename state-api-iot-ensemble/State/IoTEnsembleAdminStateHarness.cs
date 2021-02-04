@@ -37,6 +37,7 @@ using System.Net;
 using CsvHelper;
 using Fathym.Design;
 using Gremlin.Net.Driver.Exceptions;
+using LCU.Graphs.Registry.Enterprises.Identity;
 
 namespace LCU.State.API.IoTEnsemble.State
 {
@@ -59,7 +60,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
         #region API Methods
         public virtual async Task LoadChildEnterprises(EnterpriseManagerClient entMgr, string parentEntLookup,
-            ApplicationArchitectClient appArch)
+            ApplicationArchitectClient appArch, IdentityManagerClient idMgr)
         {
             var childEntsResp = await entMgr.ListChildEnterprises(parentEntLookup);
 
@@ -74,11 +75,26 @@ namespace LCU.State.API.IoTEnsemble.State
                 
                 var devicesResp = await appArch.ListEnrolledDevices(childEnt.EnterpriseLookup);
 
+                var licenses = await idMgr.ListLicenseAccessTokens(parentEntLookup, childEnt.Name, new List<string>() { "iot" });
+            
+                DateTime? StartDate = null;
+
+                foreach (LicenseAccessToken token in licenses.Model)
+                {
+                    if(token.AccessStartDate != null){
+
+                        StartDate = token.AccessStartDate.UtcDateTime;
+
+                    }
+
+                }
+
                 var iotChildEnt = new IoTEnsembleChildEnterprise()
                 {
                     Name = childEnt.Name,
                     Lookup = childEnt.EnterpriseLookup,
                     DeviceCount = devicesResp.Model?.TotalRecords ?? 0,
+                    SignUpDate = StartDate
                     
                 };
 
@@ -134,9 +150,9 @@ namespace LCU.State.API.IoTEnsemble.State
             }
         }
 
-        public virtual async Task Refresh(ApplicationArchitectClient appArch, EnterpriseManagerClient entMgr, string parentEntLookup)
+        public virtual async Task Refresh(ApplicationArchitectClient appArch, EnterpriseManagerClient entMgr, string parentEntLookup, IdentityManagerClient idMgr)
         {
-            await LoadChildEnterprises(entMgr, parentEntLookup, appArch);
+            await LoadChildEnterprises(entMgr, parentEntLookup, appArch, idMgr);
 
             await LoadActiveEnterpriseDetails(appArch);
 
@@ -152,7 +168,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task UpdateEnterprisesSync(EnterpriseManagerClient entMgr,
-            ApplicationArchitectClient appArch, int page, int pageSize){
+            ApplicationArchitectClient appArch, IdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize){
 
             if (State.EnterpriseConfig != null)
             {
@@ -161,7 +177,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
             State.EnterpriseConfig.PageSize = pageSize;
 
-            await LoadChildEnterprises(entMgr, Environment.GetEnvironmentVariable("LCU-ENTERPRISE-LOOKUP"), appArch);
+            await LoadChildEnterprises(entMgr, parentEntLookup, appArch, idMgr);
     
 
             }
