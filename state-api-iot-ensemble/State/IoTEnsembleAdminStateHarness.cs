@@ -161,7 +161,12 @@ namespace LCU.State.API.IoTEnsemble.State
             State.Loading = false;
         }
 
-        public virtual async Task<bool> RevokeDeviceEnrollment(ApplicationArchitectClient appArch, EnterpriseManagerClient entMgr,
+        public virtual async Task<Status> RemoveChildEnterprise(ApplicationArchitectClient appArch, string ChildEntLookup)
+        {
+            return Status.Success;
+        }
+
+        public virtual async Task<Status> RevokeDeviceEnrollment(ApplicationArchitectClient appArch, EnterpriseManagerClient entMgr,
             IdentityManagerClient idMgr, string parentEntLookup, string deviceId)
         {
             var revoked = await revokeDeviceEnrollment(appArch, State.EnterpriseConfig.ActiveEnterpriseLookup, deviceId);
@@ -169,11 +174,6 @@ namespace LCU.State.API.IoTEnsemble.State
             await LoadChildEnterprises(entMgr, parentEntLookup, appArch, idMgr);
 
             return revoked;
-        }
-
-        public virtual async Task RemoveChildEnterprise(ApplicationArchitectClient appArch, string ChildEntLookup)
-        {
-
         }
 
         public virtual async Task SetActiveEnterprise(ApplicationArchitectClient appArch, string entLookup)
