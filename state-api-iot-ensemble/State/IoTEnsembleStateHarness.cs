@@ -76,6 +76,33 @@ namespace LCU.State.API.IoTEnsemble.State
         #endregion
 
         #region Helpers
+        protected virtual async Task<bool> revokeDeviceEnrollment(ApplicationArchitectClient appArch, string entLookup, string deviceId)
+        {
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        var revokeResp = await appArch.RevokeDeviceEnrollment(deviceId, entLookup, envLookup: null);
+
+                        return !revokeResp.Status;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError(ex, "Failed revoking device enrollment");
+
+                        return true;
+                    }
+                })
+                .SetCycles(5)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
+
+            await Task.Delay(2500);
+
+            return false;
+        }
         #endregion
     }
 }

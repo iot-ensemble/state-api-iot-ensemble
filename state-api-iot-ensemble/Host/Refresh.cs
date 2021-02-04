@@ -43,8 +43,8 @@ namespace LCU.State.API.IoTEnsemble.Host
 
         protected SecurityManagerClient secMgr;
 
-        public Refresh(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, EnterpriseManagerClient entMgr, IdentityManagerClient idMgr,
-            SecurityManagerClient secMgr)
+        public Refresh(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, EnterpriseManagerClient entMgr, 
+            IdentityManagerClient idMgr, SecurityManagerClient secMgr)
         {
             this.appArch = appArch;
 
@@ -77,7 +77,7 @@ namespace LCU.State.API.IoTEnsemble.Host
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
 
-                    await harness.Refresh(appArch, entMgr, stateDetails.EnterpriseLookup, idMgr);
+                    await harness.Refresh(appArch, entMgr, idMgr, stateDetails.EnterpriseLookup);
 
                     return Status.Success;
                 });
