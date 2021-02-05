@@ -705,7 +705,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return false;
         }
 
-        public virtual async Task<Status> SendCloudMessage(ApplicationArchitectClient appArch, string deviceName, MetadataModel message)
+        public virtual async Task<Status> SendCloudMessage(ApplicationArchitectClient appArch, string deviceName, string message)
         {
             var status = Status.Initialized;
 
