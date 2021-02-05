@@ -684,6 +684,36 @@ namespace LCU.State.API.IoTEnsemble.State
             return revoked;
         }
 
+        public virtual async Task<Status> SendCloudMessage(ApplicationArchitectClient appArch, string deviceName, MetadataModel message)
+        {
+            var status = Status.Initialized;
+
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        var sendResp = await appArch.SendCloudMessage(message, State.UserEnterpriseLookup, deviceName, envLookup: null);
+
+                        status = sendResp.Status;
+
+                        return !status;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError(ex, $"Failed sending cloud to device ({deviceName}) message");
+
+                        return true;
+                    }
+                })
+                .SetCycles(5)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
+
+            return status;
+        }
+
         public virtual async Task<Status> SendDeviceMessage(ApplicationArchitectClient appArch, SecurityManagerClient secMgr,
             DocumentClient client, string deviceName, MetadataModel payload)
         {
