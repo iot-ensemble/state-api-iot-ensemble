@@ -17,7 +17,7 @@ namespace LCU.State.API.IoTEnsemble.Host
         [FunctionName("negotiate")]
         public static SignalRConnectionInfo Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", "options")] HttpRequest req,
-            [SignalRConnectionInfo(HubName = IoTEnsembleSharedState.HUB_NAME, UserId = "{headers.x-ms-client-principal-id}")] SignalRConnectionInfo connectionInfo)
+            [SignalRConnectionInfo(HubName = IoTEnsembleState.HUB_NAME, UserId = "{headers.x-ms-client-principal-id}")] SignalRConnectionInfo connectionInfo)
         {
             return connectionInfo;
         }

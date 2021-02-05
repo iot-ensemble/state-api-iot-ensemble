@@ -42,7 +42,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         [FunctionName("RevokeDeviceEnrollment")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
-            [SignalR(HubName = IoTEnsembleSharedState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
+            [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
             var status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, UpdateTelemetrySyncRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
@@ -50,7 +50,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                 {
                     log.LogInformation($"Setting Loading device telemetry from UpdateTelemetrySync...");
 
-                    harness.State.Devices.Loading = true;
+                    harness.State.DevicesConfig.Loading = true;
 
                     return Status.Success;
                 }, preventStatusException: true);
@@ -65,7 +65,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                         await harness.RevokeDeviceEnrollment(appArch, enrollReq.DeviceID);
 
-                        harness.State.Devices.Loading = false;
+                        harness.State.DevicesConfig.Loading = false;
 
                         return Status.Success;
                     });

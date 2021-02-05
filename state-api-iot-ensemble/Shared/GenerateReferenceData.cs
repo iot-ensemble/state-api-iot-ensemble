@@ -56,6 +56,8 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                 var refData = await loadReferenceData();
 
+                log.LogInformation($"Loaded {refData?.Count ?? 0} reference data records");
+
                 await uploadReferenceData(refDataBlobDir, refData);
             }
         }

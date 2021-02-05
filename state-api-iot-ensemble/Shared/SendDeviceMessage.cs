@@ -50,7 +50,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         [FunctionName("SendDeviceMessage")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
-            [SignalR(HubName = IoTEnsembleSharedState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
+            [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             [CosmosDB(
                 databaseName: "%LCU-WARM-STORAGE-DATABASE%",

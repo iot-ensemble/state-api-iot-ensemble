@@ -25,10 +25,6 @@ namespace LCU.State.API.IoTEnsemble.State
     [DataContract]
     public class IoTEnsembleSharedState
     {
-        #region Constants
-        public const string HUB_NAME = "iotensemble";
-        #endregion
-
         [DataMember]
         public virtual string AccessLicenseType { get; set; }
 
@@ -39,7 +35,7 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual IoTEnsembleDashboardConfiguration Dashboard { get; set; }
 
         [DataMember]
-        public virtual IoTEnsembleConnectedDevicesConfig Devices { get; set; }
+        public virtual IoTEnsembleConnectedDevicesConfig DevicesConfig { get; set; }
 
         [DataMember]
         public virtual IoTEnsembleDrawersConfig Drawers { get; set; }
@@ -116,6 +112,9 @@ namespace LCU.State.API.IoTEnsemble.State
     public class IoTEnsembleConnectedDevicesConfig
     {
         [DataMember]
+        public virtual int EnterpriseDevicesCount { get; set; }
+        
+        [DataMember]
         public virtual List<IoTEnsembleDeviceInfo> Devices { get; set; }
 
         [DataMember]
@@ -125,13 +124,32 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual int MaxDevicesCount { get; set; }
 
         [DataMember]
-        public virtual string Page { get; set; }
+        public virtual int Page { get; set; }
 
         [DataMember]
         public virtual int PageSize { get; set; }
 
         [DataMember]
         public virtual Dictionary<string, string> SASTokens { get; set; }
+        
+        [DataMember]
+        public virtual Status Status { get; internal set; }
+
+        [DataMember]
+        public virtual long TotalDevices { get; set; }
+
+        #region Constructors
+        public IoTEnsembleConnectedDevicesConfig()
+        {
+            MaxDevicesCount = 1;
+
+            Page = 1;
+
+            PageSize = 10;
+
+            EnterpriseDevicesCount = 50;
+        }
+        #endregion
     }
 
     [Serializable]
@@ -144,56 +162,13 @@ namespace LCU.State.API.IoTEnsemble.State
 
     [Serializable]
     [DataContract]
-    public class IoTEnsembleDeviceInfo : DeviceInfo
-    {
-        [DataMember]
-        public virtual string AuthenticationType { get; set; }
-
-        [DataMember]
-        public virtual int CloudToDeviceMessageCount { get; set; }
-
-        [DataMember]
-        public virtual string DeviceName { get; set; }
-
-        [DataMember]
-        public virtual Status LastStatusUpdate { get; set; }
-    }
-
-    [Serializable]
-    [DataContract]
-    public class IoTEnsembleTelemetry
-    {
-        [DataMember]
-        public virtual bool Enabled { get; set; }
-
-        [DataMember]
-        public virtual DateTime LastSyncedAt { get; set; }
-
-        [DataMember]
-        public virtual bool Loading { get; set; }
-
-        [DataMember]
-        public virtual List<IoTEnsembleTelemetryPayload> Payloads { get; set; }
-
-        [DataMember]
-        public virtual int Page { get; set; }
-
-        [DataMember]
-        public virtual int PageSize { get; set; }
-
-        [DataMember]
-        public virtual int RefreshRate { get; set; }
-
-        [DataMember]
-        public virtual long TotalPayloads { get; set; }
-    }
-
-    [Serializable]
-    [DataContract]
     public class IoTEnsembleTelemetryResponse : BaseResponse
     {
         [DataMember]
         public virtual List<IoTEnsembleTelemetryPayload> Payloads { get; set; }
+        
+        [DataMember]
+        public virtual long TotalPayloads { get; set; }
     }
 
     [Serializable]
@@ -254,7 +229,7 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual List<IoTEnsembleAPIKeyData> APIKeys { get; set; }
 
         [DataMember]
-        public virtual List<IoTEnsembleAPIOption> APIOptions { get; set; }
+        public virtual string OpenAPISource { get; set; }
     }
 
     [Serializable]
@@ -266,23 +241,6 @@ namespace LCU.State.API.IoTEnsemble.State
 
         [DataMember]
         public virtual string KeyName { get; set; }
-    }
-
-    [Serializable]
-    [DataContract]
-    public class IoTEnsembleAPIOption
-    {
-        [DataMember]
-        public virtual string Description { get; set; }
-
-        [DataMember]
-        public virtual string Method { get; set; }
-
-        [DataMember]
-        public virtual string Name { get; set; }
-
-        [DataMember]
-        public virtual string Path { get; set; }
     }
 
     [Serializable]

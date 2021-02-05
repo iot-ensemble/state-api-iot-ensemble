@@ -62,7 +62,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
 
         [FunctionName("WarmQuery")]
         public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req, ILogger log,
-            [SignalR(HubName = IoTEnsembleSharedState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
+            [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             [CosmosDB(
                 databaseName: "%LCU-WARM-STORAGE-DATABASE%",
@@ -81,29 +81,32 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
 
+                    if (dataReq == null)
+                        dataReq = new WarmQueryRequest();
+
                     if (req.Query.ContainsKey("endDate"))
-                        dataReq.EndDate = req.Query["endDate"].As<DateTime>();
+                        dataReq.EndDate = req.Query["endDate"].ToString().As<DateTime>();
 
                     if (req.Query.ContainsKey("includeEmulated"))
-                        dataReq.IncludeEmulated = req.Query["includeEmulated"].As<bool>();
+                        dataReq.IncludeEmulated = req.Query["includeEmulated"].ToString().As<bool>();
 
                     if (req.Query.ContainsKey("page"))
-                        dataReq.Page = req.Query["page"].As<int>();
+                        dataReq.Page = req.Query["page"].ToString().As<int>();
 
                     if (req.Query.ContainsKey("pageSize"))
-                        dataReq.PageSize = req.Query["pageSize"].As<int>();
+                        dataReq.PageSize = req.Query["pageSize"].ToString().As<int>();
 
                     if (req.Query.ContainsKey("startDate"))
-                        dataReq.StartDate = req.Query["startDate"].As<DateTime>();
+                        dataReq.StartDate = req.Query["startDate"].ToString().As<DateTime>();
 
                     if (req.Query.ContainsKey("selectedDevices"))
-                        dataReq.SelectedDeviceIDs = req.Query["selectedDevices"].As<List<string>>();
+                        dataReq.SelectedDeviceIDs = req.Query["selectedDevices"].ToString().Split(',').ToList();
 
                     queried = await harness.WarmQuery(telemClient, dataReq.SelectedDeviceIDs, dataReq.PageSize, dataReq.Page,
                         dataReq.IncludeEmulated, dataReq.StartDate, dataReq.EndDate);
 
                     return queried.Status;
-                }, preventStatusException: true);
+                }, preventStatusException: true, withLock: false);
 
             var statusCode = status ? HttpStatusCode.OK : HttpStatusCode.InternalServerError;
 

@@ -92,7 +92,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         [FunctionName("TelemetrySyncOrchestration_Sync")]
         public virtual async Task<Status> Sync([ActivityTrigger] StateActionContext stateCtxt, ILogger log,
-            [SignalR(HubName = IoTEnsembleSharedState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
+            [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{stateCtxt.StateDetails.EnterpriseLookup}/{stateCtxt.StateDetails.HubName}/{stateCtxt.StateDetails.Username}/{stateCtxt.StateDetails.StateKey}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             [CosmosDB(
                 databaseName: "%LCU-WARM-STORAGE-DATABASE%",
@@ -103,6 +103,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
                 stateCtxt.ActionRequest, signalRMessages, log, async (harness, reqData) =>
                 {
                     log.LogInformation($"Setting Loading device telemetry from sync state...");
+
+                    if (harness.State.Telemetry == null)
+                        harness.State.Telemetry = new IoTEnsembleTelemetry();
 
                     harness.State.Telemetry.Loading = true;
 
@@ -127,13 +130,16 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         [FunctionName("TelemetrySyncOrchestration_Disabled")]
         public virtual async Task<Status> Disabled([ActivityTrigger] StateActionContext stateCtxt, ILogger log,
-            [SignalR(HubName = IoTEnsembleSharedState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
+            [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{stateCtxt.StateDetails.EnterpriseLookup}/{stateCtxt.StateDetails.HubName}/{stateCtxt.StateDetails.Username}/{stateCtxt.StateDetails.StateKey}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
             var status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, TelemetrySyncRequest, IoTEnsembleSharedStateHarness>(stateCtxt.StateDetails,
                 stateCtxt.ActionRequest, signalRMessages, log, async (harness, reqData) =>
                 {
                     log.LogInformation($"Setting device telemetry disabled...");
+
+                    if (harness.State.Telemetry == null)
+                        harness.State.Telemetry = new IoTEnsembleTelemetry();
 
                     harness.State.Telemetry.Enabled = false;
 
