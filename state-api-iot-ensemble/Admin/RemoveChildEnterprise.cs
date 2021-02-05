@@ -25,32 +25,36 @@ namespace LCU.State.API.IoTEnsemble.Admin
 {
     [Serializable]
     [DataContract]
-    public class RevokeChildEnterpriseRequest : BaseRequest
+    public class RemoveChildEnterpriseRequest : BaseRequest
     {
         [DataMember]
         public virtual string ChildEntLookup { get; set; }
     }
 
-    public class RevokeChildEnterprise
+    public class RemoveChildEnterprise
     {
         protected ApplicationArchitectClient appArch;
 
-        public RevokeChildEnterprise(ApplicationArchitectClient appArch)
+        protected EnterpriseArchitectClient entArch;
+
+        public RemoveChildEnterprise(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch)
         {
             this.appArch = appArch;
+
+            this.entArch = entArch;
          }
 
-        [FunctionName("RevokeChildEnterprise")]
+        [FunctionName("RemoveChildEnterprise")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
-            return await stateBlob.WithStateHarness<IoTEnsembleAdminState, RevokeChildEnterpriseRequest, IoTEnsembleAdminStateHarness>(req, signalRMessages, log,
+            return await stateBlob.WithStateHarness<IoTEnsembleAdminState, RemoveChildEnterpriseRequest, IoTEnsembleAdminStateHarness>(req, signalRMessages, log,
                 async (harness, dataReq, actReq) =>
             {
                 log.LogInformation($"RevokeChildEnterprise");
 
-                await harness.RevokeChildEnterprise(appArch, dataReq.ChildEntLookup);
+                await harness.RemoveChildEnterprise(appArch, entArch, dataReq.ChildEntLookup);
 
                 return Status.Success;
             });
