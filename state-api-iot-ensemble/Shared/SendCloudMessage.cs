@@ -26,38 +26,32 @@ namespace LCU.State.API.IoTEnsemble.Shared
 {
     [Serializable]
     [DataContract]
-    public class SendDeviceMessageRequest : BaseRequest
+    public class SendCloudMessageRequest : BaseRequest
     {
         [DataMember]
         public virtual string DeviceName { get; set; }
 
         [DataMember]
-        public virtual MetadataModel Payload { get; set; }
+        public virtual MetadataModel Message { get; set; }
     }
 
-    public class SendDeviceMessage
+    public class SendCloudMessage
     {
         protected ApplicationArchitectClient appArch;
 
         protected SecurityManagerClient secMgr;
 
-        public SendDeviceMessage(ApplicationArchitectClient appArch, SecurityManagerClient secMgr)
+        public SendCloudMessage(ApplicationArchitectClient appArch)
         {
             this.appArch = appArch;
-
-            this.secMgr = secMgr;
         }
 
-        [FunctionName("SendDeviceMessage")]
+        [FunctionName("SendCloudMessage")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
-            [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
-            [CosmosDB(
-                databaseName: "%LCU-WARM-STORAGE-DATABASE%",
-                collectionName: "%LCU-WARM-STORAGE-TELEMETRY-CONTAINER%",
-                ConnectionStringSetting = "LCU-WARM-STORAGE-CONNECTION-STRING")]DocumentClient docClient)
+            [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
-            var status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, SendDeviceMessageRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
+            var status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, SendCloudMessageRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
                 async (harness, dataReq, actReq) =>
                 {
                     log.LogInformation($"Setting Loading device telemetry from UpdateTelemetrySync...");
@@ -68,14 +62,14 @@ namespace LCU.State.API.IoTEnsemble.Shared
                 }, preventStatusException: true);
 
             if (status)
-                status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, SendDeviceMessageRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
+                status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, SendCloudMessageRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
                     async (harness, dataReq, actReq) =>
                     {
-                        log.LogInformation($"SendDeviceMessage");
+                        log.LogInformation($"SendCloudMessage");
 
                         var stateDetails = StateUtils.LoadStateDetails(req);
 
-                        await harness.SendDeviceMessage(appArch, secMgr, docClient, dataReq.DeviceName, dataReq.Payload);
+                        await harness.SendCloudMessage(appArch, dataReq.DeviceName, dataReq.Message);
 
                         harness.State.Telemetry.Loading = false;
 
