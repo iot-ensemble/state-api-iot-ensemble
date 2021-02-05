@@ -74,7 +74,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                         harness.State.Telemetry.Loading = false;
 
                         return Status.Success;
-                    });
+                    }, withLock: false);
 
             return status;
         }
