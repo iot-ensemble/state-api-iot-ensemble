@@ -32,7 +32,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
         public virtual string DeviceName { get; set; }
 
         [DataMember]
-        public virtual MetadataModel Message { get; set; }
+        public virtual string Message { get; set; }
     }
 
     public class SendCloudMessage

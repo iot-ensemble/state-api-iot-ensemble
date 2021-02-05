@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="19.0.0" />
-    <PackageReference Include="LCU.StateAPI" Version="1.368.21036.9" />
+    <PackageReference Include="LCU.StateAPI" Version="1.370.21036.15" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.CosmosDB" Version="3.0.7" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.1" />
