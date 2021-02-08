@@ -53,6 +53,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
             var shouldGenerate = bypassGenerateRefData ? "bypass" : "generate";
 
             log.LogInformation($"Should generate reference data: {shouldGenerate}");
+            log.LogInformation(Environment.GetEnvironmentVariable("LCU-BYPASS-GENERATE-REFERENCE-DATA"));
 
             if (!bypassGenerateRefData)
             {
