@@ -163,8 +163,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task<Status> RemoveChildEnterprise(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, string ChildEntLookup)
         {
-            // entArch.Delete<>
-
+            
             return Status.Success;
         }
 

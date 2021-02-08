@@ -52,7 +52,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
             return await stateBlob.WithStateHarness<IoTEnsembleAdminState, RemoveChildEnterpriseRequest, IoTEnsembleAdminStateHarness>(req, signalRMessages, log,
                 async (harness, dataReq, actReq) =>
             {
-                log.LogInformation($"RevokeChildEnterprise");
+                log.LogInformation($"RemoveChildEnterprise");
 
                 await harness.RemoveChildEnterprise(appArch, entArch, dataReq.ChildEntLookup);
 
