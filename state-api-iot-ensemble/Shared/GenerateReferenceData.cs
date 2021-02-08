@@ -50,6 +50,10 @@ namespace LCU.State.API.IoTEnsemble.Shared
         public virtual async Task Run([TimerTrigger("0 */1 * * * *")] TimerInfo myTimer, ILogger log,
             [Blob("cold-storage/reference-data", FileAccess.Read, Connection = "LCU-COLD-STORAGE-CONNECTION-STRING")] CloudBlobDirectory refDataBlobDir)
         {
+            var shouldGenerate = bypassGenerateRefData ? "bypass" : "generate";
+
+            log.LogInformation($"Should generate reference data: {shouldGenerate}");
+
             if (!bypassGenerateRefData)
             {
                 log.LogInformation($"Generating reference data");
