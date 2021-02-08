@@ -98,8 +98,8 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                     var username = hostLookupParts[1];
 
-                    var license = licenses.FirstOrDefault(lic => lic.Username == username); 
-                    
+                    var license = licenses.FirstOrDefault(lic => lic.Username == username);
+
                     //await idMgr.HasLicenseAccess(parentLookup, username, Personas.AllAnyTypes.All, new List<string>() { "iot" });
 
                     IoTEnsembleEnterpriseReferenceData refd;
@@ -107,16 +107,18 @@ namespace LCU.State.API.IoTEnsemble.Shared
                     if (license != null)
                         refd = license.Details.JSONConvert<IoTEnsembleEnterpriseReferenceData>();
                     else
-                        refd = new IoTEnsembleEnterpriseReferenceData()
-                        {
-                            Devices = 1,
-                            DataInterval = 300,
-                            DataRetention = 43200
-                        };
+                        refd = null;
+                    // refd = new IoTEnsembleEnterpriseReferenceData()
+                    // {
+                    //     Devices = 1,
+                    //     DataInterval = 300,
+                    //     DataRetention = 43200
+                    // };
 
                     refd.EnterpriseLookup = childEnt.EnterpriseLookup;
 
-                    refData.Add(refd);
+                    if (refd != null)
+                        refData.Add(refd);
                 }
             });
 
