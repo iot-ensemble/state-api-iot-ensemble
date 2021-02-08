@@ -50,14 +50,14 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         [FunctionName("SendDeviceMessage")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
-            [SignalR(HubName = IoTEnsembleSharedState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
+            [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             [CosmosDB(
                 databaseName: "%LCU-WARM-STORAGE-DATABASE%",
                 collectionName: "%LCU-WARM-STORAGE-TELEMETRY-CONTAINER%",
                 ConnectionStringSetting = "LCU-WARM-STORAGE-CONNECTION-STRING")]DocumentClient docClient)
         {
-            var status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, TelemetrySyncRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
+            var status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, SendDeviceMessageRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
                 async (harness, dataReq, actReq) =>
                 {
                     log.LogInformation($"Setting Loading device telemetry from UpdateTelemetrySync...");
@@ -80,7 +80,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                         harness.State.Telemetry.Loading = false;
 
                         return Status.Success;
-                    });
+                    }, withLock: false);
 
             return status;
         }

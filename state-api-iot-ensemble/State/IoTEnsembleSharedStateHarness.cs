@@ -40,7 +40,7 @@ using Gremlin.Net.Driver.Exceptions;
 
 namespace LCU.State.API.IoTEnsemble.State
 {
-    public class IoTEnsembleSharedStateHarness : LCUStateHarness<IoTEnsembleSharedState>
+    public class IoTEnsembleSharedStateHarness : IoTEnsembleStateHarness<IoTEnsembleSharedState>
     {
         #region Constants
         const string DETAILS_PANE_ENABLED = "IoTEnsemble:DetailsPaneEnabled";
@@ -53,13 +53,6 @@ namespace LCU.State.API.IoTEnsemble.State
         #endregion
 
         #region Fields
-        protected readonly string deviceEnv;
-
-        protected readonly string telemetryRoot;
-
-        protected readonly string warmTelemetryContainer;
-
-        protected readonly string warmTelemetryDatabase;
         #endregion
 
         #region Properties
@@ -68,18 +61,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #region Constructors
         public IoTEnsembleSharedStateHarness(IoTEnsembleSharedState state, ILogger logger)
             : base(state ?? new IoTEnsembleSharedState(), logger)
-        {
-            deviceEnv = Environment.GetEnvironmentVariable("LCU-DEVICE-ENVIRONMENT") ?? String.Empty;
-
-            telemetryRoot = Environment.GetEnvironmentVariable("LCU-TELEMETRY-ROOT");
-
-            if (telemetryRoot.IsNullOrEmpty())
-                telemetryRoot = String.Empty;
-
-            warmTelemetryContainer = Environment.GetEnvironmentVariable("LCU-WARM-STORAGE-TELEMETRY-CONTAINER");
-
-            warmTelemetryDatabase = Environment.GetEnvironmentVariable("LCU-WARM-STORAGE-DATABASE");
-        }
+        { }
         #endregion
 
         #region API Methods
@@ -637,35 +619,30 @@ namespace LCU.State.API.IoTEnsemble.State
             if (State.Telemetry.PageSize < 1)
                 State.Telemetry.PageSize = 10;
 
-            if (State.Telemetry.Enabled)
+            State.Telemetry.Payloads = new List<IoTEnsembleTelemetryPayload>();
+
+            try
             {
-                State.Telemetry.Payloads = new List<IoTEnsembleTelemetryPayload>();
+                var payloads = await queryTelemetryPayloads(client, State.UserEnterpriseLookup,
+                        State.SelectedDeviceIDs, State.Telemetry.PageSize, State.Telemetry.Page, State.Emulated.Enabled);
 
-                try
-                {
-                    var payloads = await queryTelemetryPayloads(client, State.UserEnterpriseLookup,
-                            State.SelectedDeviceIDs, State.Telemetry.PageSize, State.Telemetry.Page, State.Emulated.Enabled);
+                if (!payloads.Items.IsNullOrEmpty())
+                    State.Telemetry.Payloads.AddRange(payloads.Items);
 
-                    if (!payloads.Items.IsNullOrEmpty())
-                        State.Telemetry.Payloads.AddRange(payloads.Items);
+                State.Telemetry.TotalPayloads = payloads.TotalRecords;
 
-                    State.Telemetry.TotalPayloads = payloads.TotalRecords;
+                status.Metadata["RefreshRate"] = State.Telemetry.RefreshRate >= 10 ? State.Telemetry.RefreshRate : 30;
 
-                    status.Metadata["RefreshRate"] = State.Telemetry.RefreshRate >= 10 ? State.Telemetry.RefreshRate : 30;
+                State.Telemetry.RefreshRate = status.Metadata["RefreshRate"].ToString().As<int>();
 
-                    State.Telemetry.RefreshRate = status.Metadata["RefreshRate"].ToString().As<int>();
-
-                    State.Telemetry.LastSyncedAt = DateTime.Now;
-                }
-                catch (Exception ex)
-                {
-                    log.LogError(ex, "There was an issue loading your device telemetry.");
-
-                    status = Status.GeneralError.Clone("There was an issue loading your device telemetry.");
-                }
+                State.Telemetry.LastSyncedAt = DateTime.Now;
             }
-            else
-                status = Status.GeneralError.Clone("Device Telemetry is Disabled");
+            catch (Exception ex)
+            {
+                log.LogError(ex, "There was an issue loading your device telemetry.");
+
+                status = Status.GeneralError.Clone("There was an issue loading your device telemetry.");
+            }
 
             return status;
         }
@@ -726,6 +703,36 @@ namespace LCU.State.API.IoTEnsemble.State
             await LoadDevices(appArch);
 
             return false;
+        }
+
+        public virtual async Task<Status> SendCloudMessage(ApplicationArchitectClient appArch, string deviceName, string message)
+        {
+            var status = Status.Initialized;
+
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        var sendResp = await appArch.SendCloudMessage(message, State.UserEnterpriseLookup, deviceName, envLookup: null);
+
+                        status = sendResp.Status;
+
+                        return !status;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError(ex, $"Failed sending cloud to device ({deviceName}) message");
+
+                        return true;
+                    }
+                })
+                .SetCycles(5)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
+
+            return status;
         }
 
         public virtual async Task<Status> SendDeviceMessage(ApplicationArchitectClient appArch, SecurityManagerClient secMgr,
@@ -906,7 +913,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #region Storage Access
         public virtual async Task<HttpResponseMessage> ColdQuery(CloudBlobDirectory coldBlob, List<string> selectedDeviceIds, int pageSize, int page,
             bool includeEmulated, DateTime? startDate, DateTime? endDate, ColdQueryResultTypes resultType, bool flatten,
-            ColdQueryDataTypes dataType, bool zip)
+            ColdQueryDataTypes dataType, bool zip, bool asFile)
         {
             var status = Status.GeneralError;
 
@@ -920,9 +927,14 @@ namespace LCU.State.API.IoTEnsemble.State
 
                     var fileName = buildFileName(dataType, startDate.Value, endDate.Value, fileExtension);
 
-                    log.LogInformation($"Loaded {fileName} with extension {fileExtension}");
+                    log.LogInformation($"Loading {fileName} with extension {fileExtension}");
 
-                    var downloadedData = await downloadData(coldBlob, dataType, State.UserEnterpriseLookup, startDate, endDate);
+                    var entLookups = new List<string>() { State.UserEnterpriseLookup };
+
+                    if (includeEmulated)
+                        entLookups.Add("EMULATED");
+
+                    var downloadedData = await downloadData(coldBlob, dataType, entLookups, startDate, endDate);
 
                     log.LogInformation($"Downloaded data records: {downloadedData.Count}");
 
@@ -957,9 +969,13 @@ namespace LCU.State.API.IoTEnsemble.State
 
                     content = new ByteArrayContent(bytes);
 
-                    content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+                    if (asFile)
+                    {
+                        content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
 
-                    content.Headers.ContentDisposition.FileName = fileName;
+                        content.Headers.ContentDisposition.FileName = fileName;
+
+                    }
 
                     content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
 
@@ -1009,7 +1025,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 page = 1;
 
             if (!pageSize.HasValue || pageSize.Value < 1)
-                pageSize = 1;
+                pageSize = 10;
 
             try
             {
@@ -1017,6 +1033,8 @@ namespace LCU.State.API.IoTEnsemble.State
                     page.Value, includeEmulated);
 
                 response.Payloads = payloads.Items.ToList();
+
+                response.TotalPayloads = payloads.TotalRecords;
 
                 response.Status = Status.Success;
             }
@@ -1047,7 +1065,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return fileName;
         }
 
-        protected virtual async Task<List<JObject>> downloadData(CloudBlobDirectory coldBlob, ColdQueryDataTypes dataType, string entLookup,
+        protected virtual async Task<List<JObject>> downloadData(CloudBlobDirectory coldBlob, ColdQueryDataTypes dataType, List<string> entLookups,
             DateTime? startDate, DateTime? endDate)
         {
             BlobContinuationToken contToken = null;
@@ -1059,42 +1077,54 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     try
                     {
-                        downloadedData = new List<JObject>();
+                        var downloadedDataDict = new Dictionary<DateTime, List<JObject>>();
 
-                        do
+                        await entLookups.Each(async entLookup =>
                         {
-                            var dataTypeColdBlob = coldBlob.GetDirectoryReference(dataType.ToString().ToLower());
-
-                            var entColdBlob = dataTypeColdBlob.GetDirectoryReference(State.UserEnterpriseLookup);
-
-                            log.LogInformation($"Listing blob segments...");
-
-                            var blobSeg = await entColdBlob.ListBlobsSegmentedAsync(true, BlobListingDetails.Metadata, null, contToken, null, null);
-
-                            contToken = blobSeg.ContinuationToken;
-
-                            // foreach (var item in blobSeg.Results)
-                            await blobSeg.Results.Each(async item =>
+                            do
                             {
-                                var blob = (CloudBlockBlob)item;
+                                var dataTypeColdBlob = coldBlob.GetDirectoryReference(dataType.ToString().ToLower());
 
-                                await blob.FetchAttributesAsync();
+                                var entColdBlob = dataTypeColdBlob.GetDirectoryReference(entLookup);
 
-                                var minTime = DateTime.Parse(blob.Metadata["MinTime"]);
+                                log.LogInformation($"Listing blob segments for {entLookup} and continuation {contToken}...");
 
-                                var maxTime = DateTime.Parse(blob.Metadata["MaxTime"]);
+                                var blobSeg = await entColdBlob.ListBlobsSegmentedAsync(true, BlobListingDetails.Metadata, null, contToken, null, null);
 
-                                if ((startDate <= minTime && minTime <= endDate) || (startDate <= maxTime && maxTime <= endDate))
+                                contToken = blobSeg.ContinuationToken;
+
+                                // foreach (var item in blobSeg.Results)
+                                await blobSeg.Results.Each(async item =>
                                 {
-                                    var blobContents = await blob.DownloadTextAsync();
+                                    var blob = (CloudBlockBlob)item;
 
-                                    var blobData = JsonConvert.DeserializeObject<JArray>(blobContents);
+                                    await blob.FetchAttributesAsync();
 
-                                    if (downloadedData.Count == 0)
-                                        downloadedData.AddRange(blobData.ToObject<List<JObject>>());
-                                }
-                            }, parallel: true);
-                        } while (contToken != null);
+                                    var minTime = DateTime.Parse(blob.Metadata["MinTime"]);
+
+                                    var maxTime = DateTime.Parse(blob.Metadata["MaxTime"]);
+
+                                    if ((startDate <= minTime && minTime <= endDate) || (startDate <= maxTime && maxTime <= endDate))
+                                    {
+                                        log.LogInformation($"Adding blobs for {entLookup} and continuation {contToken} to downloads at {minTime}/{maxTime}");
+
+                                        var blobContents = await blob.DownloadTextAsync();
+
+                                        var blobData = JsonConvert.DeserializeObject<JArray>(blobContents);
+
+                                        lock (downloadedDataDict)
+                                        {
+                                            if (downloadedDataDict.ContainsKey(maxTime))
+                                                downloadedDataDict[maxTime].AddRange(blobData.ToObject<List<JObject>>());
+                                            else
+                                                downloadedDataDict.Add(maxTime, blobData.ToObject<List<JObject>>());
+                                        }
+                                    }
+                                }, parallel: true);
+                            } while (contToken != null);
+                        }, parallel: true);
+
+                        downloadedData = downloadedDataDict.OrderBy(dd => dd.Key).SelectMany(dd => dd.Value).ToList();
 
                         return false;
                     }

@@ -37,6 +37,9 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
     public class ColdQueryRequest : BaseRequest
     {
         [DataMember]
+        public virtual bool AsFile { get; set; }
+
+        [DataMember]
         [JsonConverter(typeof(StringEnumConverter))]
         public virtual ColdQueryDataTypes DataType { get; set; }
 
@@ -80,7 +83,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
 
         [FunctionName("ColdQuery")]
         public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req, ILogger log,
-            [SignalR(HubName = IoTEnsembleSharedState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
+            [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             [Blob("cold-storage/data", FileAccess.Read, Connection = "LCU-COLD-STORAGE-CONNECTION-STRING")] CloudBlobDirectory coldBlob)
         {
@@ -95,6 +98,9 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
 
                     if (dataReq == null)
                         dataReq = new ColdQueryRequest();
+
+                    if (req.Query.ContainsKey("asFile"))
+                        dataReq.AsFile = req.Query["asFile"].ToString().As<bool>();
 
                     if (req.Query.ContainsKey("dataType"))
                         dataReq.DataType = req.Query["dataType"].ToString().As<ColdQueryDataTypes>(ColdQueryDataTypes.Telemetry);
@@ -134,12 +140,14 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
                     if (dataReq.EndDate == null)
                         dataReq.EndDate = now;
 
+                    log.LogInformation($"Running cold query with: {dataReq.ToJSON()}");
+
                     queried = await harness.ColdQuery(coldBlob, dataReq.SelectedDeviceIDs, dataReq.PageSize, dataReq.Page,
                         dataReq.IncludeEmulated, dataReq.StartDate, dataReq.EndDate, dataReq.ResultType, dataReq.Flatten, dataReq.DataType,
-                        dataReq.Zip);
+                        dataReq.Zip, dataReq.AsFile);
 
                     return Status.Success;
-                }, preventStatusException: true);
+                }, preventStatusException: true, withLock: false);
 
             return queried;
         }

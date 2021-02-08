@@ -21,35 +21,36 @@ using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
 
-namespace LCU.State.API.IoTEnsemble.Shared
+namespace LCU.State.API.IoTEnsemble.Admin
 {
     [Serializable]
     [DataContract]
-    public class ToggleDetailsPaneRequest : BaseRequest
-    { }
-
-    public class ToggleDetailsPane
+    public class SetActiveEnterpriseRequest : BaseRequest
     {
-        protected SecurityManagerClient secMgr;
+        [DataMember]
+        public virtual string Lookup { get; set; }
+    }
 
-        public ToggleDetailsPane(SecurityManagerClient secMgr)
+    public class SetActiveEnterprise
+    {
+        protected ApplicationArchitectClient appArch;
+
+        public SetActiveEnterprise(ApplicationArchitectClient appArch)
         {
-            this.secMgr = secMgr;
-        }
+            this.appArch = appArch;
+         }
 
-        [FunctionName("ToggleDetailsPane")]
+        [FunctionName("SetActiveEnterprise")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
-            [SignalR(HubName = IoTEnsembleState.HUB_NAME)]IAsyncCollector<SignalRMessage> signalRMessages,
+            [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
-            return await stateBlob.WithStateHarness<IoTEnsembleSharedState, ToggleDetailsPaneRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
-                async (harness, refreshReq, actReq) =>
+            return await stateBlob.WithStateHarness<IoTEnsembleAdminState, SetActiveEnterpriseRequest, IoTEnsembleAdminStateHarness>(req, signalRMessages, log,
+                async (harness, dataReq, actReq) =>
             {
-                log.LogInformation($"ToggleDetailsPane");
+                log.LogInformation($"SetActiveEnterprise");
 
-                var stateDetails = StateUtils.LoadStateDetails(req);
-
-                await harness.ToggleDetailsPane(secMgr);
+                await harness.SetActiveEnterprise(appArch, dataReq.Lookup);
 
                 return Status.Success;
             });

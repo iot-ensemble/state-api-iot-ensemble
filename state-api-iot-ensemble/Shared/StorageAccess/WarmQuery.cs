@@ -62,7 +62,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
 
         [FunctionName("WarmQuery")]
         public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req, ILogger log,
-            [SignalR(HubName = IoTEnsembleSharedState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
+            [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             [CosmosDB(
                 databaseName: "%LCU-WARM-STORAGE-DATABASE%",
@@ -80,6 +80,9 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
                     log.LogInformation($"Running a WarmQuery: {dataReq}");
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
+
+                    if (dataReq == null)
+                        dataReq = new WarmQueryRequest();
 
                     if (req.Query.ContainsKey("endDate"))
                         dataReq.EndDate = req.Query["endDate"].ToString().As<DateTime>();
@@ -103,7 +106,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
                         dataReq.IncludeEmulated, dataReq.StartDate, dataReq.EndDate);
 
                     return queried.Status;
-                }, preventStatusException: true);
+                }, preventStatusException: true, withLock: false);
 
             var statusCode = status ? HttpStatusCode.OK : HttpStatusCode.InternalServerError;
 

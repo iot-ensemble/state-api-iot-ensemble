@@ -50,6 +50,10 @@ namespace LCU.State.API.IoTEnsemble.Shared
         public virtual async Task Run([TimerTrigger("0 */1 * * * *")] TimerInfo myTimer, ILogger log,
             [Blob("cold-storage/reference-data", FileAccess.Read, Connection = "LCU-COLD-STORAGE-CONNECTION-STRING")] CloudBlobDirectory refDataBlobDir)
         {
+            var shouldGenerate = bypassGenerateRefData ? "bypass" : "generate";
+
+            log.LogInformation($"Should generate reference data: {shouldGenerate}");
+
             if (!bypassGenerateRefData)
             {
                 log.LogInformation($"Generating reference data");
@@ -98,8 +102,8 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                     var username = hostLookupParts[1];
 
-                    var license = licenses.FirstOrDefault(lic => lic.Username == username); 
-                    
+                    var license = licenses.FirstOrDefault(lic => lic.Username == username);
+
                     //await idMgr.HasLicenseAccess(parentLookup, username, Personas.AllAnyTypes.All, new List<string>() { "iot" });
 
                     IoTEnsembleEnterpriseReferenceData refd;
@@ -107,16 +111,18 @@ namespace LCU.State.API.IoTEnsemble.Shared
                     if (license != null)
                         refd = license.Details.JSONConvert<IoTEnsembleEnterpriseReferenceData>();
                     else
-                        refd = new IoTEnsembleEnterpriseReferenceData()
-                        {
-                            Devices = 1,
-                            DataInterval = 300,
-                            DataRetention = 43200
-                        };
+                        refd = null;
+                    // refd = new IoTEnsembleEnterpriseReferenceData()
+                    // {
+                    //     Devices = 1,
+                    //     DataInterval = 300,
+                    //     DataRetention = 43200
+                    // };
 
                     refd.EnterpriseLookup = childEnt.EnterpriseLookup;
 
-                    refData.Add(refd);
+                    if (refd != null)
+                        refData.Add(refd);
                 }
             });
 
