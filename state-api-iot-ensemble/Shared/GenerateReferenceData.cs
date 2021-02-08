@@ -120,10 +120,12 @@ namespace LCU.State.API.IoTEnsemble.Shared
                     //     DataRetention = 43200
                     // };
 
-                    refd.EnterpriseLookup = childEnt.EnterpriseLookup;
-
                     if (refd != null)
+                    {
+                        refd.EnterpriseLookup = childEnt.EnterpriseLookup;
+
                         refData.Add(refd);
+                    }
                 }
             });
 
