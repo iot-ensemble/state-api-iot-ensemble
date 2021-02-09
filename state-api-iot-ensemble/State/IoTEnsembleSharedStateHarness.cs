@@ -350,6 +350,7 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual async Task EnsureTelemetrySyncState(IDurableOrchestrationClient starter, StateDetails stateDetails,
             ExecuteActionRequest exActReq)
         {
+
             var instanceId = $"{stateDetails.EnterpriseLookup}-{stateDetails.HubName}-{stateDetails.Username}-{stateDetails.StateKey}-{State.UserEnterpriseLookup}";
 
             var existingOrch = await starter.GetStatusAsync(instanceId);
@@ -376,6 +377,10 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual async Task EnsureUserEnterprise(EnterpriseArchitectClient entArch, EnterpriseManagerClient entMgr,
             SecurityManagerClient secMgr, string parentEntLookup, string username)
         {
+            if (State.DevicesConfig != null){
+                State.DevicesConfig.Status = null;
+            }
+
             if (State.UserEnterpriseLookup.IsNullOrEmpty())
             {
                 await DesignOutline.Instance.Retry()
