@@ -37,6 +37,7 @@ using System.Net;
 using CsvHelper;
 using Fathym.Design;
 using Gremlin.Net.Driver.Exceptions;
+using LCU.Graphs.Registry.Enterprises.Identity;
 
 namespace LCU.State.API.IoTEnsemble.State
 {
@@ -59,27 +60,43 @@ namespace LCU.State.API.IoTEnsemble.State
 
         #region API Methods
         public virtual async Task LoadChildEnterprises(EnterpriseManagerClient entMgr, string parentEntLookup,
-            ApplicationArchitectClient appArch)
+            ApplicationArchitectClient appArch, IdentityManagerClient idMgr)
         {
             var childEntsResp = await entMgr.ListChildEnterprises(parentEntLookup);
 
-            //  Paging impl, could eventually shift this all the way down to the DB, probably preferable, but this is better to start
+            State.EnterpriseConfig.TotalChildEnterprisesCount = childEntsResp.Model?.Count;
+
             var pagedChildEnts = childEntsResp.Model?.Page(State.EnterpriseConfig.Page, State.EnterpriseConfig.PageSize);
 
             var iotChildEnts = new List<IoTEnsembleChildEnterprise>();
 
-            //  using each iterator from our internal library so we can still support async/await to free up threads during api calls
             await pagedChildEnts.Items.Each(async childEnt =>
             {
-                //  The main issue that you were having was the missing await operator, similar to how async/await work in TS
-                //      with Promises, except in C3# its tasks
+
                 var devicesResp = await appArch.ListEnrolledDevices(childEnt.EnterpriseLookup);
+
+                var licenses = await idMgr.ListLicenseAccessTokens(parentEntLookup, childEnt.Name, new List<string>() { "iot" });
+
+                DateTime? StartDate = null;
+
+                foreach (LicenseAccessToken token in licenses.Model)
+                {
+                    if (token.AccessStartDate != null)
+                    {
+
+                        StartDate = token.AccessStartDate.UtcDateTime;
+
+                    }
+
+                }
 
                 var iotChildEnt = new IoTEnsembleChildEnterprise()
                 {
                     Name = childEnt.Name,
                     Lookup = childEnt.EnterpriseLookup,
-                    DeviceCount = devicesResp.Model?.TotalRecords ?? 0
+                    DeviceCount = devicesResp.Model?.TotalRecords ?? 0,
+                    SignUpDate = StartDate
+
                 };
 
                 iotChildEnt.Devices = devicesResp.Model?.Items?.Select(device =>
@@ -96,7 +113,11 @@ namespace LCU.State.API.IoTEnsemble.State
 
             State.EnterpriseConfig.ChildEnterprises = iotChildEnts;
 
-            State.Loading = false;
+            var activeEnt = State.EnterpriseConfig.ChildEnterprises.FirstOrDefault(ce => ce.Lookup == State.EnterpriseConfig.ActiveEnterpriseLookup);
+
+            if (activeEnt == null)
+                State.EnterpriseConfig.ActiveEnterpriseLookup = null;
+
         }
 
         public virtual async Task LoadActiveEnterpriseDetails(ApplicationArchitectClient appArch)
@@ -110,16 +131,18 @@ namespace LCU.State.API.IoTEnsemble.State
                     var activeEnt = State.EnterpriseConfig.ChildEnterprises.FirstOrDefault(ce => ce.Lookup == State.EnterpriseConfig.ActiveEnterpriseLookup);
 
                     activeEnt.Devices = enrolledDevices.Model.Items.Select(m =>
-                            {
-                                var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
+                    {
+                        var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
 
-                                devInfo.DeviceName = devInfo.DeviceID.Replace($"{State.EnterpriseConfig.ActiveEnterpriseLookup}-", String.Empty);
+                        devInfo.DeviceName = devInfo.DeviceID.Replace($"{State.EnterpriseConfig.ActiveEnterpriseLookup}-", String.Empty);
 
-                                return devInfo;
+                        return devInfo;
 
-                            }).ToList();
+                    }).ToList();
 
                     activeEnt.DeviceCount = enrolledDevices.Model.TotalRecords;
+
+
                 }
                 else
                 {
@@ -128,13 +151,30 @@ namespace LCU.State.API.IoTEnsemble.State
             }
         }
 
-        public virtual async Task Refresh(ApplicationArchitectClient appArch, EnterpriseManagerClient entMgr, string parentEntLookup)
+        public virtual async Task Refresh(ApplicationArchitectClient appArch, EnterpriseManagerClient entMgr,
+            IdentityManagerClient idMgr, string parentEntLookup)
         {
-            await LoadChildEnterprises(entMgr, parentEntLookup, appArch);
+            await LoadChildEnterprises(entMgr, parentEntLookup, appArch, idMgr);
 
             await LoadActiveEnterpriseDetails(appArch);
 
             State.Loading = false;
+        }
+
+        public virtual async Task<Status> RemoveChildEnterprise(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, string ChildEntLookup)
+        {
+            
+            return Status.Success;
+        }
+
+        public virtual async Task<Status> RevokeDeviceEnrollment(ApplicationArchitectClient appArch, EnterpriseManagerClient entMgr,
+            IdentityManagerClient idMgr, string parentEntLookup, string deviceId)
+        {
+            var revoked = await revokeDeviceEnrollment(appArch, State.EnterpriseConfig.ActiveEnterpriseLookup, deviceId);
+
+            await LoadChildEnterprises(entMgr, parentEntLookup, appArch, idMgr);
+
+            return revoked;
         }
 
         public virtual async Task SetActiveEnterprise(ApplicationArchitectClient appArch, string entLookup)
@@ -143,7 +183,26 @@ namespace LCU.State.API.IoTEnsemble.State
 
             await LoadActiveEnterpriseDetails(appArch);
 
-            State.Loading = false;
+        }
+
+        public virtual async Task UpdateEnterprisesSync(EnterpriseManagerClient entMgr,
+            ApplicationArchitectClient appArch, IdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize)
+        {
+
+            if (State.EnterpriseConfig != null)
+            {
+
+                State.EnterpriseConfig.Page = page;
+
+                State.EnterpriseConfig.PageSize = pageSize;
+
+                await LoadChildEnterprises(entMgr, parentEntLookup, appArch, idMgr);
+
+
+            }
+
+            else
+                throw new Exception("Unable to load the enterprise config, please try again or contact support.");
         }
         #endregion
 
