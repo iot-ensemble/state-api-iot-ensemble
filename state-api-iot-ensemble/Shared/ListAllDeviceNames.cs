@@ -26,7 +26,7 @@ using System.Text;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.Documents.Client;
 
-namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
+namespace LCU.State.API.IoTEnsemble.Shared
 {
     [Serializable]
     [DataContract]
@@ -35,15 +35,25 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
         [DataMember]
         public virtual string ChildEntLookup { get; set; }
 
+        [DataMember]
+        public virtual string Filter { get; set; }
+    }
+
+    [Serializable]
+    [DataContract]
+    public class ListAllDeviceNamesResponse : BaseResponse
+    {
+        [DataMember]
+        public virtual List<string> DeviceNames { get; set; }
     }
 
     public class ListAllDeviceNames
     {
-        protected SecurityManagerClient secMgr;
+        protected ApplicationArchitectClient appArch;
 
-        public ListAllDeviceNames(SecurityManagerClient secMgr)
+        public ListAllDeviceNames(ApplicationArchitectClient appArch)
         {
-            this.secMgr = secMgr;
+            this.appArch = appArch;
         }
 
         [FunctionName("ListAllDeviceNames")]
@@ -52,7 +62,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             DocumentClient telemClient)
         {
-            var queried = new IoTEnsembleDeviceListResponse()
+            var queried = new ListAllDeviceNamesResponse()
             {
                 Status = Status.GeneralError
             };
@@ -67,8 +77,9 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
                     if (dataReq == null)
                         dataReq = new ListAllDeviceNamesRequest();
 
+                    queried.DeviceNames = await harness.ListAllDeviceNames(appArch, dataReq.ChildEntLookup, dataReq.Filter);
 
-                    queried = await harness.ListAllDeviceNames(telemClient, dataReq.ChildEntLookup);
+                    queried.Status = Status.Success;
 
                     return queried.Status;
                 }, preventStatusException: true, withLock: false);

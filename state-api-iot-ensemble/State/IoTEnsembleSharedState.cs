@@ -162,17 +162,6 @@ namespace LCU.State.API.IoTEnsemble.State
 
     [Serializable]
     [DataContract]
-    public class IoTEnsembleDeviceListResponse
-    {
-        [DataMember]
-        public virtual List<string> DeviceNames { get; set; }
-
-        [DataMember]
-        public virtual Status Status { get; set; }
-    }
-
-    [Serializable]
-    [DataContract]
     public class IoTEnsembleTelemetryResponse : BaseResponse
     {
         [DataMember]

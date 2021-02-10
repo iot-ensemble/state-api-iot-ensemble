@@ -377,7 +377,8 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual async Task EnsureUserEnterprise(EnterpriseArchitectClient entArch, EnterpriseManagerClient entMgr,
             SecurityManagerClient secMgr, string parentEntLookup, string username)
         {
-            if (State.DevicesConfig != null){
+            if (State.DevicesConfig != null)
+            {
                 State.DevicesConfig.Status = null;
             }
 
@@ -512,31 +513,18 @@ namespace LCU.State.API.IoTEnsemble.State
                 .Run();
         }
 
-        public virtual async Task<IoTEnsembleDeviceListResponse> ListAllDeviceNames(DocumentClient telemClient, string ChildEntLookup)
+        public virtual async Task<List<string>> ListAllDeviceNames(ApplicationArchitectClient appArch, string childEntLookup, string filter)
         {
-            var response = new IoTEnsembleDeviceListResponse()
+            var deviceNames = new List<string>();
+
+            var devices = await loadDevices(appArch, childEntLookup, 1, 100);
+
+            deviceNames = devices?.Items?.Select(device => device.DeviceName).Where(deviceName =>
             {
-                DeviceNames = new List<string>(),
-                Status = Status.Initialized
-            };
+                return filter.IsNullOrEmpty() || deviceName.Contains(filter);
+            }).ToList();
 
-            try
-            {
-                var payloads = await queryDeviceNames(telemClient, ChildEntLookup);
-
-                response.DeviceNames = payloads;
-
-                response.Status = Status.Success;
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex, "There was an issue loading device list.");
-
-                response.Status = Status.GeneralError.Clone("There was an issue loading device list.",
-                    new { Exception = ex.ToString() });
-            }
-
-            return response;
+            return deviceNames;
         }
 
         public virtual async Task<Status> LoadAPIKeys(EnterpriseArchitectClient entArch, string entLookup, string username)
@@ -590,55 +578,16 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task LoadDevices(ApplicationArchitectClient appArch)
         {
-            if (State.DevicesConfig == null)
-                State.DevicesConfig = new IoTEnsembleConnectedDevicesConfig();
+            var devices = await loadDevices(appArch, State.UserEnterpriseLookup, State.DevicesConfig.Page, State.DevicesConfig.PageSize);
 
-            await DesignOutline.Instance.Retry()
-                .SetActionAsync(async () =>
-                {
-                    try
-                    {
-                        var devicesResp = await appArch.ListEnrolledDevices(State.UserEnterpriseLookup, envLookup: null,
-                            page: State.DevicesConfig.Page, pageSize: State.DevicesConfig.PageSize);
+            if (devices != null)
+            {
+                State.DevicesConfig.Devices = devices.Items.ToList();
 
-                        if (devicesResp.Status)
-                        {
-                            State.DevicesConfig.Devices = devicesResp.Model?.Items?.Select(m =>
-                            {
-                                var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
+                State.DevicesConfig.TotalDevices = devices.TotalRecords;
+            }
 
-                                devInfo.DeviceName = devInfo.DeviceID.Replace($"{State.UserEnterpriseLookup}-", String.Empty);
-
-                                return devInfo;
-
-                            }).JSONConvert<List<IoTEnsembleDeviceInfo>>() ?? new List<IoTEnsembleDeviceInfo>();
-
-                            State.DevicesConfig.TotalDevices = devicesResp.Model.TotalRecords;
-
-                            State.DevicesConfig.SASTokens = null;
-                        }
-                        else if (State.DevicesConfig.Devices.IsNullOrEmpty() || devicesResp.Status == Status.NotLocated)
-                        {
-                            State.DevicesConfig.Devices = new List<IoTEnsembleDeviceInfo>();
-
-                            State.DevicesConfig.TotalDevices = 0;
-                        }
-
-                        log.LogInformation($"Load devices status {devicesResp.Status.ToJSON()}");
-
-                        return !devicesResp.Status && devicesResp.Status != Status.NotLocated;
-                    }
-                    catch (Exception ex)
-                    {
-                        log.LogError(ex, "Failed loading devices");
-
-                        return true;
-                    }
-                })
-                .SetCycles(5)
-                .SetThrottle(25)
-                .SetThrottleScale(2)
-                .Run();
+            State.DevicesConfig.SASTokens = null;
         }
 
         public virtual async Task<Status> LoadTelemetry(SecurityManagerClient secMgr, DocumentClient client)
@@ -1263,6 +1212,57 @@ namespace LCU.State.API.IoTEnsemble.State
             // return "{\r\n\t\"version\": 1,\r\n\t\"allow_edit\": true,\r\n\t\"plugins\": [],\r\n\t\"panes\": [\r\n\t\t{\r\n\t\t\t\"width\": 1,\r\n\t\t\t\"row\": {\r\n\t\t\t\t\"3\": 1\r\n\t\t\t},\r\n\t\t\t\"col\": {\r\n\t\t\t\t\"3\": 1\r\n\t\t\t},\r\n\t\t\t\"col_width\": 3,\r\n\t\t\t\"widgets\": [\r\n\t\t\t\t{\r\n\t\t\t\t\t\"type\": \"text_widget\",\r\n\t\t\t\t\t\"settings\": {\r\n\t\t\t\t\t\t\"size\": \"regular\",\r\n\t\t\t\t\t\t\"value\": \"Device Insights & Monitoring\",\r\n\t\t\t\t\t\t\"animate\": true\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t]\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"title\": \"Last Processed Device Data\",\r\n\t\t\t\"width\": 1,\r\n\t\t\t\"row\": {\r\n\t\t\t\t\"3\": 5\r\n\t\t\t},\r\n\t\t\t\"col\": {\r\n\t\t\t\t\"3\": 1\r\n\t\t\t},\r\n\t\t\t\"col_width\": 2,\r\n\t\t\t\"widgets\": [\r\n\t\t\t\t{\r\n\t\t\t\t\t\"type\": \"text_widget\",\r\n\t\t\t\t\t\"settings\": {\r\n\t\t\t\t\t\t\"size\": \"regular\",\r\n\t\t\t\t\t\t\"value\": \"datasources[\\\"Query\\\"][datasources[\\\"Query\\\"].length - 1][\\\"DeviceID\\\"]\",\r\n\t\t\t\t\t\t\"animate\": true\r\n\t\t\t\t\t}\r\n\t\t\t\t},\r\n\t\t\t\t{\r\n\t\t\t\t\t\"type\": \"html\",\r\n\t\t\t\t\t\"settings\": {\r\n\t\t\t\t\t\t\"html\": \"JSON.stringify(datasources[\\\"Query\\\"][datasources[\\\"Query\\\"].length - 1])\",\r\n\t\t\t\t\t\t\"height\": 4\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t]\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"title\": \"Connected Devices (Last 3 Days)\",\r\n\t\t\t\"width\": 1,\r\n\t\t\t\"row\": {\r\n\t\t\t\t\"3\": 5\r\n\t\t\t},\r\n\t\t\t\"col\": {\r\n\t\t\t\t\"3\": 3\r\n\t\t\t},\r\n\t\t\t\"col_width\": 1,\r\n\t\t\t\"widgets\": [\r\n\t\t\t\t{\r\n\t\t\t\t\t\"type\": \"html\",\r\n\t\t\t\t\t\"settings\": {\r\n\t\t\t\t\t\t\"html\": \"JSON.stringify(Array.from(new Set(datasources[\\\"Query\\\"].map((q) => q.DeviceID))))\",\r\n\t\t\t\t\t\t\"height\": 4\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t]\r\n\t\t}\r\n\t],\r\n\t\"datasources\": [\r\n\t\t{\r\n\t\t\t\"name\": \"Query\",\r\n\t\t\t\"type\": \"JSON\",\r\n\t\t\t\"settings\": {\r\n\t\t\t\t\"url\": \"\\/api\\/iot-ensemble\\/devices\\/telemetry\",\r\n\t\t\t\t\"use_thingproxy\": false,\r\n\t\t\t\t\"refresh\": 30,\r\n\t\t\t\t\"method\": \"GET\"\r\n\t\t\t}\r\n\t\t}\r\n\t],\r\n\t\"columns\": 3\r\n}".FromJSON<MetadataModel>();
         }
 
+        protected virtual async Task<Pageable<IoTEnsembleDeviceInfo>> loadDevices(ApplicationArchitectClient appArch, string entLookup,
+            int page, int pageSize)
+        {
+            var devices = new Pageable<IoTEnsembleDeviceInfo>()
+            {
+                Items = new List<IoTEnsembleDeviceInfo>(),
+                TotalRecords = 0
+            };
+
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        var devicesResp = await appArch.ListEnrolledDevices(entLookup, envLookup: null,
+                            page: page, pageSize: pageSize);
+
+                        if (devicesResp.Status)
+                        {
+                            devices.Items = devicesResp.Model?.Items?.Select(m =>
+                            {
+                                var devInfo = m.JSONConvert<IoTEnsembleDeviceInfo>();
+
+                                devInfo.DeviceName = devInfo.DeviceID.Replace($"{entLookup}-", String.Empty);
+
+                                return devInfo;
+
+                            }).JSONConvert<List<IoTEnsembleDeviceInfo>>() ?? new List<IoTEnsembleDeviceInfo>();
+
+                            devices.TotalRecords = devicesResp.Model.TotalRecords;
+                        }
+
+                        log.LogInformation($"Load devices status {devicesResp.Status.ToJSON()}");
+
+                        return !devicesResp.Status && devicesResp.Status != Status.NotLocated;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError(ex, "Failed loading devices");
+
+                        return true;
+                    }
+                })
+                .SetCycles(5)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
+
+            return devices;
+        }
+
         protected virtual async Task<byte[]> processToResultType(List<JObject> downloadedData, ColdQueryResultTypes resultType)
         {
             var response = new byte[] { };
@@ -1289,75 +1289,6 @@ namespace LCU.State.API.IoTEnsemble.State
             }
 
             return response;
-        }
-
-        protected virtual async Task<List<string>> queryDeviceNames(DocumentClient client, string entLookup)
-        {
-            var payloads = new List<string>();
-
-            await DesignOutline.Instance.Retry()
-                .SetActionAsync(async () =>
-                {
-                    try
-                    {
-                        Uri colUri = UriFactory.CreateDocumentCollectionUri(warmTelemetryDatabase, warmTelemetryContainer);
-
-                        IQueryable<IoTEnsembleTelemetryPayload> docsQueryBldr =
-                            client.CreateDocumentQuery<IoTEnsembleTelemetryPayload>(colUri, new FeedOptions()
-                            {
-                                EnableCrossPartitionQuery = true
-                            })
-                            .Where(payload => payload.EnterpriseLookup == entLookup);
-
-                        docsQueryBldr = docsQueryBldr
-                            .OrderByDescending(payload => payload._ts);
-
-                        // docsQueryBldr = docsQueryBldr
-                        //     .Skip((pageSize * page) - pageSize)
-                        //     .Take(pageSize);
-
-                        var docsQuery = docsQueryBldr.AsDocumentQuery();
-
-                        var tempPayloads = new List<IoTEnsembleTelemetryPayload>();
-
-                        while (docsQuery.HasMoreResults)
-                            tempPayloads.AddRange(await docsQuery.ExecuteNextAsync<IoTEnsembleTelemetryPayload>());
-
-                        return false;
-                    }
-                    catch (Exception ex)
-                    {
-                        var retriable = false;
-
-                        var retriableExceptionCodes = new List<int>() { 409, 412, 429, 1007, 1008 };
-
-                        if (ex is ResponseException rex)
-                        {
-                            var code = rex.StatusAttributes["x-ms-status-code"].As<int>();
-
-                            retriable = retriableExceptionCodes.Contains(code);
-
-                            if (retriable && rex.StatusAttributes.ContainsKey("x-ms-retry-after-ms"))
-                            {
-                                var retryMsWait = rex.StatusAttributes["x-ms-retry-after-ms"].As<int>();
-
-                                await Task.Delay(retryMsWait);
-                            }
-                        }
-
-                        if (!retriable)
-                            throw;
-
-                        return retriable;
-                    }
-                })
-                .SetCycles(10)
-                .SetThrottle(25)
-                .SetThrottleScale(2)
-                .Run();
-
-            return payloads;
-
         }
 
         protected virtual async Task<Pageable<IoTEnsembleTelemetryPayload>> queryTelemetryPayloads(DocumentClient client, string entLookup,
