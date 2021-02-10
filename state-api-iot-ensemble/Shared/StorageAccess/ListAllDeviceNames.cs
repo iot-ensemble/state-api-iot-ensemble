@@ -52,7 +52,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             DocumentClient telemClient)
         {
-            var queried = new IoTEnsembleTelemetryResponse()
+            var queried = new IoTEnsembleDeviceListResponse()
             {
                 Status = Status.GeneralError
             };
