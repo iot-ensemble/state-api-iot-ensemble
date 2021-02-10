@@ -512,6 +512,33 @@ namespace LCU.State.API.IoTEnsemble.State
                 .Run();
         }
 
+        public virtual async Task<IoTEnsembleDeviceListResponse> ListAllDeviceNames(DocumentClient telemClient, string ChildEntLookup)
+        {
+            var response = new IoTEnsembleDeviceListResponse()
+            {
+                DeviceNames = new List<string>(),
+                Status = Status.Initialized
+            };
+
+            try
+            {
+                var payloads = await queryDeviceNames(telemClient, ChildEntLookup);
+
+                response.DeviceNames = payloads;
+
+                response.Status = Status.Success;
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex, "There was an issue loading device list.");
+
+                response.Status = Status.GeneralError.Clone("There was an issue loading device list.",
+                    new { Exception = ex.ToString() });
+            }
+
+            return response;
+        }
+
         public virtual async Task<Status> LoadAPIKeys(EnterpriseArchitectClient entArch, string entLookup, string username)
         {
             if (State.Storage == null)
@@ -1262,6 +1289,75 @@ namespace LCU.State.API.IoTEnsemble.State
             }
 
             return response;
+        }
+
+        protected virtual async Task<List<string>> queryDeviceNames(DocumentClient client, string entLookup)
+        {
+            var payloads = new List<string>();
+
+            await DesignOutline.Instance.Retry()
+                .SetActionAsync(async () =>
+                {
+                    try
+                    {
+                        Uri colUri = UriFactory.CreateDocumentCollectionUri(warmTelemetryDatabase, warmTelemetryContainer);
+
+                        IQueryable<IoTEnsembleTelemetryPayload> docsQueryBldr =
+                            client.CreateDocumentQuery<IoTEnsembleTelemetryPayload>(colUri, new FeedOptions()
+                            {
+                                EnableCrossPartitionQuery = true
+                            })
+                            .Where(payload => payload.EnterpriseLookup == entLookup);
+
+                        docsQueryBldr = docsQueryBldr
+                            .OrderByDescending(payload => payload._ts);
+
+                        // docsQueryBldr = docsQueryBldr
+                        //     .Skip((pageSize * page) - pageSize)
+                        //     .Take(pageSize);
+
+                        var docsQuery = docsQueryBldr.AsDocumentQuery();
+
+                        var tempPayloads = new List<IoTEnsembleTelemetryPayload>();
+
+                        while (docsQuery.HasMoreResults)
+                            tempPayloads.AddRange(await docsQuery.ExecuteNextAsync<IoTEnsembleTelemetryPayload>());
+
+                        return false;
+                    }
+                    catch (Exception ex)
+                    {
+                        var retriable = false;
+
+                        var retriableExceptionCodes = new List<int>() { 409, 412, 429, 1007, 1008 };
+
+                        if (ex is ResponseException rex)
+                        {
+                            var code = rex.StatusAttributes["x-ms-status-code"].As<int>();
+
+                            retriable = retriableExceptionCodes.Contains(code);
+
+                            if (retriable && rex.StatusAttributes.ContainsKey("x-ms-retry-after-ms"))
+                            {
+                                var retryMsWait = rex.StatusAttributes["x-ms-retry-after-ms"].As<int>();
+
+                                await Task.Delay(retryMsWait);
+                            }
+                        }
+
+                        if (!retriable)
+                            throw;
+
+                        return retriable;
+                    }
+                })
+                .SetCycles(10)
+                .SetThrottle(25)
+                .SetThrottleScale(2)
+                .Run();
+
+            return payloads;
+
         }
 
         protected virtual async Task<Pageable<IoTEnsembleTelemetryPayload>> queryTelemetryPayloads(DocumentClient client, string entLookup,
