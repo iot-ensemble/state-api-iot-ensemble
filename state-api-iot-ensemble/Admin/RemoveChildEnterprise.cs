@@ -57,7 +57,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
                 await harness.RemoveChildEnterprise(appArch, entArch, dataReq.ChildEntLookup);
 
                 return Status.Success;
-            });
+            }, withLock: false);
         }
     }
 }

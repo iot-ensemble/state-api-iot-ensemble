@@ -75,7 +75,7 @@ namespace LCU.State.API.IoTEnsemble.Host
                     harness.State.Loading = true;
 
                     return Status.Success;
-                }, preventStatusException: true);
+                }, preventStatusException: true, withLock: false);
 
             if (status)
                 status = await stateBlob.WithStateHarness<IoTEnsembleAdminState, RevokeDeviceEnrollmentRequest, IoTEnsembleAdminStateHarness>(req, signalRMessages, log,
@@ -90,7 +90,7 @@ namespace LCU.State.API.IoTEnsemble.Host
                         harness.State.Loading = false;
 
                         return Status.Success;
-                    });
+                    }, withLock: false);
 
             return status;
         }
@@ -106,7 +106,7 @@ namespace LCU.State.API.IoTEnsemble.Host
                     harness.State.DevicesConfig.Loading = true;
 
                     return Status.Success;
-                }, preventStatusException: true);
+                }, preventStatusException: true, withLock: false);
 
             if (status)
                 status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, RevokeDeviceEnrollmentRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
@@ -121,7 +121,7 @@ namespace LCU.State.API.IoTEnsemble.Host
                         harness.State.DevicesConfig.Loading = false;
 
                         return Status.Success;
-                    });
+                    }, withLock: false);
 
             return status;
         }

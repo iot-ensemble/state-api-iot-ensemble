@@ -53,7 +53,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
                 await harness.SetActiveEnterprise(appArch, dataReq.Lookup);
 
                 return Status.Success;
-            });
+            }, withLock: false);
         }
     }
 }

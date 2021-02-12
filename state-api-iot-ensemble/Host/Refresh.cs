@@ -80,7 +80,7 @@ namespace LCU.State.API.IoTEnsemble.Host
                     await harness.Refresh(appArch, entMgr, idMgr, stateDetails.EnterpriseLookup);
 
                     return Status.Success;
-                });
+                }, withLock: false);
             else
                 return await stateBlob.WithStateHarness<IoTEnsembleSharedState, RefreshRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
                     async (harness, refreshReq, actReq) =>
@@ -92,7 +92,7 @@ namespace LCU.State.API.IoTEnsemble.Host
                     await harness.Refresh(starter, stateDetails, actReq, appArch, entArch, entMgr, idMgr, secMgr, docClient);
 
                     return Status.Success;
-                });
+                }, withLock: false);
         }
     }
 }
