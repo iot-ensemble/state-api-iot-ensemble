@@ -70,7 +70,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
                 await harness.UpdateEnterprisesSync(entMgr, appArch, idMgr, stateDetails.EnterpriseLookup, dataReq.Page, dataReq.PageSize);
 
                 return Status.Success;
-            });
+            }, withLock: false);
         }
     }
 }
