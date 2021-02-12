@@ -110,7 +110,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                     harness.State.Telemetry.Loading = true;
 
                     return Status.Success;
-                }, preventStatusException: true);
+                }, preventStatusException: true, withLock: false);
 
             if (status)
                 status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, TelemetrySyncRequest, IoTEnsembleSharedStateHarness>(stateCtxt.StateDetails,
@@ -123,7 +123,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                         harness.State.Telemetry.Loading = false;
 
                         return loaded;
-                    }, preventStatusException: true);
+                    }, preventStatusException: true, withLock: false);
 
             return status;
         }

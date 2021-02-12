@@ -1000,9 +1000,9 @@ namespace LCU.State.API.IoTEnsemble.State
             }
             catch (Exception ex)
             {
-                log.LogError(ex, "There was an issue loading your device telemetry.");
+                log.LogError(ex, "There was an issue loading your warm query.");
 
-                response.Status = Status.GeneralError.Clone("There was an issue loading your device telemetry.",
+                response.Status = Status.GeneralError.Clone("There was an issue loading your warm query.",
                     new { Exception = ex.ToString() });
             }
 

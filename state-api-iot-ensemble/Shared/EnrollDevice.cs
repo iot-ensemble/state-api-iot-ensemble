@@ -53,7 +53,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                     harness.State.DevicesConfig.Loading = true;
 
                     return Status.Success;
-                }, preventStatusException: true);
+                }, preventStatusException: true, withLock: false);
 
             if (status)
                 status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, EnrollDeviceRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
@@ -68,7 +68,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                         harness.State.DevicesConfig.Loading = false;
 
                         return Status.Success;
-                    });
+                    }, withLock: false);
 
             return status;
         }
