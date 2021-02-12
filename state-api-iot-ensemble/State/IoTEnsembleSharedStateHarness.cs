@@ -157,9 +157,6 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task EnsureDevicesDashboard(SecurityManagerClient secMgr)
         {
-            if (State.Dashboard == null)
-                State.Dashboard = new IoTEnsembleDashboardConfiguration();
-
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
                 if (State.Dashboard.FreeboardConfig == null)
@@ -216,9 +213,6 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task EnsureDrawersConfig(SecurityManagerClient secMgr)
         {
-            if (State.Drawers == null)
-                State.Drawers = new IoTEnsembleDrawersConfig();
-
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
                 await DesignOutline.Instance.Retry()
@@ -264,9 +258,6 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual async Task EnsureEmulatedDeviceInfo(IDurableOrchestrationClient starter, StateDetails stateDetails,
             ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient client)
         {
-            if (State.Emulated == null)
-                State.Emulated = new EmulatedDeviceInfo();
-
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
                 await DesignOutline.Instance.Retry()
@@ -306,9 +297,6 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual async Task EnsureTelemetry(IDurableOrchestrationClient starter, StateDetails stateDetails,
             ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient docClient)
         {
-            if (State.Telemetry == null)
-                State.Telemetry = new IoTEnsembleTelemetry();
-
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
                 await DesignOutline.Instance.Retry()
@@ -350,7 +338,6 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual async Task EnsureTelemetrySyncState(IDurableOrchestrationClient starter, StateDetails stateDetails,
             ExecuteActionRequest exActReq)
         {
-
             var instanceId = $"{stateDetails.EnterpriseLookup}-{stateDetails.HubName}-{stateDetails.Username}-{stateDetails.StateKey}-{State.UserEnterpriseLookup}";
 
             var existingOrch = await starter.GetStatusAsync(instanceId);
@@ -378,9 +365,7 @@ namespace LCU.State.API.IoTEnsemble.State
             SecurityManagerClient secMgr, string parentEntLookup, string username)
         {
             if (State.DevicesConfig != null)
-            {
                 State.DevicesConfig.Status = null;
-            }
 
             if (State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -529,9 +514,6 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task<Status> LoadAPIKeys(EnterpriseArchitectClient entArch, string entLookup, string username)
         {
-            if (State.Storage == null)
-                State.Storage = new IoTEnsembleStorageConfiguration();
-
             State.Storage.APIKeys = new List<IoTEnsembleAPIKeyData>();
 
             await DesignOutline.Instance.Retry()
@@ -568,9 +550,6 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task<Status> LoadAPIOptions()
         {
-            if (State.Storage == null)
-                State.Storage = new IoTEnsembleStorageConfiguration();
-
             State.Storage.OpenAPISource = "https://www.iot-ensemble.com/open-api/iot-ensemble.openapi.json";
 
             return Status.Success;
@@ -827,9 +806,6 @@ namespace LCU.State.API.IoTEnsemble.State
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
-                if (State.Telemetry == null)
-                    State.Telemetry = new IoTEnsembleTelemetry();
-
                 await setTelemetryEnabled(secMgr, !State.Telemetry.Enabled);
 
                 await EnsureTelemetrySyncState(starter, stateDetails, exActReq);
