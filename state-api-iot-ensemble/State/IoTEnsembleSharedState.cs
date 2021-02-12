@@ -63,6 +63,21 @@ namespace LCU.State.API.IoTEnsemble.State
 
         [DataMember]
         public virtual string UserEnterpriseLookup { get; set; }
+
+        #region Constructors
+        public IoTEnsembleSharedState()
+        {
+            Dashboard = new IoTEnsembleDashboardConfiguration();
+
+            Drawers = new IoTEnsembleDrawersConfig();
+
+            Emulated = new EmulatedDeviceInfo();
+
+            Storage = new IoTEnsembleStorageConfiguration();
+            
+            Telemetry = new IoTEnsembleTelemetry();
+        }
+        #endregion
     }
 
     [Serializable]
