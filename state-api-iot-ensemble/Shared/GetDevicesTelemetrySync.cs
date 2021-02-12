@@ -63,7 +63,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                 payloads = harness.State.Telemetry?.Payloads?.OrderByDescending(p => p.Timestamp).ToList() ?? new List<IoTEnsembleTelemetryPayload>();
 
                 return Status.Success;
-            });
+            }, withLock: false);
 
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
