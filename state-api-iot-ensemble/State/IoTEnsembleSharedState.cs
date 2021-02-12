@@ -69,6 +69,8 @@ namespace LCU.State.API.IoTEnsemble.State
         {
             Dashboard = new IoTEnsembleDashboardConfiguration();
 
+            DevicesConfig = new IoTEnsembleConnectedDevicesConfig();
+
             Drawers = new IoTEnsembleDrawersConfig();
 
             Emulated = new EmulatedDeviceInfo();
