@@ -690,7 +690,9 @@ namespace LCU.State.API.IoTEnsemble.State
                         var sendResp = await appArch.SendDeviceMessage(payload, State.UserEnterpriseLookup,
                             deviceName, envLookup: null);
 
-                        status = sendResp.Status;
+                        log.LogInformation($"Send Device Message Response {sendResp?.Status?.ToJSON()}");
+
+                        status = sendResp?.Status ?? Status.GeneralError.Clone("Send device returned no response.");
 
                         return !status;
                     }
