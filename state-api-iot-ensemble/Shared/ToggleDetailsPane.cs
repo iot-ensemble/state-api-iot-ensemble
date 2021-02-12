@@ -52,7 +52,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                 await harness.ToggleDetailsPane(secMgr);
 
                 return Status.Success;
-            });
+            }, withLock: false);
         }
     }
 }

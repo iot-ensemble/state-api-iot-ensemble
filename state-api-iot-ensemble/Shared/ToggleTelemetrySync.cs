@@ -64,7 +64,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                 await harness.ToggleTelemetrySyncEnabled(starter, stateDetails, actReq, secMgr, docClient);
 
                 return Status.Success;
-            });
+            }, withLock: false);
         }
     }
 }
