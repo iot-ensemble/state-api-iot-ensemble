@@ -20,6 +20,7 @@ using System.Security.Claims;
 using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
+using LCU.Personas.Client.Identity;
 
 namespace LCU.State.API.IoTEnsemble.Admin
 {
@@ -37,11 +38,21 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
         protected EnterpriseArchitectClient entArch;
 
-        public RemoveChildEnterprise(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch)
+        protected EnterpriseManagerClient entMgr;
+
+        protected IdentityManagerClient idMgr;
+        
+
+        public RemoveChildEnterprise(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, 
+        EnterpriseManagerClient entMgr, IdentityManagerClient idMgr)
         {
             this.appArch = appArch;
 
             this.entArch = entArch;
+
+            this.entMgr = entMgr;
+
+            this.idMgr = idMgr;
          }
 
         [FunctionName("RemoveChildEnterprise")]
@@ -54,7 +65,9 @@ namespace LCU.State.API.IoTEnsemble.Admin
             {
                 log.LogInformation($"RemoveChildEnterprise");
 
-                await harness.RemoveChildEnterprise(appArch, entArch, dataReq.ChildEntLookup);
+                var stateDetails = StateUtils.LoadStateDetails(req);
+
+                await harness.RemoveChildEnterprise(appArch, entArch, entMgr, idMgr, dataReq.ChildEntLookup, stateDetails.EnterpriseLookup);
 
                 return Status.Success;
             }, withLock: false);

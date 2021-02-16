@@ -162,8 +162,23 @@ namespace LCU.State.API.IoTEnsemble.State
             State.Loading = false;
         }
 
-        public virtual async Task<Status> RemoveChildEnterprise(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, string ChildEntLookup)
+        public virtual async Task<Status> RemoveChildEnterprise(ApplicationArchitectClient appArch, 
+        EnterpriseArchitectClient entArch, EnterpriseManagerClient entMgr, IdentityManagerClient idMgr, 
+        string childEntLookup, string parentEntLookup)
         {
+            var devices = await appArch.ListEnrolledDevices(childEntLookup);
+            
+            await devices.Model.Items.Each(async d =>{
+
+                await revokeDeviceEnrollment(appArch, childEntLookup, d.DeviceID);
+
+            });
+
+            if(State.EnterpriseConfig.ActiveEnterpriseLookup == childEntLookup)
+            {
+                State.EnterpriseConfig.ActiveEnterpriseLookup = null;
+            }
+            await LoadChildEnterprises(entMgr, parentEntLookup, appArch, idMgr);
             
             return Status.Success;
         }
