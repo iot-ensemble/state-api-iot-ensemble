@@ -172,7 +172,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                 await revokeDeviceEnrollment(appArch, childEntLookup, d.DeviceID);
 
-            });
+            }, parallel: true);
 
             if(State.EnterpriseConfig.ActiveEnterpriseLookup == childEntLookup)
             {
