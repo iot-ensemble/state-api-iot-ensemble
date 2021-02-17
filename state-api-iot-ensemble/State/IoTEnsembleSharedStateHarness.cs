@@ -963,8 +963,8 @@ namespace LCU.State.API.IoTEnsemble.State
                 page = 1;
 
             if (!pageSize.HasValue || pageSize.Value < 1){
-                // pageSize = 10;
-                pageSize = (int)State.Telemetry.TotalPayloads;
+                pageSize = 100;
+                // pageSize = (int)State.Telemetry.TotalPayloads;
             }
                 
 
