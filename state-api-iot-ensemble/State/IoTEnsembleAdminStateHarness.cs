@@ -114,6 +114,10 @@ namespace LCU.State.API.IoTEnsemble.State
 
             State.EnterpriseConfig.ChildEnterprises = iotChildEnts;
 
+            // if(State.ActiveEnterpriseConfig != null){
+            //     await LoadActiveEnterpriseDetails(appArch, State.ActiveEnterpriseConfig.Page, State.ActiveEnterpriseConfig.PageSize);
+            // }
+
             // var activeEnt = State.EnterpriseConfig.ChildEnterprises.FirstOrDefault(ce => ce.Lookup == State.ActiveEnterpriseConfig.ActiveEnterprise.Lookup);
 
             // if (activeEnt == null)
@@ -238,7 +242,10 @@ namespace LCU.State.API.IoTEnsemble.State
 
                 await LoadChildEnterprises(entMgr, parentEntLookup, appArch, idMgr);
 
-
+                if(State.ActiveEnterpriseConfig != null)
+                {
+                await LoadActiveEnterpriseDetails(appArch, State.ActiveEnterpriseConfig.Page, State.ActiveEnterpriseConfig.PageSize);
+                }
             }
 
             else
