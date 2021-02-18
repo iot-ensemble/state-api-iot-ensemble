@@ -44,6 +44,9 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual EmulatedDeviceInfo Emulated { get; set; }
 
         [DataMember]
+        public virtual IoTEnsembleEnterpriseReferenceData EnterpriseReferenceData { get; set; }
+
+        [DataMember]
         public virtual ErrorContext Error { get; set; }
 
         [DataMember]
