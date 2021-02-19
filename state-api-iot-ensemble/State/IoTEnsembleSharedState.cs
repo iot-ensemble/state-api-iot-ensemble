@@ -32,6 +32,12 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual string AccessPlanGroup { get; set; }
 
         [DataMember]
+        public virtual int DataInterval { get; set; }
+
+        [DataMember]
+        public virtual int DataRetention { get; set; }
+
+        [DataMember]
         public virtual IoTEnsembleDashboardConfiguration Dashboard { get; set; }
 
         [DataMember]
@@ -43,8 +49,8 @@ namespace LCU.State.API.IoTEnsemble.State
         [DataMember]
         public virtual EmulatedDeviceInfo Emulated { get; set; }
 
-        [DataMember]
-        public virtual IoTEnsembleEnterpriseReferenceData EnterpriseReferenceData { get; set; }
+        // [DataMember]
+        // public virtual IoTEnsembleEnterpriseReferenceData EnterpriseReferenceData { get; set; }
 
         [DataMember]
         public virtual ErrorContext Error { get; set; }

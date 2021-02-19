@@ -294,42 +294,6 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
-        public virtual async Task EnterpriseReferenceData(IDurableOrchestrationClient starter, StateDetails stateDetails,
-            ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient docClient)
-        {
-            if (!State.UserEnterpriseLookup.IsNullOrEmpty())
-            {
-                await DesignOutline.Instance.Retry()
-                    .SetActionAsync(async () =>
-                    {
-                        try
-                        {
-                            var tpd = await secMgr.RetrieveEnterpriseThirdPartyData(State.UserEnterpriseLookup, TELEMETRY_SYNC_ENABLED);
-
-                            if (tpd.Status && tpd.Model.ContainsKey(TELEMETRY_SYNC_ENABLED) && !tpd.Model[TELEMETRY_SYNC_ENABLED].IsNullOrEmpty())
-                                State.Telemetry.Enabled = tpd.Model[TELEMETRY_SYNC_ENABLED].As<bool>();
-                            else
-                                State.EnterpriseReferenceData = null;
-
-                            return false;
-                        }
-                        catch (Exception ex)
-                        {
-                            log.LogError(ex, "Failed setting enterprise reference data");
-
-                            return true;
-                        }
-                    })
-                    .SetCycles(5)
-                    .SetThrottle(25)
-                    .SetThrottleScale(2)
-                    .Run();
-
-            }
-            else
-                throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
-        }
-
         public virtual async Task EnsureTelemetry(IDurableOrchestrationClient starter, StateDetails stateDetails,
             ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient docClient)
         {
@@ -474,6 +438,12 @@ namespace LCU.State.API.IoTEnsemble.State
 
                             if (hasAccess.Model.Metadata.ContainsKey("Devices"))
                                 State.DevicesConfig.MaxDevicesCount = hasAccess.Model.Metadata["Devices"].ToString().As<int>();
+
+                            if(hasAccess.Model.Metadata.ContainsKey("DataInterval"))
+                                State.DataInterval = (int) hasAccess.Model.Metadata["DataInterval"];
+
+                            if(hasAccess.Model.Metadata.ContainsKey("DataRetention"))
+                                State.DataRetention = (int) hasAccess.Model.Metadata["DataRetention"];
                         }
                         else
                         {
