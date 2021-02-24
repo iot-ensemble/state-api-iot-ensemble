@@ -438,6 +438,12 @@ namespace LCU.State.API.IoTEnsemble.State
 
                             if (hasAccess.Model.Metadata.ContainsKey("Devices"))
                                 State.DevicesConfig.MaxDevicesCount = hasAccess.Model.Metadata["Devices"].ToString().As<int>();
+
+                            if(hasAccess.Model.Metadata.ContainsKey("DataInterval"))
+                                State.DataInterval = (int) hasAccess.Model.Metadata["DataInterval"];
+
+                            if(hasAccess.Model.Metadata.ContainsKey("DataRetention"))
+                                State.DataRetention = (int) hasAccess.Model.Metadata["DataRetention"];
                         }
                         else
                         {
@@ -962,8 +968,11 @@ namespace LCU.State.API.IoTEnsemble.State
             if (!page.HasValue || page.Value < 1)
                 page = 1;
 
-            if (!pageSize.HasValue || pageSize.Value < 1)
-                pageSize = 10;
+            if (!pageSize.HasValue || pageSize.Value < 1){
+                pageSize = 100;
+                // pageSize = (int)State.Telemetry.TotalPayloads;
+            }
+                
 
             try
             {

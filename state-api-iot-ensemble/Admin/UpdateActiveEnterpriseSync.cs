@@ -26,48 +26,48 @@ namespace LCU.State.API.IoTEnsemble.Admin
 {
     [Serializable]
     [DataContract]
-    public class RemoveChildEnterpriseRequest : BaseRequest
+    public class UpdateActiveEnterpriseSyncRequest : BaseRequest
     {
         [DataMember]
-        public virtual string ChildEntLookup { get; set; }
+        public virtual int Page { get; set; }
+        
+        [DataMember]
+        public virtual int PageSize { get; set; }
     }
 
-    public class RemoveChildEnterprise
+    public class UpdateActiveEnterpriseSync
     {
-        protected ApplicationArchitectClient appArch;
 
-        protected EnterpriseArchitectClient entArch;
+        protected ApplicationArchitectClient appArch;
 
         protected EnterpriseManagerClient entMgr;
 
         protected IdentityManagerClient idMgr;
-        
 
-        public RemoveChildEnterprise(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, 
-        EnterpriseManagerClient entMgr, IdentityManagerClient idMgr)
+
+        public UpdateActiveEnterpriseSync(EnterpriseManagerClient entMgr, 
+            ApplicationArchitectClient appArch, IdentityManagerClient idMgr)
         {
             this.appArch = appArch;
-
-            this.entArch = entArch;
 
             this.entMgr = entMgr;
 
             this.idMgr = idMgr;
          }
 
-        [FunctionName("RemoveChildEnterprise")]
+        [FunctionName("UpdateActiveEnterpriseSync")]
         public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
-            return await stateBlob.WithStateHarness<IoTEnsembleAdminState, RemoveChildEnterpriseRequest, IoTEnsembleAdminStateHarness>(req, signalRMessages, log,
+            return await stateBlob.WithStateHarness<IoTEnsembleAdminState, UpdateActiveEnterpriseSyncRequest, IoTEnsembleAdminStateHarness>(req, signalRMessages, log,
                 async (harness, dataReq, actReq) =>
             {
-                log.LogInformation($"RemoveChildEnterprise");
+                log.LogInformation($"UpdateActiveEnterpriseSync");
 
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                await harness.RemoveChildEnterprise(appArch, entArch, entMgr, idMgr, dataReq.ChildEntLookup, stateDetails.EnterpriseLookup);
+                await harness.UpdateActiveEnterpriseSync(entMgr, appArch, idMgr, stateDetails.EnterpriseLookup, dataReq.Page, dataReq.PageSize);
 
                 return Status.Success;
             }, withLock: false);
