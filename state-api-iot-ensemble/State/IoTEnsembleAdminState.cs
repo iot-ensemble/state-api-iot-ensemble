@@ -26,6 +26,10 @@ namespace LCU.State.API.IoTEnsemble.State
     [DataContract]
     public class IoTEnsembleAdminState
     {
+
+        [DataMember]
+        public virtual IoTEnsembleActiveEnterpriseConfig ActiveEnterpriseConfig { get; set; }
+
         [DataMember]
         public virtual IoTEnsembleEnterpriseConfig EnterpriseConfig { get; set; }
 
@@ -35,7 +39,35 @@ namespace LCU.State.API.IoTEnsemble.State
         #region Constructors
         public IoTEnsembleAdminState()
         {
+            ActiveEnterpriseConfig = new IoTEnsembleActiveEnterpriseConfig();
+
             EnterpriseConfig = new IoTEnsembleEnterpriseConfig();
+        }
+        #endregion
+    }
+
+    [Serializable]
+    [DataContract]
+    public class IoTEnsembleActiveEnterpriseConfig
+    {
+        [DataMember]
+        public virtual IoTEnsembleChildEnterprise ActiveEnterprise { get; set; }
+
+        [DataMember]
+        public virtual int Page { get; set; }
+
+        [DataMember]
+        public virtual int PageSize { get; set; }
+
+        #region Constructors
+        public IoTEnsembleActiveEnterpriseConfig()
+        {  
+            ActiveEnterprise = new IoTEnsembleChildEnterprise();
+
+            Page = 1;
+
+            PageSize = 10;
+
         }
         #endregion
     }
@@ -44,8 +76,7 @@ namespace LCU.State.API.IoTEnsemble.State
     [DataContract]
     public class IoTEnsembleEnterpriseConfig
     {
-        [DataMember]
-        public virtual string ActiveEnterpriseLookup { get; set; }
+
         
         [DataMember]
         public virtual List<IoTEnsembleChildEnterprise> ChildEnterprises { get; set; }
