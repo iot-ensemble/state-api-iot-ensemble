@@ -166,16 +166,13 @@ namespace LCU.State.API.IoTEnsemble.State
             var devices = await appArch.ListEnrolledDevices(childEntLookup);
 
             //Remove devices
-
-            if(devices.Model != null)
-            {
             
                 await devices.Model.Items.Each(async d =>{
 
                     await revokeDeviceEnrollment(appArch, childEntLookup, d.DeviceID);
 
                 }, parallel: true);
-            }
+            
 
             //If its the active ent set active to null
             if(State.ActiveEnterpriseConfig.ActiveEnterprise.Lookup == childEntLookup)
@@ -183,18 +180,18 @@ namespace LCU.State.API.IoTEnsemble.State
                 State.ActiveEnterpriseConfig.ActiveEnterprise = null;
             }
 
-            var revokePassport = await idMgr.RevokePassport(childEntLookup, childEnt.Name);
+            await idMgr.RevokePassport(parentEntLookup, childEnt.Name);
 
             var revokeAccessCardRequest = await idMgr.RevokeAccessCard(new Personas.Identity.RevokeAccessCardRequest(){
                 AccessConfiguration = "iot",
                 Username = childEnt.Name
-            }, childEntLookup);
+            }, parentEntLookup);
 
             if(revokeAccessCardRequest.Status.Code == 1){
                 log.LogError($"Unable to revoke access cards: {revokeAccessCardRequest.Status.Message}");
             }
 
-            var revokeLicenceAccess = await idMgr.RevokeLicenseAccess(childEntLookup, childEnt.Name, "iot" );
+            var revokeLicenceAccess = await idMgr.RevokeLicenseAccess(parentEntLookup, childEnt.Name, "iot" );
 
             if(revokeLicenceAccess.Status.Code == 1){
                 log.LogError($"Unable to revoke license access: {revokeLicenceAccess.Status.Message}");
@@ -202,13 +199,13 @@ namespace LCU.State.API.IoTEnsemble.State
 
             //TODO removing the API Management keys
 
-            var cancelUserSubscription = await entMgr.CancelSubscriptionByUser(childEnt.Name, childEntLookup);
+            var cancelUserSubscription = await entMgr.CancelSubscriptionByUser(childEnt.Name, parentEntLookup);
 
             if(cancelUserSubscription.Status.Code == 1){
                 log.LogError($"Unable to cancel subscription: {cancelUserSubscription.Status.Message}");
             }
 
-            var deleteEnterpriseRequest = await entMgr.DeleteEnterpriseByLookup(childEntLookup, new DeleteEnterpriseByLookupRequest(){
+            var deleteRequest = await entMgr.DeleteEnterpriseByLookup(childEntLookup, new DeleteEnterpriseByLookupRequest(){
                 Password= "F@thym!t"
             });
 
