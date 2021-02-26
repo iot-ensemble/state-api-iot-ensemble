@@ -37,6 +37,7 @@ using System.Net;
 using CsvHelper;
 using Fathym.Design;
 using Gremlin.Net.Driver.Exceptions;
+using LCU.Personas.API;
 
 namespace LCU.State.API.IoTEnsemble.State
 {
@@ -520,7 +521,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task<Status> LoadAPIKeys(EnterpriseArchitectClient entArch, string entLookup, string username)
         {
-            State.Storage.APIKeys = new List<IoTEnsembleAPIKeyData>();
+            State.Storage.APIKeys = new List<APIAccessKeyData>();
 
             await DesignOutline.Instance.Retry()
                 .SetActionAsync(async () =>
@@ -531,7 +532,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                         //  TODO:  Handle API error
 
-                        State.Storage.APIKeys = resp.Model?.Metadata.Select(m => new IoTEnsembleAPIKeyData()
+                        State.Storage.APIKeys = resp.Model?.Metadata.Select(m => new APIAccessKeyData()
                         {
                             Key = m.Value.ToString(),
                             KeyName = m.Key
