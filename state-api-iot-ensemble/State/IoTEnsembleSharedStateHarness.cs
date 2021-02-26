@@ -449,7 +449,7 @@ namespace LCU.State.API.IoTEnsemble.State
                         {
                             State.AccessLicenseType = "iot";
 
-                            State.AccessPlanGroup = "explorer";
+                            State.AccessPlanGroup = "explore";
 
                             State.DevicesConfig.MaxDevicesCount = 1;
                         }
@@ -624,6 +624,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 HasLicenseAccess(idMgr, stateDetails.EnterpriseLookup, stateDetails.Username),
                 EnsureEmulatedDeviceInfo(starter, stateDetails, exActReq, secMgr, client)
             );
+
             await Task.WhenAll(
                 EnsureAPISubscription(entArch, stateDetails.EnterpriseLookup, stateDetails.Username),
                 EnsureDevicesDashboard(secMgr),
