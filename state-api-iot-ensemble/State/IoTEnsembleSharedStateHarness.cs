@@ -134,7 +134,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         var resp = await entArch.EnsureAPISubscription(new EnsureAPISubscriptionRequset()
                         {
-                            SubscriptionType = $"{State.AccessLicenseType}-{State.AccessPlanGroup}".ToLower()
+                            SubscriptionType = buildSubscriptionType()
                         }, entLookup, username);
 
                         //  TODO:  Handle API error
@@ -528,7 +528,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     try
                     {
-                        var resp = await entArch.LoadAPIKeys(entLookup, username);
+                        var resp = await entArch.LoadAPIKeys(entLookup, buildSubscriptionType(), username);
 
                         //  TODO:  Handle API error
 
@@ -1012,6 +1012,11 @@ namespace LCU.State.API.IoTEnsemble.State
             var fileName = $"{dtTypeStr}-{startStr}-{endStr}.{fileExtension}";
 
             return fileName;
+        }
+
+        protected virtual string buildSubscriptionType()
+        {
+            return $"{State.AccessLicenseType}-{State.AccessPlanGroup}".ToLower();
         }
 
         protected virtual async Task<List<JObject>> downloadData(CloudBlobDirectory coldBlob, ColdQueryDataTypes dataType, List<string> entLookups,
