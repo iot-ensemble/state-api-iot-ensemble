@@ -37,6 +37,7 @@ using System.Net;
 using CsvHelper;
 using Fathym.Design;
 using Gremlin.Net.Driver.Exceptions;
+using LCU.Personas.API;
 
 namespace LCU.State.API.IoTEnsemble.State
 {
@@ -133,7 +134,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         var resp = await entArch.EnsureAPISubscription(new EnsureAPISubscriptionRequset()
                         {
-                            SubscriptionType = $"{State.AccessLicenseType}-{State.AccessPlanGroup}".ToLower()
+                            SubscriptionType = buildSubscriptionType()
                         }, entLookup, username);
 
                         //  TODO:  Handle API error
@@ -520,18 +521,18 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task<Status> LoadAPIKeys(EnterpriseArchitectClient entArch, string entLookup, string username)
         {
-            State.Storage.APIKeys = new List<IoTEnsembleAPIKeyData>();
+            State.Storage.APIKeys = new List<APIAccessKeyData>();
 
             await DesignOutline.Instance.Retry()
                 .SetActionAsync(async () =>
                 {
                     try
                     {
-                        var resp = await entArch.LoadAPIKeys(entLookup, username);
+                        var resp = await entArch.LoadAPIKeys(entLookup, buildSubscriptionType(), username);
 
                         //  TODO:  Handle API error
 
-                        State.Storage.APIKeys = resp.Model?.Metadata.Select(m => new IoTEnsembleAPIKeyData()
+                        State.Storage.APIKeys = resp.Model?.Metadata.Select(m => new APIAccessKeyData()
                         {
                             Key = m.Value.ToString(),
                             KeyName = m.Key
@@ -624,6 +625,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 HasLicenseAccess(idMgr, stateDetails.EnterpriseLookup, stateDetails.Username),
                 EnsureEmulatedDeviceInfo(starter, stateDetails, exActReq, secMgr, client)
             );
+
             await Task.WhenAll(
                 EnsureAPISubscription(entArch, stateDetails.EnterpriseLookup, stateDetails.Username),
                 EnsureDevicesDashboard(secMgr),
@@ -1010,6 +1012,11 @@ namespace LCU.State.API.IoTEnsemble.State
             var fileName = $"{dtTypeStr}-{startStr}-{endStr}.{fileExtension}";
 
             return fileName;
+        }
+
+        protected virtual string buildSubscriptionType()
+        {
+            return $"{State.AccessLicenseType}-{State.AccessPlanGroup}".ToLower();
         }
 
         protected virtual async Task<List<JObject>> downloadData(CloudBlobDirectory coldBlob, ColdQueryDataTypes dataType, List<string> entLookups,

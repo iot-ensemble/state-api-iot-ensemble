@@ -18,6 +18,7 @@ using System.Runtime.Serialization;
 using System.Collections.Generic;
 using LCU.Personas.Applications;
 using Fathym.API;
+using LCU.Personas.API;
 
 namespace LCU.State.API.IoTEnsemble.State
 {
@@ -252,21 +253,10 @@ namespace LCU.State.API.IoTEnsemble.State
     public class IoTEnsembleStorageConfiguration
     {
         [DataMember]
-        public virtual List<IoTEnsembleAPIKeyData> APIKeys { get; set; }
+        public virtual List<APIAccessKeyData> APIKeys { get; set; }
 
         [DataMember]
         public virtual string OpenAPISource { get; set; }
-    }
-
-    [Serializable]
-    [DataContract]
-    public class IoTEnsembleAPIKeyData
-    {
-        [DataMember]
-        public virtual string Key { get; set; }
-
-        [DataMember]
-        public virtual string KeyName { get; set; }
     }
 
     [Serializable]
