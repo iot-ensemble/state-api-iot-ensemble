@@ -183,9 +183,9 @@ namespace LCU.State.API.IoTEnsemble.State
             await idMgr.RevokePassport(parentEntLookup, childEnt.Name);
 
             var revokeAccessCardRequest = await idMgr.RevokeAccessCard(new Personas.Identity.RevokeAccessCardRequest(){
-                AccessConfiguration = "iot",
+                AccessConfiguration = "LCU",
                 Username = childEnt.Name
-            }, parentEntLookup);
+            }, childEntLookup);
 
             if(revokeAccessCardRequest.Status.Code == 1){
                 log.LogError($"Unable to revoke access cards: {revokeAccessCardRequest.Status.Message}");
