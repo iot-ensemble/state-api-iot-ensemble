@@ -119,7 +119,7 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual async Task LoadActiveEnterpriseDetails(ApplicationArchitectClient appArch, int page, int pageSize)
         {
 
-            if (State.ActiveEnterpriseConfig?.ActiveEnterprise != null)
+            if (State.ActiveEnterpriseConfig?.ActiveEnterprise?.Lookup != null)
             {
                 var enrolledDevices = await appArch.ListEnrolledDevices(State.ActiveEnterpriseConfig.ActiveEnterprise.Lookup, envLookup: null, page: page, pageSize: pageSize);
 
