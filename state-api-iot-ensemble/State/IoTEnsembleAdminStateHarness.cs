@@ -119,7 +119,7 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual async Task LoadActiveEnterpriseDetails(ApplicationArchitectClient appArch, int page, int pageSize)
         {
 
-            if (State.ActiveEnterpriseConfig?.ActiveEnterprise != null)
+            if (State.ActiveEnterpriseConfig?.ActiveEnterprise?.Lookup != null)
             {
                 var enrolledDevices = await appArch.ListEnrolledDevices(State.ActiveEnterpriseConfig.ActiveEnterprise.Lookup, envLookup: null, page: page, pageSize: pageSize);
 
@@ -164,7 +164,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 ent.Lookup == childEntLookup
             );
             var devices = await appArch.ListEnrolledDevices(childEntLookup);
-
+          
             //Remove devices
             
                 await devices.Model.Items.Each(async d =>{
@@ -175,12 +175,12 @@ namespace LCU.State.API.IoTEnsemble.State
             
 
             //If its the active ent set active to null
-            if(State.ActiveEnterpriseConfig.ActiveEnterprise.Lookup == childEntLookup)
+            if(State.ActiveEnterpriseConfig.ActiveEnterprise != null && State.ActiveEnterpriseConfig?.ActiveEnterprise.Lookup == childEntLookup)
             {
                 State.ActiveEnterpriseConfig.ActiveEnterprise = null;
             }
 
-            await idMgr.RevokePassport(parentEntLookup, childEnt.Name);
+            var revokePassportRequest = await idMgr.RevokePassport(parentEntLookup, childEnt.Name);
 
             var revokeAccessCardRequest = await idMgr.RevokeAccessCard(new Personas.Identity.RevokeAccessCardRequest(){
                 AccessConfiguration = "LCU",
