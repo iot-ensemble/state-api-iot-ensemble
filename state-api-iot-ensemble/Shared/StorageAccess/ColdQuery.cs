@@ -113,13 +113,9 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
                     if (req.Query.ContainsKey("flatten"))
                         dataReq.Flatten = req.Query["flatten"].ToString().As<bool>();
 
-                    if (req.Query.ContainsKey("includeEmulated")){
-                        dataReq.IncludeEmulated = req.Query["includeEmulated"].ToString().As<bool>();
-                        
-                        if (dataReq.IncludeEmulated)
-                            dataReq.StartDate = now.AddDays(-1);
-                    }
-                        
+                    if (req.Query.ContainsKey("includeEmulated"))
+                        dataReq.IncludeEmulated = req.Query["includeEmulated"].ToString().As<bool>();                      
+                                           
                     if (req.Query.ContainsKey("page"))
                         dataReq.Page = req.Query["page"].ToString().As<int>();
 
@@ -139,7 +135,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
                         dataReq.Zip = req.Query["zip"].ToString().As<bool>();                    
 
                     if (dataReq.StartDate == null)
-                        dataReq.StartDate = now.AddDays(-30);
+                        dataReq.StartDate = now.AddDays(-1);
 
                     if (dataReq.EndDate == null)
                         dataReq.EndDate = now;
