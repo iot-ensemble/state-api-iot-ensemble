@@ -119,7 +119,7 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual async Task LoadActiveEnterpriseDetails(ApplicationArchitectClient appArch, int page, int pageSize)
         {
 
-            if (State.ActiveEnterpriseConfig?.ActiveEnterprise != null)
+            if (State.ActiveEnterpriseConfig?.ActiveEnterprise?.Lookup != null)
             {
                 var enrolledDevices = await appArch.ListEnrolledDevices(State.ActiveEnterpriseConfig.ActiveEnterprise.Lookup, envLookup: null, page: page, pageSize: pageSize);
 
@@ -158,36 +158,56 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task<Status> RemoveChildEnterprise(ApplicationArchitectClient appArch, 
         EnterpriseArchitectClient entArch, EnterpriseManagerClient entMgr, IdentityManagerClient idMgr, 
-         string parentEntLookup, string childEntLookup)
+         string childEntLookup, string parentEntLookup)
         {
             var childEnt = State.EnterpriseConfig.ChildEnterprises.FirstOrDefault(ent => 
                 ent.Lookup == childEntLookup
             );
             var devices = await appArch.ListEnrolledDevices(childEntLookup);
-
+          
             //Remove devices
             
-            await devices.Model.Items.Each(async d =>{
+                await devices.Model.Items.Each(async d =>{
 
-                await revokeDeviceEnrollment(appArch, childEntLookup, d.DeviceID);
+                    await revokeDeviceEnrollment(appArch, childEntLookup, d.DeviceID);
 
-            }, parallel: true);
+                }, parallel: true);
+            
 
             //If its the active ent set active to null
-            if(State.ActiveEnterpriseConfig.ActiveEnterprise.Lookup == childEntLookup)
+            if(State.ActiveEnterpriseConfig.ActiveEnterprise != null && State.ActiveEnterpriseConfig?.ActiveEnterprise.Lookup == childEntLookup)
             {
                 State.ActiveEnterpriseConfig.ActiveEnterprise = null;
             }
 
-            //TODO: remove passport if they are using free version
+            var revokePassportRequest = await idMgr.RevokePassport(parentEntLookup, childEnt.Name);
 
-            var revACR = new Personas.Identity.RevokeAccessCardRequest(){ };
+            var revokeAccessCardRequest = await idMgr.RevokeAccessCard(new Personas.Identity.RevokeAccessCardRequest(){
+                AccessConfiguration = "LCU",
+                Username = childEnt.Name
+            }, childEntLookup);
 
-            await idMgr.RevokeAccessCard(revACR, childEntLookup);
+            if(revokeAccessCardRequest.Status.Code == 1){
+                log.LogError($"Unable to revoke access cards: {revokeAccessCardRequest.Status.Message}");
+            }
 
-            await idMgr.RevokeLicenseAccess(childEntLookup, childEnt.Name, "iot" );
+            var revokeLicenceAccess = await idMgr.RevokeLicenseAccess(parentEntLookup, childEnt.Name, "iot" );
 
-            //TODO: remove instance from stripe so user doesn't get billed
+            if(revokeLicenceAccess.Status.Code == 1){
+                log.LogError($"Unable to revoke license access: {revokeLicenceAccess.Status.Message}");
+            }
+
+            //TODO removing the API Management keys
+
+            var cancelUserSubscription = await entMgr.CancelSubscriptionByUser(childEnt.Name, parentEntLookup);
+
+            if(cancelUserSubscription.Status.Code == 1){
+                log.LogError($"Unable to cancel subscription: {cancelUserSubscription.Status.Message}");
+            }
+
+            var deleteRequest = await entMgr.DeleteEnterpriseByLookup(childEntLookup, new DeleteEnterpriseByLookupRequest(){
+                Password= "F@thym!t"
+            });
 
             await LoadChildEnterprises(entMgr, parentEntLookup, appArch, idMgr);
             
