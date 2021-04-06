@@ -225,6 +225,9 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual string ID { get; set; }
 
         [DataMember]
+        public virtual bool IsExpanded { get; set; }
+
+        [DataMember]
         public virtual MetadataModel SensorMetadata { get; set; }
 
         [DataMember]

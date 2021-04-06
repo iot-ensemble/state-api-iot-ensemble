@@ -63,6 +63,10 @@ namespace LCU.State.API.IoTEnsemble.State
         [DataMember]
         public virtual List<IoTEnsembleTelemetryPayload> Payloads { get; set; }
 
+        
+        [DataMember]
+        public virtual bool PayloadExpanded { get; set; }
+
         [DataMember]
         public virtual int Page { get; set; }
 
@@ -78,6 +82,8 @@ namespace LCU.State.API.IoTEnsemble.State
         #region Constructors
         public IoTEnsembleTelemetry()
         {
+            PayloadExpanded = false;
+
             RefreshRate = 30;
 
             PageSize = 10;
