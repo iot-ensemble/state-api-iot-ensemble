@@ -57,6 +57,9 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual ErrorContext Error { get; set; }
 
         [DataMember]
+        public virtual string ExpandedPayloadID { get; set; }
+
+        [DataMember]
         public virtual bool HasAccess { get; set; }
 
         [DataMember]
