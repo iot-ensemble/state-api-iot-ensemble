@@ -148,6 +148,24 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
             return status;
         }
+
+        [FunctionName("TelemetrySyncOrchestration_SetTimeout")]
+        public virtual async Task<Status> SetTimeout([ActivityTrigger] StateActionContext stateCtxt, ILogger log,
+            [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
+            [Blob("state-api/{stateCtxt.StateDetails.EnterpriseLookup}/{stateCtxt.StateDetails.HubName}/{stateCtxt.StateDetails.Username}/{stateCtxt.StateDetails.StateKey}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
+        {
+            var status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, TelemetrySyncRequest, IoTEnsembleSharedStateHarness>(stateCtxt.StateDetails,
+                stateCtxt.ActionRequest, signalRMessages, log, async (harness, reqData) =>
+                {
+                    log.LogInformation($"Setting telemetry IsTimedout to true...");
+
+                    harness.State.Telemetry.IsTelemetryTimedOut = true;
+
+                    return Status.Success;
+                }, preventStatusException: true);
+
+            return status;
+        }
         #endregion
 
         #region Helpers
@@ -204,6 +222,8 @@ namespace LCU.State.API.IoTEnsemble.Shared
                 }
             }
 
+            await context.CallActivityAsync<Status>("TelemetrySyncOrchestration_SetTimeout", stateCtxt);
+            
             synced = await context.CallActivityAsync<Status>("TelemetrySyncOrchestration_Sync", stateCtxt);
 
             return synced;

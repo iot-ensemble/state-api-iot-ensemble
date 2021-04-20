@@ -1395,6 +1395,8 @@ namespace LCU.State.API.IoTEnsemble.State
                         if (resp.Status)
                             State.Telemetry.Enabled = enabled;
 
+                            State.Telemetry.IsTelemetryTimedOut = false;
+
                         return !resp.Status;
                     }
                     catch (Exception ex)

@@ -55,6 +55,9 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual bool Enabled { get; set; }
 
         [DataMember]
+        public virtual bool IsTelemetryTimedOut { get; set; }
+
+        [DataMember]
         public virtual DateTime LastSyncedAt { get; set; }
 
         [DataMember]
