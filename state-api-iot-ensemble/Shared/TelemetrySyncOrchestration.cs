@@ -128,7 +128,6 @@ namespace LCU.State.API.IoTEnsemble.Shared
             return status;
         }
 
-
         [FunctionName("TelemetrySyncOrchestration_Disabled")]
         public virtual async Task<Status> Disabled([ActivityTrigger] StateActionContext stateCtxt, ILogger log,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
