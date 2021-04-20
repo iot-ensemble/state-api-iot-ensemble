@@ -91,6 +91,8 @@ namespace LCU.State.API.IoTEnsemble.State
             Storage = new IoTEnsembleStorageConfiguration();
             
             Telemetry = new IoTEnsembleTelemetry();
+
+            ExpandedPayloadID = null;
         }
         #endregion
     }
@@ -226,9 +228,6 @@ namespace LCU.State.API.IoTEnsemble.State
         [DataMember]
         [JsonProperty("id")]
         public virtual string ID { get; set; }
-
-        [DataMember]
-        public virtual bool IsExpanded { get; set; }
 
         [DataMember]
         public virtual MetadataModel SensorMetadata { get; set; }
