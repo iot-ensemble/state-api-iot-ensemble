@@ -844,6 +844,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                 if(!payloadId.IsNullOrEmpty()){
                     State.ExpandedPayloadID = payloadId;
+                    return;
                 }
 
                 await LoadTelemetry(secMgr, client);
