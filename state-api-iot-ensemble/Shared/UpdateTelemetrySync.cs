@@ -40,7 +40,6 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         [DataMember]
         public virtual int PageSize { get; set; }
-
         
         [DataMember]
         public virtual string PayloadId { get; set; }
