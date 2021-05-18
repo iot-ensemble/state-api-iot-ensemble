@@ -1162,9 +1162,16 @@ namespace LCU.State.API.IoTEnsemble.State
             var valueLines = dataTable.AsEnumerable()
                                .Select(row => string.Join(",", row.ItemArray));
             lines.AddRange(valueLines);
-            var final = String.Join("\r\n", lines);
- 
-             return Encoding.UTF8.GetBytes(final);
+
+
+            using (var writer = new StringWriter())
+            {
+                foreach(var line in lines)
+                {
+                    writer.WriteLine(line);
+                }
+                return Encoding.UTF8.GetBytes(writer.ToString());
+            }
         }
 
         protected virtual async Task<byte[]> generateJsonLines(List<JObject> downloadedData)
