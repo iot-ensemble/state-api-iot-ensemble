@@ -1162,7 +1162,7 @@ namespace LCU.State.API.IoTEnsemble.State
             var valueLines = dataTable.AsEnumerable()
                                .Select(row => string.Join(",", row.ItemArray));
             lines.AddRange(valueLines);
-            var final = String.Join(" ", lines);
+            var final = String.Join("\r\n", lines);
  
              return Encoding.UTF8.GetBytes(final);
         }
@@ -1294,7 +1294,7 @@ namespace LCU.State.API.IoTEnsemble.State
             else if (resultType == ColdQueryResultTypes.CSV)
             {
                 log.LogInformation($"Returning CSV result");
-                //response = await generateCsv(downloadedData);
+                response = await generateCsv(downloadedData);
             }
             else if (resultType == ColdQueryResultTypes.ZIP)
             {
