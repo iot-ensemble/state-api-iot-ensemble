@@ -30,6 +30,7 @@ using Microsoft.Azure.Documents.Linq;
 using LCU.Personas.Client.Identity;
 using Microsoft.Azure.Storage.Blob;
 using Newtonsoft.Json.Linq;
+using System.Data;
 using System.Text;
 using System.IO.Compression;
 using System.Net.Http.Headers;
@@ -935,6 +936,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     }
 
                     content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+                    content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment") { FileName = "Export.csv" };
 
                     status = Status.Success;
                 }
@@ -1149,17 +1151,20 @@ namespace LCU.State.API.IoTEnsemble.State
 
         protected virtual async Task<byte[]> generateCsv(List<JObject> downloadedData, string delimiter = ",")
         {
-            using (var writer = new StringWriter())
-            {
-                using (var csv = new CsvWriter(writer, System.Globalization.CultureInfo.CurrentCulture))
-                {
-                    csv.Configuration.Delimiter = delimiter;
-
-                    await csv.WriteRecordsAsync(downloadedData);
-                }
-
-                return Encoding.UTF8.GetBytes(writer.ToString());
-            }
+            var payloadString = JsonConvert.SerializeObject(downloadedData);
+            var dataTable = (DataTable)JsonConvert.DeserializeObject(payloadString, (typeof(DataTable)));
+            var lines = new List<string>();
+            string[] columnNames = dataTable.Columns.Cast<DataColumn>().
+                                              Select(column => column.ColumnName).
+                                              ToArray();
+            var header = string.Join(",", columnNames);
+            lines.Add(header);
+            var valueLines = dataTable.AsEnumerable()
+                               .Select(row => string.Join(",", row.ItemArray));
+            lines.AddRange(valueLines);
+            var final = String.Join(" ", lines);
+ 
+             return Encoding.UTF8.GetBytes(final);
         }
 
         protected virtual async Task<byte[]> generateJsonLines(List<JObject> downloadedData)
@@ -1289,6 +1294,11 @@ namespace LCU.State.API.IoTEnsemble.State
             else if (resultType == ColdQueryResultTypes.CSV)
             {
                 log.LogInformation($"Returning CSV result");
+                //response = await generateCsv(downloadedData);
+            }
+            else if (resultType == ColdQueryResultTypes.ZIP)
+            {
+                log.LogInformation($"Returning ZIP result");
 
                 response = await generateCsv(downloadedData);
             }
@@ -1445,7 +1455,10 @@ namespace LCU.State.API.IoTEnsemble.State
         JSON,
 
         [EnumMember]
-        JSONLines
+        JSONLines,
+
+        [EnumMember]
+        ZIP
     }
 
     [Serializable]
