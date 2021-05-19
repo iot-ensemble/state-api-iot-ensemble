@@ -1151,25 +1151,33 @@ namespace LCU.State.API.IoTEnsemble.State
 
         protected virtual async Task<byte[]> generateCsv(List<JObject> downloadedData, string delimiter = ",")
         {
-            var payloadString = JsonConvert.SerializeObject(downloadedData);
-            var dataTable = (DataTable)JsonConvert.DeserializeObject(payloadString, (typeof(DataTable)));
-            var lines = new List<string>();
-            string[] columnNames = dataTable.Columns.Cast<DataColumn>().
-                                              Select(column => column.ColumnName).
-                                              ToArray();
-            var header = string.Join(",", columnNames);
-            lines.Add(header);
-            var valueLines = dataTable.AsEnumerable()
-                               .Select(row => string.Join(",", row.ItemArray));
-            lines.AddRange(valueLines);
-
-
+            var thingy = JsonConvert.SerializeObject(downloadedData); 
+ 
             using (var writer = new StringWriter())
             {
-                foreach(var line in lines)
+                using (var csv = new CsvHelper.CsvWriter(writer, System.Globalization.CultureInfo.InvariantCulture))
                 {
-                    writer.WriteLine(line);
+                    csv.Configuration.Delimiter = delimiter;
+ 
+                    DataTable dt = JsonConvert.DeserializeObject<DataTable>(thingy);                                       
+ 
+                    foreach (DataColumn column in dt.Columns)
+                    {
+                        csv.WriteField(column.ColumnName);
+                    }
+ 
+                    csv.NextRecord();
+ 
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        for (var i = 0; i < dt.Columns.Count; i++)
+                        {
+                            csv.WriteField(row[i]);
+                        }
+                        csv.NextRecord();
+                    }                                       
                 }
+ 
                 return Encoding.UTF8.GetBytes(writer.ToString());
             }
         }
