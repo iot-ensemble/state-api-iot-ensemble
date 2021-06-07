@@ -97,6 +97,8 @@ namespace LCU.State.API.IoTEnsemble.State
 
                             log.LogInformation($"Enroll device status {State.DevicesConfig.Status.ToJSON()}");
 
+                            State.DevicesConfig.AddingDevice = false;
+
                             return !State.DevicesConfig.Status;
                         }
                         catch (Exception ex)
@@ -565,12 +567,16 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual async Task LoadDevices(ApplicationArchitectClient appArch)
         {
             var devices = await loadDevices(appArch, State.UserEnterpriseLookup, State.DevicesConfig.Page, State.DevicesConfig.PageSize);
-
+            State.DevicesConfig.AddingDevice = true;
             if (devices != null)
             {
                 State.DevicesConfig.Devices = devices.Items.ToList();
 
                 State.DevicesConfig.TotalDevices = devices.TotalRecords;
+                
+                if (State.DevicesConfig.TotalDevices > 0) {
+                    State.DevicesConfig.AddingDevice = false;
+                }
             }
 
             State.DevicesConfig.SASTokens = null;
@@ -826,7 +832,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
-        public virtual async Task UpdateTelemetrySync(SecurityManagerClient secMgr, DocumentClient client, int refreshRate, int page, int pageSize)
+        public virtual async Task UpdateTelemetrySync(SecurityManagerClient secMgr, DocumentClient client, int refreshRate, int page, int pageSize, string payloadId=null)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -835,6 +841,11 @@ namespace LCU.State.API.IoTEnsemble.State
                 State.Telemetry.Page = page;
 
                 State.Telemetry.PageSize = pageSize;
+
+                if(!payloadId.IsNullOrEmpty()){
+                    State.ExpandedPayloadID = payloadId;
+                    return;
+                }
 
                 await LoadTelemetry(secMgr, client);
             }
@@ -1384,6 +1395,8 @@ namespace LCU.State.API.IoTEnsemble.State
 
                         if (resp.Status)
                             State.Telemetry.Enabled = enabled;
+
+                            State.Telemetry.IsTelemetryTimedOut = false;
 
                         return !resp.Status;
                     }

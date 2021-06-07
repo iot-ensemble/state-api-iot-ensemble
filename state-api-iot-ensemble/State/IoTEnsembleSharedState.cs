@@ -57,6 +57,9 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual ErrorContext Error { get; set; }
 
         [DataMember]
+        public virtual string ExpandedPayloadID { get; set; }
+
+        [DataMember]
         public virtual bool HasAccess { get; set; }
 
         [DataMember]
@@ -88,6 +91,8 @@ namespace LCU.State.API.IoTEnsemble.State
             Storage = new IoTEnsembleStorageConfiguration();
             
             Telemetry = new IoTEnsembleTelemetry();
+
+            ExpandedPayloadID = null;
         }
         #endregion
     }
@@ -140,6 +145,9 @@ namespace LCU.State.API.IoTEnsemble.State
     {
         [DataMember]
         public virtual int EnterpriseDevicesCount { get; set; }
+
+        [DataMember]
+        public virtual bool AddingDevice { get; set; }
         
         [DataMember]
         public virtual List<IoTEnsembleDeviceInfo> Devices { get; set; }

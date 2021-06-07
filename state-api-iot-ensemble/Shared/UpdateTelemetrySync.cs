@@ -40,6 +40,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         [DataMember]
         public virtual int PageSize { get; set; }
+        
+        [DataMember]
+        public virtual string PayloadId { get; set; }
     }
 
     public class UpdateTelemetrySync
@@ -79,7 +82,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                         var stateDetails = StateUtils.LoadStateDetails(req);
 
-                        await harness.UpdateTelemetrySync(secMgr, docClient, dataReq.RefreshRate, dataReq.Page, dataReq.PageSize);
+                        await harness.UpdateTelemetrySync(secMgr, docClient, dataReq.RefreshRate, dataReq.Page, dataReq.PageSize, dataReq.PayloadId);
 
                         harness.State.Telemetry.Loading = false;
 
