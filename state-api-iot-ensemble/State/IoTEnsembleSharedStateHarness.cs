@@ -876,6 +876,8 @@ namespace LCU.State.API.IoTEnsemble.State
             var status = Status.GeneralError;
 
             HttpContent content = null;
+            HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
+
 
             if (coldBlob != null)
             {
@@ -908,7 +910,13 @@ namespace LCU.State.API.IoTEnsemble.State
                     var contentType = String.Empty;
 
                     if (resultType == ColdQueryResultTypes.CSV)
-                        contentType = "text/csv";
+                    {
+                        result.Content =  new ByteArrayContent(generateCsv(downloadedData));
+                        result.Content.Headers.ContentType = new MediaTypeHeaderValue("text/csv");
+                        result.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment");
+                        result.Content.Headers.ContentDisposition.FileName = "RecordExport.csv";
+                        return result;
+                    }
                     else if (resultType == ColdQueryResultTypes.JSON)
                         contentType = "application/json";
                     else if (resultType == ColdQueryResultTypes.JSONLines)
@@ -1149,7 +1157,7 @@ namespace LCU.State.API.IoTEnsemble.State
             root.Remove(parentPropName);
         }
 
-        protected virtual async Task<byte[]> generateCsv(List<JObject> downloadedData, string delimiter = ",")
+        protected byte[] generateCsv(List<JObject> downloadedData, string delimiter = ",")
         {
             var thingy = JsonConvert.SerializeObject(downloadedData); 
  
@@ -1177,9 +1185,9 @@ namespace LCU.State.API.IoTEnsemble.State
                         csv.NextRecord();
                     }                                       
                 }
- 
+                var poo = writer.ToString();
                 return Encoding.UTF8.GetBytes(writer.ToString());
-            }
+            }        
         }
 
         protected virtual async Task<byte[]> generateJsonLines(List<JObject> downloadedData)
@@ -1309,13 +1317,13 @@ namespace LCU.State.API.IoTEnsemble.State
             else if (resultType == ColdQueryResultTypes.CSV)
             {
                 log.LogInformation($"Returning CSV result");
-                response = await generateCsv(downloadedData);
+                //response = await generateCsv(downloadedData);
             }
             else if (resultType == ColdQueryResultTypes.ZIP)
             {
                 log.LogInformation($"Returning ZIP result");
 
-                response = await generateCsv(downloadedData);
+                //response = await generateCsv(downloadedData);
             }
 
             return response;
