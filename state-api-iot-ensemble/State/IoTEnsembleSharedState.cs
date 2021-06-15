@@ -145,9 +145,6 @@ namespace LCU.State.API.IoTEnsemble.State
     {
         [DataMember]
         public virtual int EnterpriseDevicesCount { get; set; }
-
-        [DataMember]
-        public virtual bool AddingDevice { get; set; }
         
         [DataMember]
         public virtual List<IoTEnsembleDeviceInfo> Devices { get; set; }
