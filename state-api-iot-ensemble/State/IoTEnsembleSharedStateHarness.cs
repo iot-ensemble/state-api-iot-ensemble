@@ -97,8 +97,6 @@ namespace LCU.State.API.IoTEnsemble.State
 
                             log.LogInformation($"Enroll device status {State.DevicesConfig.Status.ToJSON()}");
 
-                            State.DevicesConfig.AddingDevice = false;
-
                             return !State.DevicesConfig.Status;
                         }
                         catch (Exception ex)
@@ -567,16 +565,11 @@ namespace LCU.State.API.IoTEnsemble.State
         public virtual async Task LoadDevices(ApplicationArchitectClient appArch)
         {
             var devices = await loadDevices(appArch, State.UserEnterpriseLookup, State.DevicesConfig.Page, State.DevicesConfig.PageSize);
-            State.DevicesConfig.AddingDevice = true;
             if (devices != null)
             {
                 State.DevicesConfig.Devices = devices.Items.ToList();
 
                 State.DevicesConfig.TotalDevices = devices.TotalRecords;
-                
-                if (State.DevicesConfig.TotalDevices > 0) {
-                    State.DevicesConfig.AddingDevice = false;
-                }
             }
 
             State.DevicesConfig.SASTokens = null;
