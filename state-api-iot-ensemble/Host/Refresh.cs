@@ -23,6 +23,7 @@ using LCU.Personas.Client.Security;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using LCU.Personas.Client.Identity;
 using Microsoft.Azure.Documents.Client;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Host
 {
