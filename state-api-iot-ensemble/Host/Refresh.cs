@@ -37,13 +37,13 @@ namespace LCU.State.API.IoTEnsemble.Host
 
         protected EnterpriseArchitectClient entArch;
 
-        protected EnterpriseManagerClient entMgr;
+        protected IEnterprisesManagementService entMgr;
 
         protected IdentityManagerClient idMgr;
 
         protected SecurityManagerClient secMgr;
 
-        public Refresh(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, EnterpriseManagerClient entMgr, 
+        public Refresh(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, IEnterprisesManagementService entMgr, 
             IdentityManagerClient idMgr, SecurityManagerClient secMgr)
         {
             this.appArch = appArch;

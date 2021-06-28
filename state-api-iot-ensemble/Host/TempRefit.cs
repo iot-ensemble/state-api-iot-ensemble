@@ -16,6 +16,13 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 		[Get("/management/enterprises/{entLookup}/children")]
 		Task<BaseResponse<List<Enterprise>>> ListChildEnterprises(string entLookup);
 	}
+
+    [DataContract]
+    public class DeleteEnterpriseByLookupRequest : BaseRequest
+    {
+        [DataMember]
+        public virtual string Password { get; set; }
+    }
 	
     public class Enterprise
     {
