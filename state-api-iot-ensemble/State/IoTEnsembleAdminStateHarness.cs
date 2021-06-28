@@ -60,8 +60,8 @@ namespace LCU.State.API.IoTEnsemble.State
 
         #region API Methods
 
-        public virtual async Task LoadChildEnterprises(EnterpriseManagerClient entMgr, string parentEntLookup,
-            ApplicationArchitectClient appArch, IdentityManagerClient idMgr)
+        public virtual async Task LoadChildEnterprises(IEnterprisesManagementService entMgr, string parentEntLookup)//,
+            //ApplicationArchitectClient appArch, IdentityManagerClient idMgr)
         {
             var childEntsResp = await entMgr.ListChildEnterprises(parentEntLookup);
 
