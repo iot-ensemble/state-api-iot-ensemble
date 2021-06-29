@@ -38,6 +38,7 @@ using CsvHelper;
 using Fathym.Design;
 using Gremlin.Net.Driver.Exceptions;
 using LCU.Personas.API;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.State
 {
@@ -362,7 +363,7 @@ namespace LCU.State.API.IoTEnsemble.State
             }
         }
 
-        public virtual async Task EnsureUserEnterprise(EnterpriseArchitectClient entArch, EnterpriseManagerClient entMgr,
+        public virtual async Task EnsureUserEnterprise(EnterpriseArchitectClient entArch, IEnterprisesManagementService entMgr,
             SecurityManagerClient secMgr, string parentEntLookup, string username)
         {
             if (State.DevicesConfig != null)
@@ -614,7 +615,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task Refresh(IDurableOrchestrationClient starter, StateDetails stateDetails, ExecuteActionRequest exActReq,
-            ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, EnterpriseManagerClient entMgr, IdentityManagerClient idMgr,
+            ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, IEnterprisesManagementService entMgr, IdentityManagerClient idMgr,
             SecurityManagerClient secMgr, DocumentClient client)
         {
             await EnsureUserEnterprise(entArch, entMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
