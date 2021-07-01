@@ -22,6 +22,7 @@ using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
 using LCU.Personas.Client.Identity;
 using LCU.State.API.IoTEnsemble.Shared;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Host
 {
@@ -37,11 +38,11 @@ namespace LCU.State.API.IoTEnsemble.Host
     {
         protected ApplicationArchitectClient appArch;
 
-        protected EnterpriseManagerClient entMgr;
+        protected IEnterprisesManagementService entMgr;
 
         protected IdentityManagerClient idMgr;
 
-        public RevokeDeviceEnrollment(ApplicationArchitectClient appArch, EnterpriseManagerClient entMgr,
+        public RevokeDeviceEnrollment(ApplicationArchitectClient appArch, IEnterprisesManagementService entMgr,
             IdentityManagerClient idMgr)
         {
             this.appArch = appArch;

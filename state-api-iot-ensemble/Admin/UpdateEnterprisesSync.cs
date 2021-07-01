@@ -21,6 +21,7 @@ using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
 using LCU.Personas.Client.Identity;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Admin
 {
@@ -40,12 +41,12 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
         protected ApplicationArchitectClient appArch;
 
-        protected EnterpriseManagerClient entMgr;
+        protected IEnterprisesManagementService entMgr;
 
         protected IdentityManagerClient idMgr;
 
 
-        public UpdateEnterprisesSync(EnterpriseManagerClient entMgr, 
+        public UpdateEnterprisesSync(IEnterprisesManagementService entMgr, 
             ApplicationArchitectClient appArch, IdentityManagerClient idMgr)
         {
             this.appArch = appArch;
