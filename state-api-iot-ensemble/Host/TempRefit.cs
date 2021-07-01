@@ -31,6 +31,21 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         Task<BaseResponse<EnterpriseContext>> ResolveHost(string host, bool isDevEnv);
 	}
 
+    public interface IIdentityManagerClient
+    {
+        [Get("{entLookup}/licenses/{username}")]
+        Task<BaseResponse<List<License>>> ListLicenses(string entLookup, string username, List<string> licenseTypes = null);
+
+        [Post("{entLookup}/revoke")]
+        Task<BaseResponse> RevokeAccessCard(RevokeAccessCardRequest request, string entLookup);
+
+        [Delete("{entLookup}/license/{username}/{licenseType}")]
+        Task<BaseResponse> RevokeLicenseAccess(string entLookup, string username, string licenseType);
+
+        [Delete("{entLookup}/passport/{username}")]
+		Task<BaseResponse> RevokePassport(string entLookup, string username);
+    }
+
     [DataContract]
     public class DeleteEnterpriseByLookupRequest : BaseRequest
     {
@@ -72,5 +87,24 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual string EnterpriseLookup { get; set; }
         
         public virtual bool PreventDefaultApplications { get; set; }
+    }
+
+    public class License //': LCUVertex
+    {
+        public virtual string Details { get; set; }
+
+        public virtual DateTime ExpirationDate { get; set; }
+
+        public virtual string Lookup { get; set; }
+
+        public virtual bool IsLocked { get; set; }
+    }
+
+    public class RevokeAccessCardRequest : BaseRequest
+    {
+        //public RevokeAccessCardRequest();
+        public virtual string AccessConfiguration { get; set; }
+
+        public virtual string Username { get; set; }
     }
 }
