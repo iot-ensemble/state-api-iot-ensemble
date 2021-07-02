@@ -6,6 +6,7 @@ using Fathym.API;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Refit;
 
+
 [assembly: FunctionsStartup(typeof(LCU.State.API.IoTEnsemble.Host.Startup))]
 
 namespace LCU.State.API.IoTEnsemble.Host.TempRefit
@@ -33,6 +34,9 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 
     public interface IIdentityManagerClient
     {
+        [Get("{entLookup}/license/{username}/{allAny}")]
+        Task<BaseResponse<Fathym.MetadataModel>> HasLicenseAccess(string entLookup,string username, Personas.AllAnyTypes allAny, List<string> licenseTypes);
+
         [Get("{entLookup}/licenses/{username}")]
         Task<BaseResponse<List<License>>> ListLicenses(string entLookup, string username, List<string> licenseTypes = null);
 
@@ -91,13 +95,15 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 
     public class License //': LCUVertex
     {
-        public virtual string Details { get; set; }
-
-        public virtual DateTime ExpirationDate { get; set; }
-
-        public virtual string Lookup { get; set; }
-
-        public virtual bool IsLocked { get; set; }
+        public DateTimeOffset AccessStartDate { get; set; }
+        public Fathym.MetadataModel Details { get; set; }
+        public DateTimeOffset ExpirationDate { get; set; }
+        public bool EnterpriseOverride { get; set; }
+        public bool IsLocked { get; set; }
+        public bool IsReset { get; set; }
+        public string Lookup { get; set; }
+        public int TrialPeriodDays { get; set; }
+        public string Username { get; set; }
     }
 
     public class RevokeAccessCardRequest : BaseRequest

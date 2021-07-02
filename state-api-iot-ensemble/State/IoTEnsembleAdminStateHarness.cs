@@ -148,9 +148,9 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task Refresh(ApplicationArchitectClient appArch, IEnterprisesManagementService entMgr,
-            IdentityManagerClient idMgr, string parentEntLookup)
+            IIdentityManagerClient idMgr, string parentEntLookup)
         {
-            await LoadChildEnterprises(entMgr, parentEntLookup);
+            await LoadChildEnterprises(entMgr, parentEntLookup, idMgr);
 
             await LoadActiveEnterpriseDetails(appArch, State.ActiveEnterpriseConfig.Page,State.ActiveEnterpriseConfig.PageSize );
 
@@ -210,7 +210,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 Password= "F@thym!t"
             });
 
-            await LoadChildEnterprises(entMgr, parentEntLookup);
+            await LoadChildEnterprises(entMgr, parentEntLookup, idMgr);
             
             return Status.Success;
         }
@@ -220,7 +220,7 @@ namespace LCU.State.API.IoTEnsemble.State
         {
             var revoked = await revokeDeviceEnrollment(appArch, State.ActiveEnterpriseConfig.ActiveEnterprise.Lookup, deviceId);
 
-            await LoadChildEnterprises(entMgr, parentEntLookup);
+            await LoadChildEnterprises(entMgr, parentEntLookup, idMgr);
 
             return revoked;
         }
@@ -239,7 +239,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task UpdateActiveEnterpriseSync(EnterpriseManagerClient entMgr,
-            ApplicationArchitectClient appArch, IdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize)
+            ApplicationArchitectClient appArch, IIdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize)
         {
 
             if (State.ActiveEnterpriseConfig != null)
@@ -269,7 +269,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                 State.EnterpriseConfig.PageSize = pageSize;
 
-                await LoadChildEnterprises(entMgr, parentEntLookup);
+                await LoadChildEnterprises(entMgr, parentEntLookup, idMgr);
 
                 if(State.ActiveEnterpriseConfig != null)
                 {
