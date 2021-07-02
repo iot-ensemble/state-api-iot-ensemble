@@ -21,6 +21,7 @@ using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
 using LCU.Personas.Client.Identity;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Admin
 {
@@ -34,17 +35,17 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
     public class RemoveChildEnterprise
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appArch;
 
         protected EnterpriseArchitectClient entArch;
 
-        protected EnterpriseManagerClient entMgr;
+        protected IEnterprisesManagementService entMgr;
 
         protected IdentityManagerClient idMgr;
         
 
-        public RemoveChildEnterprise(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, 
-        EnterpriseManagerClient entMgr, IdentityManagerClient idMgr)
+        public RemoveChildEnterprise(IApplicationsIoTService appArch, EnterpriseArchitectClient entArch, 
+        IEnterprisesManagementService entMgr, IdentityManagerClient idMgr)
         {
             this.appArch = appArch;
 

@@ -22,7 +22,6 @@ using LCU.Personas.Client.DevOps;
 using LCU.Personas.Enterprises;
 using LCU.Personas.Client.Applications;
 using Fathym.API;
-using LCU.Personas.Applications;
 using LCU.Personas.Client.Security;
 using System.Net.Http;
 using Microsoft.Azure.Documents.Client;
@@ -67,7 +66,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #endregion
 
         #region API Methods
-        public virtual async Task<bool> EnrollDevice(ApplicationArchitectClient appArch, IoTEnsembleDeviceEnrollment device)
+        public virtual async Task<bool> EnrollDevice(IApplicationsIoTService appArch, IoTEnsembleDeviceEnrollment device)
         {
             var enrollResp = new EnrollDeviceResponse();
 
@@ -363,7 +362,7 @@ namespace LCU.State.API.IoTEnsemble.State
             }
         }
 
-        public virtual async Task EnsureUserEnterprise(EnterpriseArchitectClient entArch, IEnterprisesManagementService entMgr,
+        public virtual async Task EnsureUserEnterprise(EnterpriseArchitectClient entArch, IEnterprisesHostingManagerService entHostMgr,
             SecurityManagerClient secMgr, string parentEntLookup, string username)
         {
             if (State.DevicesConfig != null)
@@ -383,7 +382,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                             log.LogInformation($"Ensuring user enterprise for {hostLookup}...");
 
-                            var getResp = await entMgr.ResolveHost(hostLookup, false);
+                            var getResp = await entHostMgr.ResolveHost(hostLookup);
 
                             if (!getResp.Status || getResp.Model == null)
                             {
@@ -506,7 +505,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 .Run();
         }
 
-        public virtual async Task<List<string>> ListAllDeviceNames(ApplicationArchitectClient appArch, string childEntLookup, string filter)
+        public virtual async Task<List<string>> ListAllDeviceNames(IApplicationsIoTService appArch, string childEntLookup, string filter)
         {
             var deviceNames = new List<string>();
 
@@ -563,7 +562,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return Status.Success;
         }
 
-        public virtual async Task LoadDevices(ApplicationArchitectClient appArch)
+        public virtual async Task LoadDevices(IApplicationsIoTService appArch)
         {
             var devices = await loadDevices(appArch, State.UserEnterpriseLookup, State.DevicesConfig.Page, State.DevicesConfig.PageSize);
             if (devices != null)
@@ -615,10 +614,10 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task Refresh(IDurableOrchestrationClient starter, StateDetails stateDetails, ExecuteActionRequest exActReq,
-            ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, IEnterprisesManagementService entMgr, IdentityManagerClient idMgr,
+            IApplicationsIoTService appArch, EnterpriseArchitectClient entArch, IEnterprisesHostingManagerService entHostMgr, IdentityManagerClient idMgr,
             SecurityManagerClient secMgr, DocumentClient client)
         {
-            await EnsureUserEnterprise(entArch, entMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
+            await EnsureUserEnterprise(entArch, entHostMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
 
             await Task.WhenAll(
                 LoadDevices(appArch),
@@ -643,7 +642,7 @@ namespace LCU.State.API.IoTEnsemble.State
             State.Telemetry.Loading = false;
         }
 
-        public virtual async Task<bool> RevokeDeviceEnrollment(ApplicationArchitectClient appArch, string deviceId)
+        public virtual async Task<bool> RevokeDeviceEnrollment(IApplicationsIoTService appArch, string deviceId)
         {
             var revoked = await revokeDeviceEnrollment(appArch, State.UserEnterpriseLookup, deviceId);
 
@@ -652,7 +651,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return revoked;
         }
 
-        public virtual async Task<Status> SendCloudMessage(ApplicationArchitectClient appArch, string deviceName, string message)
+        public virtual async Task<Status> SendCloudMessage(IApplicationsIoTService appArch, string deviceName, MetadataModel message)
         {
             var status = Status.Initialized;
 
@@ -847,7 +846,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
-        public virtual async Task UpdateConnectedDevicesSync(ApplicationArchitectClient appArch, int page, int pageSize)
+        public virtual async Task UpdateConnectedDevicesSync(IApplicationsIoTService appArch, int page, int pageSize)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -1211,7 +1210,7 @@ namespace LCU.State.API.IoTEnsemble.State
             // return "{\r\n\t\"version\": 1,\r\n\t\"allow_edit\": true,\r\n\t\"plugins\": [],\r\n\t\"panes\": [\r\n\t\t{\r\n\t\t\t\"width\": 1,\r\n\t\t\t\"row\": {\r\n\t\t\t\t\"3\": 1\r\n\t\t\t},\r\n\t\t\t\"col\": {\r\n\t\t\t\t\"3\": 1\r\n\t\t\t},\r\n\t\t\t\"col_width\": 3,\r\n\t\t\t\"widgets\": [\r\n\t\t\t\t{\r\n\t\t\t\t\t\"type\": \"text_widget\",\r\n\t\t\t\t\t\"settings\": {\r\n\t\t\t\t\t\t\"size\": \"regular\",\r\n\t\t\t\t\t\t\"value\": \"Device Insights & Monitoring\",\r\n\t\t\t\t\t\t\"animate\": true\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t]\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"title\": \"Last Processed Device Data\",\r\n\t\t\t\"width\": 1,\r\n\t\t\t\"row\": {\r\n\t\t\t\t\"3\": 5\r\n\t\t\t},\r\n\t\t\t\"col\": {\r\n\t\t\t\t\"3\": 1\r\n\t\t\t},\r\n\t\t\t\"col_width\": 2,\r\n\t\t\t\"widgets\": [\r\n\t\t\t\t{\r\n\t\t\t\t\t\"type\": \"text_widget\",\r\n\t\t\t\t\t\"settings\": {\r\n\t\t\t\t\t\t\"size\": \"regular\",\r\n\t\t\t\t\t\t\"value\": \"datasources[\\\"Query\\\"][datasources[\\\"Query\\\"].length - 1][\\\"DeviceID\\\"]\",\r\n\t\t\t\t\t\t\"animate\": true\r\n\t\t\t\t\t}\r\n\t\t\t\t},\r\n\t\t\t\t{\r\n\t\t\t\t\t\"type\": \"html\",\r\n\t\t\t\t\t\"settings\": {\r\n\t\t\t\t\t\t\"html\": \"JSON.stringify(datasources[\\\"Query\\\"][datasources[\\\"Query\\\"].length - 1])\",\r\n\t\t\t\t\t\t\"height\": 4\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t]\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"title\": \"Connected Devices (Last 3 Days)\",\r\n\t\t\t\"width\": 1,\r\n\t\t\t\"row\": {\r\n\t\t\t\t\"3\": 5\r\n\t\t\t},\r\n\t\t\t\"col\": {\r\n\t\t\t\t\"3\": 3\r\n\t\t\t},\r\n\t\t\t\"col_width\": 1,\r\n\t\t\t\"widgets\": [\r\n\t\t\t\t{\r\n\t\t\t\t\t\"type\": \"html\",\r\n\t\t\t\t\t\"settings\": {\r\n\t\t\t\t\t\t\"html\": \"JSON.stringify(Array.from(new Set(datasources[\\\"Query\\\"].map((q) => q.DeviceID))))\",\r\n\t\t\t\t\t\t\"height\": 4\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t]\r\n\t\t}\r\n\t],\r\n\t\"datasources\": [\r\n\t\t{\r\n\t\t\t\"name\": \"Query\",\r\n\t\t\t\"type\": \"JSON\",\r\n\t\t\t\"settings\": {\r\n\t\t\t\t\"url\": \"\\/api\\/iot-ensemble\\/devices\\/telemetry\",\r\n\t\t\t\t\"use_thingproxy\": false,\r\n\t\t\t\t\"refresh\": 30,\r\n\t\t\t\t\"method\": \"GET\"\r\n\t\t\t}\r\n\t\t}\r\n\t],\r\n\t\"columns\": 3\r\n}".FromJSON<MetadataModel>();
         }
 
-        protected virtual async Task<Pageable<IoTEnsembleDeviceInfo>> loadDevices(ApplicationArchitectClient appArch, string entLookup,
+        protected virtual async Task<Pageable<IoTEnsembleDeviceInfo>> loadDevices(IApplicationsIoTService appArch, string entLookup,
             int page, int pageSize)
         {
             var devices = new Pageable<IoTEnsembleDeviceInfo>()

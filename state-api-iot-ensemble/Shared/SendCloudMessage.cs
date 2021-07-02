@@ -21,6 +21,7 @@ using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
 using Microsoft.Azure.Documents.Client;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -32,16 +33,16 @@ namespace LCU.State.API.IoTEnsemble.Shared
         public virtual string DeviceName { get; set; }
 
         [DataMember]
-        public virtual string Message { get; set; }
+        public virtual MetadataModel Message { get; set; }
     }
 
     public class SendCloudMessage
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appArch;
 
         protected SecurityManagerClient secMgr;
 
-        public SendCloudMessage(ApplicationArchitectClient appArch)
+        public SendCloudMessage(IApplicationsIoTService appArch)
         {
             this.appArch = appArch;
         }

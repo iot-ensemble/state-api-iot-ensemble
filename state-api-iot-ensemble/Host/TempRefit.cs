@@ -15,7 +15,7 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     {
         [Post("/iot/{entLookup}/devices/enroll/{attestationType}/{enrollmentType}")]
         Task<EnrollDeviceResponse> EnrollDevice([Body] EnrollDeviceRequest request, string entLookup, DeviceAttestationTypes attestationType,
-             DeviceEnrollmentTypes enrollmentType, [Query] string username, [Query] string envLookup = null);
+             DeviceEnrollmentTypes enrollmentType, [Query] string envLookup = null);
 
         [Get("/iot/{entLookup}/devices/{deviceName}")]
         Task<BaseResponse<string>> IssueDeviceSASToken(string entLookup, string deviceName, [Query] int expiryInSeconds = 3600,
@@ -54,11 +54,16 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         //Billing
         [Post("/billing/{entLookup}/stripe/subscription/user/{username}/{licenseType}/cancel")]
         Task<BaseResponse> CancelSubscriptionByUser(string username, string entLookup, string licenseType);
-
-        //Hosting
-        [Get("/hosting/resolve/{host}")]
-        Task<BaseResponse<EnterpriseContext>> ResolveHost(string host, bool isDevEnv);
 	}
+
+    public interface IEnterprisesHostingManagerService
+    {
+        [Get("/hosting/{entLookup}/hosts")]
+        Task<BaseResponse<List<Host>>> ListHosts(string entLookup);
+
+        [Get("/hosting/resolve/{host}")]
+        Task<BaseResponse<EnterpriseContext>> ResolveHost(string host);
+    }
 
     [DataContract]
     public class DeleteEnterpriseByLookupRequest : BaseRequest
@@ -165,6 +170,16 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual bool PreventDefaultApplications { get; set; }
     }
 
+    [DataContract]
+    public class Host : LCUVertex
+    {
+        [DataMember]
+        public virtual string Lookup { get; set; }
+
+        [DataMember]
+        public virtual bool Verified { get; set; }
+    }
+
         [DataContract]
         public class LCUStartupHTTPClientOptions
         {
@@ -195,5 +210,21 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     {
         [DataMember]
         public virtual string BaseAddress { get; set; }
+    }
+
+    [DataContract]
+    public class LCUVertex
+    {
+        [DataMember]
+        public virtual Guid ID { get; set; }
+
+        [DataMember]
+        public virtual string Label { get; set; }
+
+        [DataMember]
+        public virtual string Registry { get; set; }
+
+        [DataMember]
+        public virtual string TenantLookup { get; set; }
     }
 }

@@ -25,6 +25,7 @@ using System.Net;
 using System.Text;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.Documents.Client;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -43,9 +44,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
     public class UpdateConnectedDevicesSync
     {
 
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appArch;
 
-        public UpdateConnectedDevicesSync(ApplicationArchitectClient appArch)
+        public UpdateConnectedDevicesSync(IApplicationsIoTService appArch)
         {
             this.appArch = appArch;
         }

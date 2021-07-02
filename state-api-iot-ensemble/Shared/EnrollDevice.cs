@@ -20,6 +20,7 @@ using System.Security.Claims;
 using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -33,9 +34,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class EnrollDevice
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appArch;
 
-        public EnrollDevice(ApplicationArchitectClient appArch)
+        public EnrollDevice(IApplicationsIoTService appArch)
         {
             this.appArch = appArch;
         }
