@@ -35,17 +35,16 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
     public class RemoveChildEnterprise
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appArch;
 
         protected EnterpriseArchitectClient entArch;
 
-        protected EnterpriseManagerClient entMgr;
+        protected IEnterprisesManagementService entMgr;
 
         protected IIdentityManagerClient idMgr;
         
-
-        public RemoveChildEnterprise(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, 
-        EnterpriseManagerClient entMgr, IIdentityManagerClient idMgr)
+        public RemoveChildEnterprise(IApplicationsIoTService appArch, EnterpriseArchitectClient entArch, 
+        IEnterprisesManagementService entMgr, IIdentityManagerClient idMgr)
         {
             this.appArch = appArch;
 

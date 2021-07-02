@@ -36,13 +36,13 @@ namespace LCU.State.API.IoTEnsemble.Host
 
     public class RevokeDeviceEnrollment
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appArch;
 
-        protected EnterpriseManagerClient entMgr;
+        protected IEnterprisesManagementService entMgr;
 
         protected IIdentityManagerClient idMgr;
 
-        public RevokeDeviceEnrollment(ApplicationArchitectClient appArch, EnterpriseManagerClient entMgr,
+        public RevokeDeviceEnrollment(IApplicationsIoTService appArch, IEnterprisesManagementService entMgr,
             IIdentityManagerClient idMgr)
         {
             this.appArch = appArch;

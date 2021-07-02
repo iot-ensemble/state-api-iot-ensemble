@@ -37,6 +37,7 @@ using System.Net;
 using CsvHelper;
 using Fathym.Design;
 using Gremlin.Net.Driver.Exceptions;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.State
 {
@@ -76,7 +77,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #endregion
 
         #region Helpers
-        protected virtual async Task<Status> revokeDeviceEnrollment(ApplicationArchitectClient appArch, string entLookup, string deviceId)
+        protected virtual async Task<Status> revokeDeviceEnrollment(IApplicationsIoTService appArch, string entLookup, string deviceId)
         {
             var status = Status.GeneralError;
 

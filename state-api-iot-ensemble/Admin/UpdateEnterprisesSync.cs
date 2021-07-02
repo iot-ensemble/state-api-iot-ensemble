@@ -39,15 +39,15 @@ namespace LCU.State.API.IoTEnsemble.Admin
     public class UpdateEnterprisesSync
     {
 
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appArch;
 
-        protected EnterpriseManagerClient entMgr;
+        protected IEnterprisesManagementService entMgr;
 
         protected IIdentityManagerClient idMgr;
 
 
-        public UpdateEnterprisesSync(EnterpriseManagerClient entMgr, 
-            ApplicationArchitectClient appArch, IIdentityManagerClient idMgr)
+        public UpdateEnterprisesSync(IEnterprisesManagementService entMgr, 
+            IApplicationsIoTService appArch, IIdentityManagerClient idMgr)
         {
             this.appArch = appArch;
 
