@@ -40,6 +40,9 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         [Get("{entLookup}/licenses/{username}")]
         Task<BaseResponse<List<License>>> ListLicenses(string entLookup, string username, List<string> licenseTypes = null);
 
+        [Get("{entLookup}/licenses")]
+        Task<BaseResponse<List<License>>> ListLicenseAccessTokens(string entLookup, List<string> licenseTypes);
+
         [Post("{entLookup}/revoke")]
         Task<BaseResponse> RevokeAccessCard(RevokeAccessCardRequest request, string entLookup);
 
