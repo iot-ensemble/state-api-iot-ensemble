@@ -34,9 +34,11 @@ namespace LCU.State.API.IoTEnsemble.Host
 
     public class Refresh
     {
-        protected IApplicationsIoTService appArch;
+        protected IApplicationsIoTService appIotArch;
 
-        protected EnterpriseArchitectClient entArch;
+        protected IEnterprisesAPIManagementService entApiArch;
+
+        protected IEnterprisesBootService entBootArch;
 
         protected IEnterprisesManagementService entMgr;
 
@@ -46,12 +48,14 @@ namespace LCU.State.API.IoTEnsemble.Host
 
         protected SecurityManagerClient secMgr;
 
-        public Refresh(IApplicationsIoTService appArch, EnterpriseArchitectClient entArch, IEnterprisesManagementService entMgr, IEnterprisesHostingManagerService entHostMgr, 
+        public Refresh(IApplicationsIoTService appIotArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesBootService entBootArch, IEnterprisesManagementService entMgr, IEnterprisesHostingManagerService entHostMgr, 
             IdentityManagerClient idMgr, SecurityManagerClient secMgr)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
 
-            this.entArch = entArch;
+            this.entApiArch = entApiArch;
+
+            this.entBootArch = entBootArch;
 
             this.entMgr = entMgr;
 
@@ -82,7 +86,7 @@ namespace LCU.State.API.IoTEnsemble.Host
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
 
-                    await harness.Refresh(appArch, entMgr, idMgr, stateDetails.EnterpriseLookup);
+                    await harness.Refresh(appIotArch, entMgr, idMgr, stateDetails.EnterpriseLookup);
 
                     return Status.Success;
                 }, withLock: false);
@@ -94,7 +98,7 @@ namespace LCU.State.API.IoTEnsemble.Host
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
 
-                    await harness.Refresh(starter, stateDetails, actReq, appArch, entArch, entHostMgr, idMgr, secMgr, docClient);
+                    await harness.Refresh(starter, stateDetails, actReq, appIotArch, entApiArch, entBootArch, entHostMgr, idMgr, secMgr, docClient);
 
                     return Status.Success;
                 }, withLock: false);
