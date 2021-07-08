@@ -20,6 +20,7 @@ using System.Security.Claims;
 using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -36,11 +37,11 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class IssueDeviceSASToken
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appIotArch;
 
-        public IssueDeviceSASToken(ApplicationArchitectClient appArch)
+        public IssueDeviceSASToken(IApplicationsIoTService appIotArch)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
         }
 
         [FunctionName("IssueDeviceSASToken")]
@@ -64,7 +65,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                     {
                         log.LogInformation($"IssueDeviceSASToken");
 
-                        await harness.IssueDeviceSASToken(appArch, dataReq.DeviceName, dataReq.ExpiryInSeconds);
+                        await harness.IssueDeviceSASToken(appIotArch, dataReq.DeviceName, dataReq.ExpiryInSeconds);
 
                         harness.State.DevicesConfig.Loading = false;
 

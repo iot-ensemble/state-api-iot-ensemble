@@ -77,7 +77,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #endregion
 
         #region Helpers
-        protected virtual async Task<Status> revokeDeviceEnrollment(IApplicationsIoTService appArch, string entLookup, string deviceId)
+        protected virtual async Task<Status> revokeDeviceEnrollment(IApplicationsIoTService appIotArch, string entLookup, string deviceId)
         {
             var status = Status.GeneralError;
 
@@ -86,7 +86,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     try
                     {
-                        var revokeResp = await appArch.RevokeDeviceEnrollment(deviceId, entLookup, envLookup: null);
+                        var revokeResp = await appIotArch.RevokeDeviceEnrollment(deviceId, entLookup, envLookup: null);
 
                         status = revokeResp.Status;
 

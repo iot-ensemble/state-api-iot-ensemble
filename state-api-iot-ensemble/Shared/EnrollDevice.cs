@@ -34,11 +34,11 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class EnrollDevice
     {
-        protected IApplicationsIoTService appArch;
+        protected IApplicationsIoTService appIotArch;
 
-        public EnrollDevice(IApplicationsIoTService appArch)
+        public EnrollDevice(IApplicationsIoTService appIotArch)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
         }
 
         [FunctionName("EnrollDevice")]
@@ -64,7 +64,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                         var stateDetails = StateUtils.LoadStateDetails(req);
 
-                        await harness.EnrollDevice(appArch, enrollReq.Device);
+                        await harness.EnrollDevice(appIotArch, enrollReq.Device);
 
                         harness.State.DevicesConfig.Loading = false;
 

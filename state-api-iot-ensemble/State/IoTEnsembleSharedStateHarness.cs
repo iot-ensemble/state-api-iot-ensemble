@@ -66,7 +66,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #endregion
 
         #region API Methods
-        public virtual async Task<bool> EnrollDevice(IApplicationsIoTService appArch, IoTEnsembleDeviceEnrollment device)
+        public virtual async Task<bool> EnrollDevice(IApplicationsIoTService appIotArch, IoTEnsembleDeviceEnrollment device)
         {
             var enrollResp = new EnrollDeviceResponse();
 
@@ -81,7 +81,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         try
                         {
-                            enrollResp = await appArch.EnrollDevice(new EnrollDeviceRequest()
+                            enrollResp = await appIotArch.EnrollDevice(new EnrollDeviceRequest()
                             {
                                 DeviceID = deviceId,
                                 EnrollmentOptions = new
@@ -120,7 +120,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
             await Task.Delay(2500);
 
-            await LoadDevices(appArch);
+            await LoadDevices(appIotArch);
 
             return false;
         }
@@ -475,14 +475,14 @@ namespace LCU.State.API.IoTEnsemble.State
             return Status.Success;
         }
 
-        public virtual async Task IssueDeviceSASToken(ApplicationArchitectClient appArch, string deviceName, int expiryInSeconds)
+        public virtual async Task IssueDeviceSASToken(IApplicationsIoTService appIotArch, string deviceName, int expiryInSeconds)
         {
             await DesignOutline.Instance.Retry()
                 .SetActionAsync(async () =>
                 {
                     try
                     {
-                        var deviceSasResp = await appArch.IssueDeviceSASToken(State.UserEnterpriseLookup, deviceName, expiryInSeconds: expiryInSeconds,
+                        var deviceSasResp = await appIotArch.IssueDeviceSASToken(State.UserEnterpriseLookup, deviceName, expiryInSeconds: expiryInSeconds,
                             envLookup: null);
 
                         if (deviceSasResp.Status)
@@ -508,11 +508,11 @@ namespace LCU.State.API.IoTEnsemble.State
                 .Run();
         }
 
-        public virtual async Task<List<string>> ListAllDeviceNames(IApplicationsIoTService appArch, string childEntLookup, string filter)
+        public virtual async Task<List<string>> ListAllDeviceNames(IApplicationsIoTService appIotArch, string childEntLookup, string filter)
         {
             var deviceNames = new List<string>();
 
-            var devices = await loadDevices(appArch, childEntLookup, 1, 100);
+            var devices = await loadDevices(appIotArch, childEntLookup, 1, 100);
 
             deviceNames = devices?.Items?.Select(device => device.DeviceName).Where(deviceName =>
             {
@@ -645,16 +645,16 @@ namespace LCU.State.API.IoTEnsemble.State
             State.Telemetry.Loading = false;
         }
 
-        public virtual async Task<bool> RevokeDeviceEnrollment(IApplicationsIoTService appArch, string deviceId)
+        public virtual async Task<bool> RevokeDeviceEnrollment(IApplicationsIoTService appIotArch, string deviceId)
         {
-            var revoked = await revokeDeviceEnrollment(appArch, State.UserEnterpriseLookup, deviceId);
+            var revoked = await revokeDeviceEnrollment(appIotArch, State.UserEnterpriseLookup, deviceId);
 
-            await LoadDevices(appArch);
+            await LoadDevices(appIotArch);
 
             return revoked;
         }
 
-        public virtual async Task<Status> SendCloudMessage(IApplicationsIoTService appArch, string deviceName, MetadataModel message)
+        public virtual async Task<Status> SendCloudMessage(IApplicationsIoTService appIotArch, string deviceName, MetadataModel message)
         {
             var status = Status.Initialized;
 
@@ -663,7 +663,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     try
                     {
-                        var sendResp = await appArch.SendCloudMessage(message, State.UserEnterpriseLookup, deviceName, envLookup: null);
+                        var sendResp = await appIotArch.SendCloudMessage(message, State.UserEnterpriseLookup, deviceName, envLookup: null);
 
                         status = sendResp.Status;
 
@@ -684,7 +684,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return status;
         }
 
-        public virtual async Task<Status> SendDeviceMessage(ApplicationArchitectClient appArch, SecurityManagerClient secMgr,
+        public virtual async Task<Status> SendDeviceMessage(IApplicationsIoTService appIotArch, SecurityManagerClient secMgr,
             DocumentClient client, string deviceName, MetadataModel payload)
         {
             if (payload.Metadata.ContainsKey("id"))
@@ -697,7 +697,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     try
                     {
-                        var sendResp = await appArch.SendDeviceMessage(payload, State.UserEnterpriseLookup,
+                        var sendResp = await appIotArch.SendDeviceMessage(payload, State.UserEnterpriseLookup,
                             deviceName, envLookup: null);
 
                         log.LogInformation($"Send Device ({deviceName}) Message Response {sendResp?.Status?.ToJSON()}: {payload?.ToJSON()}");
@@ -849,7 +849,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
-        public virtual async Task UpdateConnectedDevicesSync(IApplicationsIoTService appArch, int page, int pageSize)
+        public virtual async Task UpdateConnectedDevicesSync(IApplicationsIoTService appIotArch, int page, int pageSize)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -857,7 +857,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                 State.DevicesConfig.PageSize = pageSize;
 
-                await LoadDevices(appArch);
+                await LoadDevices(appIotArch);
             }
             else
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");

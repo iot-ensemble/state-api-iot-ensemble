@@ -44,11 +44,11 @@ namespace LCU.State.API.IoTEnsemble.Shared
     public class UpdateConnectedDevicesSync
     {
 
-        protected IApplicationsIoTService appArch;
+        protected IApplicationsIoTService appIotArch;
 
-        public UpdateConnectedDevicesSync(IApplicationsIoTService appArch)
+        public UpdateConnectedDevicesSync(IApplicationsIoTService appIotArch)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
         }
 
 
@@ -80,7 +80,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                await harness.UpdateConnectedDevicesSync(appArch, dataReq.Page, dataReq.PageSize);
+                await harness.UpdateConnectedDevicesSync(appIotArch, dataReq.Page, dataReq.PageSize);
 
                 harness.State.DevicesConfig.Loading = false;
 

@@ -157,20 +157,20 @@ namespace LCU.State.API.IoTEnsemble.State
             State.Loading = false;
         }
 
-        public virtual async Task<Status> RemoveChildEnterprise(IApplicationsIoTService appArch, 
+        public virtual async Task<Status> RemoveChildEnterprise(IApplicationsIoTService appIotArch, 
             IEnterprisesManagementService entMgr, IdentityManagerClient idMgr, 
             string childEntLookup, string parentEntLookup)
         {
             var childEnt = State.EnterpriseConfig.ChildEnterprises.FirstOrDefault(ent => 
                 ent.Lookup == childEntLookup
             );
-            var devices = await appArch.ListEnrolledDevices(childEntLookup);
+            var devices = await appIotArch.ListEnrolledDevices(childEntLookup);
           
             //Remove devices
             
                 await devices.Model.Items.Each(async d =>{
 
-                    await revokeDeviceEnrollment(appArch, childEntLookup, d.DeviceID);
+                    await revokeDeviceEnrollment(appIotArch, childEntLookup, d.DeviceID);
 
                 }, parallel: true);
             
@@ -210,22 +210,22 @@ namespace LCU.State.API.IoTEnsemble.State
                 Password= "F@thym!t"
             });
 
-            await LoadChildEnterprises(entMgr, parentEntLookup, appArch, idMgr);
+            await LoadChildEnterprises(entMgr, parentEntLookup, appIotArch, idMgr);
             
             return Status.Success;
         }
 
-        public virtual async Task<Status> RevokeDeviceEnrollment(IApplicationsIoTService appArch, IEnterprisesManagementService entMgr,
+        public virtual async Task<Status> RevokeDeviceEnrollment(IApplicationsIoTService appIotArch, IEnterprisesManagementService entMgr,
             IdentityManagerClient idMgr, string parentEntLookup, string deviceId)
         {
-            var revoked = await revokeDeviceEnrollment(appArch, State.ActiveEnterpriseConfig.ActiveEnterprise.Lookup, deviceId);
+            var revoked = await revokeDeviceEnrollment(appIotArch, State.ActiveEnterpriseConfig.ActiveEnterprise.Lookup, deviceId);
 
-            await LoadChildEnterprises(entMgr, parentEntLookup, appArch, idMgr);
+            await LoadChildEnterprises(entMgr, parentEntLookup, appIotArch, idMgr);
 
             return revoked;
         }
 
-        public virtual async Task SetActiveEnterprise(IApplicationsIoTService appArch, string entLookup)
+        public virtual async Task SetActiveEnterprise(IApplicationsIoTService appIotArch, string entLookup)
         {
             State.ActiveEnterpriseConfig.ActiveEnterprise = State.EnterpriseConfig.ChildEnterprises.FirstOrDefault(ent => 
                 ent.Lookup == entLookup
@@ -234,12 +234,12 @@ namespace LCU.State.API.IoTEnsemble.State
             State.ActiveEnterpriseConfig.Page = 1;
                 
 
-            await LoadActiveEnterpriseDetails(appArch, State.ActiveEnterpriseConfig.Page,State.ActiveEnterpriseConfig.PageSize );
+            await LoadActiveEnterpriseDetails(appIotArch, State.ActiveEnterpriseConfig.Page,State.ActiveEnterpriseConfig.PageSize );
 
         }
 
         public virtual async Task UpdateActiveEnterpriseSync(EnterpriseManagerClient entMgr,
-            IApplicationsIoTService appArch, IdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize)
+            IApplicationsIoTService appIotArch, IdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize)
         {
 
             if (State.ActiveEnterpriseConfig != null)
@@ -249,7 +249,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                 State.ActiveEnterpriseConfig.PageSize = pageSize;
 
-                await LoadActiveEnterpriseDetails(appArch, State.ActiveEnterpriseConfig.Page, State.ActiveEnterpriseConfig.PageSize );
+                await LoadActiveEnterpriseDetails(appIotArch, State.ActiveEnterpriseConfig.Page, State.ActiveEnterpriseConfig.PageSize );
 
 
             }
@@ -259,7 +259,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task UpdateEnterprisesSync(IEnterprisesManagementService entMgr,
-            IApplicationsIoTService appArch, IdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize)
+            IApplicationsIoTService appIotArch, IdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize)
         {
 
             if (State.EnterpriseConfig != null)
@@ -269,11 +269,11 @@ namespace LCU.State.API.IoTEnsemble.State
 
                 State.EnterpriseConfig.PageSize = pageSize;
 
-                await LoadChildEnterprises(entMgr, parentEntLookup, appArch, idMgr);
+                await LoadChildEnterprises(entMgr, parentEntLookup, appIotArch, idMgr);
 
                 if(State.ActiveEnterpriseConfig != null)
                 {
-                await LoadActiveEnterpriseDetails(appArch, State.ActiveEnterpriseConfig.Page, State.ActiveEnterpriseConfig.PageSize);
+                await LoadActiveEnterpriseDetails(appIotArch, State.ActiveEnterpriseConfig.Page, State.ActiveEnterpriseConfig.PageSize);
                 }
             }
 
