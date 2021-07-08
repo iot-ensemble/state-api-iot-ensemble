@@ -44,7 +44,7 @@ namespace LCU.State.API.IoTEnsemble.Host
 
         protected IEnterprisesHostingManagerService entHostMgr;
 
-        protected IdentityManagerClient idMgr;
+        protected IIdentityManagerClient idMgr;
 
         protected SecurityManagerClient secMgr;
 

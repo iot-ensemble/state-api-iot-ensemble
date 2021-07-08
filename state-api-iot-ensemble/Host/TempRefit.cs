@@ -7,6 +7,7 @@ using Fathym.API;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Refit;
 
+
 [assembly: FunctionsStartup(typeof(LCU.State.API.IoTEnsemble.Host.Startup))]
 
 namespace LCU.State.API.IoTEnsemble.Host.TempRefit
@@ -62,6 +63,27 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         Task<BaseResponse> CancelSubscriptionByUser(string username, string entLookup, string licenseType);
 	}
 
+    public interface IIdentityManagerClient
+    {
+        [Get("{entLookup}/license/{username}/{allAny}")]
+        Task<BaseResponse<Fathym.MetadataModel>> HasLicenseAccess(string entLookup,string username, Personas.AllAnyTypes allAny, List<string> licenseTypes);
+
+        [Get("{entLookup}/licenses/{username}")]
+        Task<BaseResponse<List<License>>> ListLicenses(string entLookup, string username, List<string> licenseTypes = null);
+
+        [Get("{entLookup}/licenses")]
+        Task<BaseResponse<List<License>>> ListLicenseAccessTokens(string entLookup, List<string> licenseTypes);
+
+        [Post("{entLookup}/revoke")]
+        Task<BaseResponse> RevokeAccessCard(RevokeAccessCardRequest request, string entLookup);
+
+        [Delete("{entLookup}/license/{username}/{licenseType}")]
+        Task<BaseResponse> RevokeLicenseAccess(string entLookup, string username, string licenseType);
+
+        [Delete("{entLookup}/passport/{username}")]
+		Task<BaseResponse> RevokePassport(string entLookup, string username);
+    }
+    
     public interface IEnterprisesHostingManagerService
     {
         [Get("/hosting/{entLookup}/hosts")]
@@ -460,6 +482,25 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual Guid? ProjectID { get; set; }
     }
 
+    public class License //': LCUVertex
+    {
+        public DateTimeOffset AccessStartDate { get; set; }
+        public Fathym.MetadataModel Details { get; set; }
+        public DateTimeOffset ExpirationDate { get; set; }
+        public bool EnterpriseOverride { get; set; }
+        public bool IsLocked { get; set; }
+        public bool IsReset { get; set; }
+        public string Lookup { get; set; }
+        public int TrialPeriodDays { get; set; }
+        public string Username { get; set; }
+    }
+
+    public class RevokeAccessCardRequest : BaseRequest
+    {
+        //public RevokeAccessCardRequest();
+        public virtual string AccessConfiguration { get; set; }
+
+        public virtual string Username { get; set; }
     [DataContract]
     public class Host : LCUVertex
     {

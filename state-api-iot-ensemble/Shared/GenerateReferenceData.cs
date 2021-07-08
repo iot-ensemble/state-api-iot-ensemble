@@ -17,6 +17,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -29,12 +30,12 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         protected readonly IEnterprisesHostingManagerService entHostMgr;
 
-        protected readonly IdentityManagerClient idMgr;
+        protected readonly IIdentityManagerClient idMgr;
 
         protected readonly string parentEntLookup;
         #endregion
 
-        public GenerateReferenceData(IEnterprisesManagementService entMgr, IdentityManagerClient idMgr, IEnterprisesHostingManagerService entHostMgr)
+        public GenerateReferenceData(IEnterprisesManagementService entMgr, IIdentityManagerClient idMgr, IEnterprisesHostingManagerService entHostMgr)
         {
             this.entMgr = entMgr;
 
@@ -108,7 +109,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                     var license = licenses.FirstOrDefault(lic => lic.Username == username);
 
-                    //await idMgr.HasLicenseAccess(parentLookup, username, Personas.AllAnyTypes.All, new List<string>() { "iot" });
+                    await idMgr.HasLicenseAccess(parentLookup, username, Personas.AllAnyTypes.All, new List<string>() { "iot" });
 
                     IoTEnsembleEnterpriseReferenceData refd;
 

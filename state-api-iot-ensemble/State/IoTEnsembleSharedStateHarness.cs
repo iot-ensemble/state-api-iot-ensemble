@@ -421,7 +421,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to establish the user's enterprise, please try again.");
         }
 
-        public virtual async Task<Status> HasLicenseAccess(IdentityManagerClient idMgr, string entLookup, string username)
+        public virtual async Task<Status> HasLicenseAccess(IIdentityManagerClient idMgr, string entLookup, string username)
         {
             await DesignOutline.Instance.Retry()
                 .SetActionAsync(async () =>
@@ -441,7 +441,6 @@ namespace LCU.State.API.IoTEnsemble.State
                                 State.AccessPlanGroup = hasAccess.Model.Metadata["PlanGroup"].ToString();
 
                             if (hasAccess.Model.Metadata.ContainsKey("Devices"))
-                                State.DevicesConfig.MaxDevicesCount = hasAccess.Model.Metadata["Devices"].ToString().As<int>();
 
                             if(hasAccess.Model.Metadata.ContainsKey("DataInterval"))
                                 State.DataInterval = (int) hasAccess.Model.Metadata["DataInterval"];
@@ -617,7 +616,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task Refresh(IDurableOrchestrationClient starter, StateDetails stateDetails, ExecuteActionRequest exActReq,
-            IApplicationsIoTService appIotArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesBootService entBootArch, IEnterprisesHostingManagerService entHostMgr, IdentityManagerClient idMgr,
+            IApplicationsIoTService appIotArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesBootService entBootArch, IEnterprisesHostingManagerService entHostMgr, IIdentityManagerClient idMgr,
             SecurityManagerClient secMgr, DocumentClient client)
         {
             await EnsureUserEnterprise(entBootArch, entHostMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);

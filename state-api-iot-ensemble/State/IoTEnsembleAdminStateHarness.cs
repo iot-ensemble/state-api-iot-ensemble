@@ -62,7 +62,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #region API Methods
 
         public virtual async Task LoadChildEnterprises(IEnterprisesManagementService entMgr, string parentEntLookup,
-            IApplicationsIoTService appIotArch, IdentityManagerClient idMgr)
+            IApplicationsIoTService appIotArch, IIdentityManagerClient idMgr)
         {
             var childEntsResp = await entMgr.ListChildEnterprises(parentEntLookup);
 
@@ -77,11 +77,11 @@ namespace LCU.State.API.IoTEnsemble.State
                 
                 var devicesResp = await appIotArch.ListEnrolledDevices(childEnt.Lookup);
 
-                var licenses = await idMgr.ListLicenseAccessTokens(parentEntLookup, childEnt.Name, new List<string>() { "iot" });
+                var licenses = await idMgr.ListLicenses(parentEntLookup, childEnt.Name, new List<string>() { "iot" });
 
                 DateTime? StartDate = null;
 
-                foreach (LicenseAccessToken token in licenses.Model)
+                foreach (License token in licenses.Model)
                 {
                     if (token.AccessStartDate != null)
                     {
@@ -148,7 +148,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task Refresh(IApplicationsIoTService appIotArch, IEnterprisesManagementService entMgr,
-            IdentityManagerClient idMgr, string parentEntLookup)
+            IIdentityManagerClient idMgr, string parentEntLookup)
         {
             await LoadChildEnterprises(entMgr, parentEntLookup, appIotArch, idMgr);
 
@@ -158,7 +158,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task<Status> RemoveChildEnterprise(IApplicationsIoTService appIotArch, 
-            IEnterprisesManagementService entMgr, IdentityManagerClient idMgr, 
+            IEnterprisesManagementService entMgr, IIdentityManagerClient idMgr, 
             string childEntLookup, string parentEntLookup)
         {
             var childEnt = State.EnterpriseConfig.ChildEnterprises.FirstOrDefault(ent => 
@@ -183,7 +183,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
             var revokePassportRequest = await idMgr.RevokePassport(parentEntLookup, childEnt.Name);
 
-            var revokeAccessCardRequest = await idMgr.RevokeAccessCard(new Personas.Identity.RevokeAccessCardRequest(){
+            var revokeAccessCardRequest = await idMgr.RevokeAccessCard(new Host.TempRefit.RevokeAccessCardRequest(){
                 AccessConfiguration = "LCU",
                 Username = childEnt.Name
             }, childEntLookup);
@@ -216,7 +216,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task<Status> RevokeDeviceEnrollment(IApplicationsIoTService appIotArch, IEnterprisesManagementService entMgr,
-            IdentityManagerClient idMgr, string parentEntLookup, string deviceId)
+            IIdentityManagerClient idMgr, string parentEntLookup, string deviceId)
         {
             var revoked = await revokeDeviceEnrollment(appIotArch, State.ActiveEnterpriseConfig.ActiveEnterprise.Lookup, deviceId);
 
@@ -239,7 +239,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task UpdateActiveEnterpriseSync(EnterpriseManagerClient entMgr,
-            IApplicationsIoTService appIotArch, IdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize)
+            IApplicationsIoTService appIotArch, IIdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize)
         {
 
             if (State.ActiveEnterpriseConfig != null)
@@ -259,7 +259,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task UpdateEnterprisesSync(IEnterprisesManagementService entMgr,
-            IApplicationsIoTService appIotArch, IdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize)
+            IApplicationsIoTService appIotArch, IIdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize)
         {
 
             if (State.EnterpriseConfig != null)

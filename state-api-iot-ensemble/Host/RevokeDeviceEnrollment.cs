@@ -40,10 +40,10 @@ namespace LCU.State.API.IoTEnsemble.Host
 
         protected IEnterprisesManagementService entMgr;
 
-        protected IdentityManagerClient idMgr;
+        protected IIdentityManagerClient idMgr;
 
         public RevokeDeviceEnrollment(IApplicationsIoTService appIotArch, IEnterprisesManagementService entMgr,
-            IdentityManagerClient idMgr)
+            IIdentityManagerClient idMgr)
         {
             this.appIotArch = appIotArch;
 
