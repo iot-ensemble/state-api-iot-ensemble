@@ -21,6 +21,7 @@ using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
 using Microsoft.Azure.Documents.Client;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -37,13 +38,13 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class SendDeviceMessage
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appIotArch;
 
         protected SecurityManagerClient secMgr;
 
-        public SendDeviceMessage(ApplicationArchitectClient appArch, SecurityManagerClient secMgr)
+        public SendDeviceMessage(IApplicationsIoTService appIotArch, SecurityManagerClient secMgr)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
 
             this.secMgr = secMgr;
         }
@@ -75,7 +76,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                         var stateDetails = StateUtils.LoadStateDetails(req);
 
-                        await harness.SendDeviceMessage(appArch, secMgr, docClient, dataReq.DeviceName, dataReq.Payload);
+                        await harness.SendDeviceMessage(appIotArch, secMgr, docClient, dataReq.DeviceName, dataReq.Payload);
 
                         harness.State.Telemetry.Loading = false;
 

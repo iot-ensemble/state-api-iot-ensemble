@@ -50,11 +50,11 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class ListAllDeviceNames
     {
-        protected IApplicationsIoTService appArch;
+        protected IApplicationsIoTService appIotArch;
 
-        public ListAllDeviceNames(IApplicationsIoTService appArch)
+        public ListAllDeviceNames(IApplicationsIoTService appIotArch)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
         }
 
         [FunctionName("ListAllDeviceNames")]
@@ -77,7 +77,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                     if (dataReq == null)
                         dataReq = new ListAllDeviceNamesRequest();
 
-                    queried.DeviceNames = await harness.ListAllDeviceNames(appArch, dataReq.ChildEntLookup, dataReq.Filter);
+                    queried.DeviceNames = await harness.ListAllDeviceNames(appIotArch, dataReq.ChildEntLookup, dataReq.Filter);
 
                     queried.Status = Status.Success;
 
