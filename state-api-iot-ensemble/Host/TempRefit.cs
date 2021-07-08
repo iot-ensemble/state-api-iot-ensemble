@@ -83,7 +83,7 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         [Delete("{entLookup}/passport/{username}")]
 		Task<BaseResponse> RevokePassport(string entLookup, string username);
     }
-    
+
     public interface IEnterprisesHostingManagerService
     {
         [Get("/hosting/{entLookup}/hosts")]
@@ -107,6 +107,18 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 		[Get("/api-management/{entLookup}/api/{subType}/keys/{apiKey}/validate")]
 		Task<BaseResponse<MetadataModel>> VerifyAPIKey(string entLookup, string subType, string apiKey);
 	}
+
+    [DataContract]
+    public class APILowCodeUnit : LowCodeUnit
+    {
+        [DataMember]
+        public virtual string APIRoot { get; set; }
+
+        [DataMember]
+        public virtual string Security { get; set; }
+
+        //  TODO:  Fucntion mapping, AzureFunctionLowCodeUnit?
+    }
 	
     [DataContract]
     public class AzureCloud : Cloud
@@ -482,7 +494,7 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual Guid? ProjectID { get; set; }
     }
 
-    public class License //': LCUVertex
+    public class License : LCUVertex
     {
         public DateTimeOffset AccessStartDate { get; set; }
         public Fathym.MetadataModel Details { get; set; }
@@ -501,6 +513,31 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual string AccessConfiguration { get; set; }
 
         public virtual string Username { get; set; }
+    }
+
+    [DataContract]
+    public class GitHubLowCodeUnit : LowCodeUnit
+    {
+        [DataMember]
+        public virtual string Branch { get; set; }
+
+        [DataMember]
+        public virtual string Organization { get; set; }
+        
+        [DataMember]
+        public virtual string Repository { get; set; }
+    }
+
+    [DataContract]
+    public class GitHubOAuthLowCodeUnit : LowCodeUnit
+    {
+        [DataMember]
+        public virtual string ClientID { get; set; }
+        
+        [DataMember]
+        public virtual string ClientSecret { get; set; }
+    }
+
     [DataContract]
     public class Host : LCUVertex
     {
@@ -577,5 +614,51 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 
         [DataMember]
         public virtual string TenantLookup { get; set; }
+    }
+
+    [DataContract]
+    public class LowCodeUnit : LCUVertex
+    {
+        [DataMember]
+        public virtual string Lookup { get; set; }
+    }
+
+    [DataContract]
+    public class NPMLowCodeUnit : LowCodeUnit
+    {
+        [DataMember]
+        public virtual string Package { get; set; }
+
+        [DataMember]
+        public virtual string Version { get; set; }
+    }
+
+    [DataContract]
+    public class Secret : LCUVertex
+    {
+        [DataMember]
+        public virtual string DataTokenLookup { get; set; }
+
+        [DataMember]
+        public virtual string KnownAs { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+    }
+
+    [DataContract]
+    public class SPALowCodeUnit : LowCodeUnit
+    {
+        [DataMember]
+        public virtual string SPARoot { get; set; }
+
+        //  TODO:  Fucntion mapping, AzureFunctionLowCodeUnit?
+    }
+
+    [DataContract]
+    public class ZipLowCodeUnit : LowCodeUnit
+    {
+        [DataMember]
+        public virtual string ZipFile { get; set; }
     }
 }
