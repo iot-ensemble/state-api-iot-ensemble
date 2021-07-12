@@ -167,7 +167,7 @@ namespace LCU.State.API.IoTEnsemble.State
                         {
                             try
                             {
-                                var tpd = await secMgr.RetrieveEnterpriseThirdPartyData(State.UserEnterpriseLookup, DEVICE_DASHBOARD_FREEBOARD_CONFIG);
+                                var tpd = await secMgr.RetrieveThirdPartyData(State.UserEnterpriseLookup, DEVICE_DASHBOARD_FREEBOARD_CONFIG);
 
                                 if (tpd.Status && tpd.Model.ContainsKey(DEVICE_DASHBOARD_FREEBOARD_CONFIG) && !tpd.Model[DEVICE_DASHBOARD_FREEBOARD_CONFIG].IsNullOrEmpty())
                                     State.Dashboard.FreeboardConfig = tpd.Model[DEVICE_DASHBOARD_FREEBOARD_CONFIG].FromJSON<MetadataModel>();
@@ -186,7 +186,7 @@ namespace LCU.State.API.IoTEnsemble.State
                                 {
                                     var freeboardConfig = await loadDefaultFreeboardConfig();
 
-                                    var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                                    var resp = await secMgr.SetThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
                                     {
                                         { DEVICE_DASHBOARD_FREEBOARD_CONFIG, freeboardConfig.ToJSON() }
                                     });
