@@ -156,7 +156,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return await LoadAPIKeys(entArch, entLookup, username);
         }
 
-        public virtual async Task EnsureDevicesDashboard(SecurityManagerClient secMgr)
+        public virtual async Task EnsureDevicesDashboard(ISecurityManagerClient secMgr)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -212,7 +212,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
-        public virtual async Task EnsureDrawersConfig(SecurityManagerClient secMgr)
+        public virtual async Task EnsureDrawersConfig(ISecurityManagerClient secMgr)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -221,13 +221,13 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         try
                         {
-                            var tpd = await secMgr.RetrieveEnterpriseThirdPartyData(State.UserEnterpriseLookup, DETAILS_PANE_ENABLED);
+                            var tpd = await secMgr.RetrieveThirdPartyData(State.UserEnterpriseLookup, DETAILS_PANE_ENABLED);
 
                             if (tpd.Status && tpd.Model.ContainsKey(DETAILS_PANE_ENABLED) && !tpd.Model[DETAILS_PANE_ENABLED].IsNullOrEmpty())
                                 State.Drawers.DetailsActive = tpd.Model[DETAILS_PANE_ENABLED].As<bool>();
                             else
                             {
-                                var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                                var resp = await secMgr.SetThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
                                 {
                                     { DETAILS_PANE_ENABLED, true.ToString() }
                                 });
@@ -257,7 +257,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task EnsureEmulatedDeviceInfo(IDurableOrchestrationClient starter, StateDetails stateDetails,
-            ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient client)
+            ExecuteActionRequest exActReq, ISecurityManagerClient secMgr, DocumentClient client)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -266,7 +266,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         try
                         {
-                            var tpd = await secMgr.RetrieveEnterpriseThirdPartyData(State.UserEnterpriseLookup, EMULATED_DEVICE_ENABLED);
+                            var tpd = await secMgr.RetrieveThirdPartyData(State.UserEnterpriseLookup, EMULATED_DEVICE_ENABLED);
 
                             if (tpd.Status && tpd.Model.ContainsKey(EMULATED_DEVICE_ENABLED) && !tpd.Model[EMULATED_DEVICE_ENABLED].IsNullOrEmpty())
                                 State.Emulated.Enabled = tpd.Model[EMULATED_DEVICE_ENABLED].As<bool>();
@@ -296,7 +296,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task EnsureTelemetry(IDurableOrchestrationClient starter, StateDetails stateDetails,
-            ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient docClient)
+            ExecuteActionRequest exActReq, ISecurityManagerClient secMgr, DocumentClient docClient)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -305,7 +305,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         try
                         {
-                            var tpd = await secMgr.RetrieveEnterpriseThirdPartyData(State.UserEnterpriseLookup, TELEMETRY_SYNC_ENABLED);
+                            var tpd = await secMgr.RetrieveThirdPartyData(State.UserEnterpriseLookup, TELEMETRY_SYNC_ENABLED);
 
                             if (tpd.Status && tpd.Model.ContainsKey(TELEMETRY_SYNC_ENABLED) && !tpd.Model[TELEMETRY_SYNC_ENABLED].IsNullOrEmpty())
                                 State.Telemetry.Enabled = tpd.Model[TELEMETRY_SYNC_ENABLED].As<bool>();
@@ -363,7 +363,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task EnsureUserEnterprise(EnterpriseArchitectClient entArch, IEnterprisesHostingManagerService entHostMgr,
-            SecurityManagerClient secMgr, string parentEntLookup, string username)
+            ISecurityManagerClient secMgr, string parentEntLookup, string username)
         {
             if (State.DevicesConfig != null)
                 State.DevicesConfig.Status = null;
@@ -574,7 +574,7 @@ namespace LCU.State.API.IoTEnsemble.State
             State.DevicesConfig.SASTokens = null;
         }
 
-        public virtual async Task<Status> LoadTelemetry(SecurityManagerClient secMgr, DocumentClient client)
+        public virtual async Task<Status> LoadTelemetry(ISecurityManagerClient secMgr, DocumentClient client)
         {
             var status = Status.Success;
 
@@ -614,7 +614,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task Refresh(IDurableOrchestrationClient starter, StateDetails stateDetails, ExecuteActionRequest exActReq,
             IApplicationsIoTService appArch, EnterpriseArchitectClient entArch, IEnterprisesHostingManagerService entHostMgr, IIdentityManagerClient idMgr,
-            SecurityManagerClient secMgr, DocumentClient client)
+            ISecurityManagerClient secMgr, DocumentClient client)
         {
             await EnsureUserEnterprise(entArch, entHostMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
 
@@ -680,7 +680,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return status;
         }
 
-        public virtual async Task<Status> SendDeviceMessage(ApplicationArchitectClient appArch, SecurityManagerClient secMgr,
+        public virtual async Task<Status> SendDeviceMessage(ApplicationArchitectClient appArch, ISecurityManagerClient secMgr,
             DocumentClient client, string deviceName, MetadataModel payload)
         {
             if (payload.Metadata.ContainsKey("id"))
@@ -719,7 +719,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return status;
         }
 
-        public virtual async Task ToggleDetailsPane(SecurityManagerClient secMgr)
+        public virtual async Task ToggleDetailsPane(ISecurityManagerClient secMgr)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -730,7 +730,7 @@ namespace LCU.State.API.IoTEnsemble.State
                         {
                             var active = !State.Drawers.DetailsActive;
 
-                            var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                            var resp = await secMgr.SetThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
                             {
                                 { DETAILS_PANE_ENABLED, active.ToString() }
                             });
@@ -757,7 +757,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task ToggleEmulatedEnabled(IDurableOrchestrationClient starter, StateDetails stateDetails,
-            ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient client, bool skipTelem = false)
+            ExecuteActionRequest exActReq, ISecurityManagerClient secMgr, DocumentClient client, bool skipTelem = false)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -770,7 +770,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         try
                         {
-                            var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                            var resp = await secMgr.SetThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
                             {
                                 { EMULATED_DEVICE_ENABLED, enabled.ToString() }
                             });
@@ -810,7 +810,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task ToggleTelemetrySyncEnabled(IDurableOrchestrationClient starter, StateDetails stateDetails,
-            ExecuteActionRequest exActReq, SecurityManagerClient secMgr, DocumentClient client)
+            ExecuteActionRequest exActReq, ISecurityManagerClient secMgr, DocumentClient client)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -824,7 +824,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
-        public virtual async Task UpdateTelemetrySync(SecurityManagerClient secMgr, DocumentClient client, int refreshRate, int page, int pageSize, string payloadId=null)
+        public virtual async Task UpdateTelemetrySync(ISecurityManagerClient secMgr, DocumentClient client, int refreshRate, int page, int pageSize, string payloadId=null)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -1373,14 +1373,14 @@ namespace LCU.State.API.IoTEnsemble.State
             return payloads;
         }
 
-        protected virtual async Task setTelemetryEnabled(SecurityManagerClient secMgr, bool enabled)
+        protected virtual async Task setTelemetryEnabled(ISecurityManagerClient secMgr, bool enabled)
         {
             await DesignOutline.Instance.Retry()
                 .SetActionAsync(async () =>
                 {
                     try
                     {
-                        var resp = await secMgr.SetEnterpriseThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                        var resp = await secMgr.SetThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
                         {
                             { TELEMETRY_SYNC_ENABLED, enabled.ToString() }
                         });

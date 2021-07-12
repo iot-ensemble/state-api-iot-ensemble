@@ -22,6 +22,7 @@ using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.Documents.Client;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -32,9 +33,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class ToggleEmulatedEnabled
     {
-        protected SecurityManagerClient secMgr;
+        protected ISecurityManagerClient secMgr;
 
-        public ToggleEmulatedEnabled(SecurityManagerClient secMgr)
+        public ToggleEmulatedEnabled(ISecurityManagerClient secMgr)
         {
             this.secMgr = secMgr;
         }

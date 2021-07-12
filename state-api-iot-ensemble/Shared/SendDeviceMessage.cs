@@ -21,6 +21,7 @@ using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
 using Microsoft.Azure.Documents.Client;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -39,9 +40,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
     {
         protected ApplicationArchitectClient appArch;
 
-        protected SecurityManagerClient secMgr;
+        protected ISecurityManagerClient secMgr;
 
-        public SendDeviceMessage(ApplicationArchitectClient appArch, SecurityManagerClient secMgr)
+        public SendDeviceMessage(ApplicationArchitectClient appArch, ISecurityManagerClient secMgr)
         {
             this.appArch = appArch;
 

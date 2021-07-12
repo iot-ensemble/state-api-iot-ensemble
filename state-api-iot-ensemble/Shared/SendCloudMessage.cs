@@ -40,7 +40,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
     {
         protected IApplicationsIoTService appArch;
 
-        protected SecurityManagerClient secMgr;
+        protected ISecurityManagerClient secMgr;
 
         public SendCloudMessage(IApplicationsIoTService appArch)
         {

@@ -76,6 +76,7 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 
         [Delete("{entLookup}/passport/{username}")]
 		Task<BaseResponse> RevokePassport(string entLookup, string username);
+    }
     public interface IEnterprisesHostingManagerService
     {
         [Get("/hosting/{entLookup}/hosts")]
@@ -83,6 +84,18 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 
         [Get("/hosting/resolve/{host}")]
         Task<BaseResponse<EnterpriseContext>> ResolveHost(string host);
+    }
+    public interface ISecurityManagerClient
+    {
+        [Get("{entLookup}/third-party")]
+        Task<BaseResponse<IDictionary<string, string>>> RetrieveThirdPartyData( string userEmail, string entLookup, List<string> lookups, bool decrypt = false);
+
+        [Get("{entLookup}/third-party")]
+		Task<BaseResponse<IDictionary<string, string>>> RetrieveThirdPartyData(string entLookup, List<string> lookups);
+
+        [Post("{entLookup}/third-party")]
+        Task<BaseResponse> SetThirdPartyData( string entLookup, Dictionary<string, string> data);
+
     }
 
     [DataContract]

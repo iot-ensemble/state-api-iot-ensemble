@@ -20,6 +20,7 @@ using System.Security.Claims;
 using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -30,9 +31,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class ToggleDetailsPane
     {
-        protected SecurityManagerClient secMgr;
+        protected ISecurityManagerClient secMgr;
 
-        public ToggleDetailsPane(SecurityManagerClient secMgr)
+        public ToggleDetailsPane(ISecurityManagerClient secMgr)
         {
             this.secMgr = secMgr;
         }
