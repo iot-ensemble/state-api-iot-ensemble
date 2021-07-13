@@ -238,8 +238,8 @@ namespace LCU.State.API.IoTEnsemble.State
 
         }
 
-        public virtual async Task UpdateActiveEnterpriseSync(EnterpriseManagerClient entMgr,
-            IApplicationsIoTService appIotArch, IIdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize)
+        public virtual async Task UpdateActiveEnterpriseSync(IApplicationsIoTService appIotArch, IIdentityManagerClient idMgr, string parentEntLookup, 
+            int page, int pageSize)
         {
 
             if (State.ActiveEnterpriseConfig != null)
