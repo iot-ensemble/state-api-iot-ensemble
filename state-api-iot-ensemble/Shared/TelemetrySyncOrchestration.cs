@@ -25,6 +25,7 @@ using LCU.Personas.Client.Security;
 using System.Threading;
 using DurableTask.Core.Exceptions;
 using Microsoft.Azure.Documents.Client;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -35,9 +36,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class TelemetrySyncOrchestration
     {
-        protected SecurityManagerClient secMgr;
+        protected ISecurityManagerClient secMgr;
 
-        public TelemetrySyncOrchestration(SecurityManagerClient secMgr)
+        public TelemetrySyncOrchestration(ISecurityManagerClient secMgr)
         {
             this.secMgr = secMgr;
         }

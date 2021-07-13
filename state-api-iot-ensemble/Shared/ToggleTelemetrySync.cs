@@ -25,6 +25,7 @@ using System.Net;
 using System.Text;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.Documents.Client;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -37,9 +38,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class ToggleTelemetrySync
     {
-        protected SecurityManagerClient secMgr;
+        protected ISecurityManagerClient secMgr;
 
-        public ToggleTelemetrySync(SecurityManagerClient secMgr)
+        public ToggleTelemetrySync(ISecurityManagerClient secMgr)
         {
             this.secMgr = secMgr;
         }
