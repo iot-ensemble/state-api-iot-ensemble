@@ -93,7 +93,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
         }
 
         protected virtual async Task<List<IoTEnsembleEnterpriseReferenceData>> processChildEnt(Host.TempRefit.Enterprise childEnt, List<Host.TempRefit.Host> hosts,
-            List<LicenseAccessToken> licenses)
+            List<License> licenses)
         {
             var refData = new List<IoTEnsembleEnterpriseReferenceData>();
 
