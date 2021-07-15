@@ -87,6 +87,14 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     }
     public interface ISecurityManagerClient
     {
+        [Get("{tokenLookup}")]
+        Task<BaseResponse<DataToken>> GetDataToken(string tokenLookup, string entLookup = null, string email = null, Guid? projectId = null,
+        Guid? appId = null, Guid? passportId = null, Guid? licenseId = null, bool cascadeChecks = true);
+
+        [Post("")]
+        Task<BaseResponse<DataToken>> SetDataToken(DataToken dataToken, string entLookup = null, string email = null, Guid? projectId = null,
+           Guid? appId = null, Guid? passportId = null, Guid? licenseId = null)
+
         [Get("{entLookup}/third-party")]
         Task<BaseResponse<IDictionary<string, string>>> RetrieveThirdPartyData( string userEmail, string entLookup, List<string> lookups, bool decrypt = false);
 
@@ -98,6 +106,21 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 
     }
 
+    [DataContract]
+    public class DataToken : LCUVertex
+    {
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual string Lookup { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual string Value { get; set; }
+    }
     [DataContract]
     public class DeleteEnterpriseByLookupRequest : BaseRequest
     {

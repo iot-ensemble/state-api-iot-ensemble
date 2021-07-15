@@ -167,10 +167,10 @@ namespace LCU.State.API.IoTEnsemble.State
                         {
                             try
                             {
-                                var tpd = await secMgr.RetrieveThirdPartyData(State.UserEnterpriseLookup, DEVICE_DASHBOARD_FREEBOARD_CONFIG);
+                                var tpd = await secMgr.GetDataToken(DEVICE_DASHBOARD_FREEBOARD_CONFIG, State.UserEnterpriseLookup);
 
-                                if (tpd.Status && tpd.Model.ContainsKey(DEVICE_DASHBOARD_FREEBOARD_CONFIG) && !tpd.Model[DEVICE_DASHBOARD_FREEBOARD_CONFIG].IsNullOrEmpty())
-                                    State.Dashboard.FreeboardConfig = tpd.Model[DEVICE_DASHBOARD_FREEBOARD_CONFIG].FromJSON<MetadataModel>();
+                                if (tpd.Status && tpd.Model.Lookup=="DEVICE_DASHBOARD_FREEBOARD_CONFIG" && !tpd.Model.Lookup.IsNullOrEmpty())
+                                    State.Dashboard.FreeboardConfig = tpd.Model.Value.FromJSON<MetadataModel>();
 
                                 if (State.Dashboard.FreeboardConfig != null)
                                     return State.Dashboard.FreeboardConfig == null;
@@ -186,11 +186,12 @@ namespace LCU.State.API.IoTEnsemble.State
                                 {
                                     var freeboardConfig = await loadDefaultFreeboardConfig();
 
-                                    var resp = await secMgr.SetThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                                    var resp = await secMgr.SetDataToken(new DataToken()
                                     {
-                                        { DEVICE_DASHBOARD_FREEBOARD_CONFIG, freeboardConfig.ToJSON() }
-                                    });
-
+                                        Lookup="DEVICE_DASHBOARD_FREEBOARD_CONFIG", 
+                                        Value= freeboardConfig.ToJSON()
+                                    }, State.UserEnterpriseLookup);
+                                
                                     if (resp.Status)
                                         State.Dashboard.FreeboardConfig = freeboardConfig;
                                 }
@@ -221,16 +222,17 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         try
                         {
-                            var tpd = await secMgr.RetrieveThirdPartyData(State.UserEnterpriseLookup, DETAILS_PANE_ENABLED);
+                            var tpd = await secMgr.GetDataToken(DETAILS_PANE_ENABLED, State.UserEnterpriseLookup);
 
-                            if (tpd.Status && tpd.Model.ContainsKey(DETAILS_PANE_ENABLED) && !tpd.Model[DETAILS_PANE_ENABLED].IsNullOrEmpty())
-                                State.Drawers.DetailsActive = tpd.Model[DETAILS_PANE_ENABLED].As<bool>();
+                            if (tpd.Status && tpd.Model.Lookup=="DETAILS_PANE_ENABLED" && !tpd.Model.Lookup.IsNullOrEmpty())
+                                State.Drawers.DetailsActive = tpd.Model.Value.As<bool>();
                             else
                             {
-                                var resp = await secMgr.SetThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                                var resp = await secMgr.SetDataToken(new DataToken()
                                 {
-                                    { DETAILS_PANE_ENABLED, true.ToString() }
-                                });
+                                    Lookup="DETAILS_PANE_ENABLED",
+                                    Value="true"
+                                }, State.UserEnterpriseLookup);
 
                                 if (resp.Status)
                                     State.Drawers.DetailsActive = true;
@@ -266,10 +268,11 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         try
                         {
-                            var tpd = await secMgr.RetrieveThirdPartyData(State.UserEnterpriseLookup, EMULATED_DEVICE_ENABLED);
+                            var tpd = await secMgr.GetDataToken(EMULATED_DEVICE_ENABLED, State.UserEnterpriseLookup);
 
-                            if (tpd.Status && tpd.Model.ContainsKey(EMULATED_DEVICE_ENABLED) && !tpd.Model[EMULATED_DEVICE_ENABLED].IsNullOrEmpty())
-                                State.Emulated.Enabled = tpd.Model[EMULATED_DEVICE_ENABLED].As<bool>();
+
+                            if (tpd.Status && tpd.Model.Lookup=="EMULATED_DEVICE_ENABLED" && !tpd.Model.Lookup.IsNullOrEmpty())
+                                State.Drawers.DetailsActive = tpd.Model.Value.As<bool>();
                             else
                             {
                                 State.Emulated.Enabled = true;
@@ -305,10 +308,10 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         try
                         {
-                            var tpd = await secMgr.RetrieveThirdPartyData(State.UserEnterpriseLookup, TELEMETRY_SYNC_ENABLED);
+                            var tpd = await secMgr.GetDataToken(TELEMETRY_SYNC_ENABLED, State.UserEnterpriseLookup);
 
-                            if (tpd.Status && tpd.Model.ContainsKey(TELEMETRY_SYNC_ENABLED) && !tpd.Model[TELEMETRY_SYNC_ENABLED].IsNullOrEmpty())
-                                State.Telemetry.Enabled = tpd.Model[TELEMETRY_SYNC_ENABLED].As<bool>();
+                            if (tpd.Status && tpd.Model.Lookup=="TELEMETRY_SYNC_ENABLED" && !tpd.Model.Lookup.IsNullOrEmpty())
+                                State.Drawers.DetailsActive = tpd.Model.Value.As<bool>();
                             else
                                 State.Telemetry.Enabled = false;
 
@@ -730,10 +733,11 @@ namespace LCU.State.API.IoTEnsemble.State
                         {
                             var active = !State.Drawers.DetailsActive;
 
-                            var resp = await secMgr.SetThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                            var resp = await secMgr.SetDataToken(new DataToken()
                             {
-                                { DETAILS_PANE_ENABLED, active.ToString() }
-                            });
+                                Lookup= "DETAILS_PANE_ENABLED", 
+                                Value= active.ToString()
+                            }, State.UserEnterpriseLookup);
 
                             if (resp.Status)
                                 State.Drawers.DetailsActive = active;
@@ -770,10 +774,11 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         try
                         {
-                            var resp = await secMgr.SetThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                            var resp = await secMgr.SetDataToken(new DataToken()
                             {
-                                { EMULATED_DEVICE_ENABLED, enabled.ToString() }
-                            });
+                                Lookup="EMULATED_DEVICE_ENABLED", 
+                                Value=enabled.ToString()
+                            }, State.UserEnterpriseLookup);
 
                             status = resp.Status;
 
@@ -1380,10 +1385,11 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     try
                     {
-                        var resp = await secMgr.SetThirdPartyData(State.UserEnterpriseLookup, new Dictionary<string, string>()
+                        var resp = await secMgr.SetDataToken(new DataToken()
                         {
-                            { TELEMETRY_SYNC_ENABLED, enabled.ToString() }
-                        });
+                            Lookup="TELEMETRY_SYNC_ENABLED",
+                            Value=enabled.ToString()
+                        }, State.UserEnterpriseLookup);
 
                         if (resp.Status)
                             State.Telemetry.Enabled = enabled;
