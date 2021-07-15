@@ -38,13 +38,13 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class SendDeviceMessage
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appIotArch;
 
         protected ISecurityManagerClient secMgr;
 
-        public SendDeviceMessage(ApplicationArchitectClient appArch, ISecurityManagerClient secMgr)
+        public SendDeviceMessage(IApplicationsIoTService appIotArch, ISecurityManagerClient secMgr)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
 
             this.secMgr = secMgr;
         }
@@ -76,7 +76,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                         var stateDetails = StateUtils.LoadStateDetails(req);
 
-                        await harness.SendDeviceMessage(appArch, secMgr, docClient, dataReq.DeviceName, dataReq.Payload);
+                        await harness.SendDeviceMessage(appIotArch, secMgr, docClient, dataReq.DeviceName, dataReq.Payload);
 
                         harness.State.Telemetry.Loading = false;
 

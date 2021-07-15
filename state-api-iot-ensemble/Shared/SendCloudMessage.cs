@@ -38,13 +38,13 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class SendCloudMessage
     {
-        protected IApplicationsIoTService appArch;
+        protected IApplicationsIoTService appIotArch;
 
         protected ISecurityManagerClient secMgr;
 
-        public SendCloudMessage(IApplicationsIoTService appArch)
+        public SendCloudMessage(IApplicationsIoTService appIotArch)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
         }
 
         [FunctionName("SendCloudMessage")]
@@ -70,7 +70,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                         var stateDetails = StateUtils.LoadStateDetails(req);
 
-                        await harness.SendCloudMessage(appArch, dataReq.DeviceName, dataReq.Message);
+                        await harness.SendCloudMessage(appIotArch, dataReq.DeviceName, dataReq.Message);
 
                         harness.State.Telemetry.Loading = false;
 

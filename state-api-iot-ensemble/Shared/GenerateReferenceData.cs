@@ -24,8 +24,6 @@ namespace LCU.State.API.IoTEnsemble.Shared
     public class GenerateReferenceData
     {
         #region Fields
-        protected readonly IApplicationsIoTService appArch;
-
         protected readonly bool bypassGenerateRefData;
 
         protected readonly IEnterprisesManagementService entMgr;
@@ -37,10 +35,8 @@ namespace LCU.State.API.IoTEnsemble.Shared
         protected readonly string parentEntLookup;
         #endregion
 
-        public GenerateReferenceData(IApplicationsIoTService appArch, IEnterprisesManagementService entMgr, IIdentityManagerClient idMgr, IEnterprisesHostingManagerService entHostMgr)
+        public GenerateReferenceData(IEnterprisesManagementService entMgr, IIdentityManagerClient idMgr, IEnterprisesHostingManagerService entHostMgr)
         {
-            this.appArch = appArch;
-
             this.entMgr = entMgr;
 
             this.entHostMgr = entHostMgr;
@@ -97,7 +93,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
         }
 
         protected virtual async Task<List<IoTEnsembleEnterpriseReferenceData>> processChildEnt(Host.TempRefit.Enterprise childEnt, List<Host.TempRefit.Host> hosts,
-            List<LicenseAccessToken> licenses)
+            List<License> licenses)
         {
             var refData = new List<IoTEnsembleEnterpriseReferenceData>();
 

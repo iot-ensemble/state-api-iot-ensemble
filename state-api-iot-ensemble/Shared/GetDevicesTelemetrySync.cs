@@ -35,11 +35,8 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class GetDevicesTelemetrySync
     {
-        protected ApplicationArchitectClient appArch;
-
-        public GetDevicesTelemetrySync(ApplicationArchitectClient appArch)
+        public GetDevicesTelemetrySync()
         {
-            this.appArch = appArch;
         }
 
         [FunctionName("GetDevicesTelemetrySync")]
