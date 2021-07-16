@@ -53,12 +53,8 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
 
     public class WarmQuery
     {
-        protected SecurityManagerClient secMgr;
-
-        public WarmQuery(SecurityManagerClient secMgr)
-        {
-            this.secMgr = secMgr;
-        }
+        public WarmQuery()
+        {}
 
         [FunctionName("WarmQuery")]
         public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req, ILogger log,

@@ -29,6 +29,7 @@ using Newtonsoft.Json.Converters;
 using System.Net.Http.Headers;
 using LCU.Presentation.State.ReqRes;
 using Microsoft.Extensions.Primitives;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
 {
@@ -74,12 +75,8 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
 
     public class ColdQuery
     {
-        protected SecurityManagerClient secMgr;
-
-        public ColdQuery(SecurityManagerClient secMgr)
-        {
-            this.secMgr = secMgr;
-        }
+        public ColdQuery()
+        {}
 
         [FunctionName("ColdQuery")]
         public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req, ILogger log,

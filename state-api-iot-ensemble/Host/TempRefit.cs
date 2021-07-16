@@ -118,13 +118,38 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         [Post("/iot/{entLookup}/devices/to/{deviceName}/send")]
         Task<BaseResponse> SendCloudMessage([Body] MetadataModel request, string entLookup, string deviceName,
             [Query] string envLookup = null);
-    }
-    
+    }   
+
+    public interface IEnterprisesAPIManagementService
+	{
+		[Post("/api-management/{entLookup}/api/subscription")]
+		Task<BaseResponse> EnsureAPISubscription([Body] EnsureAPISubscriptionRequest request, string entLookup, [Query] string username);
+
+		[Post("/api-management/{entLookup}/api/{subType}/keys")]
+		Task<BaseResponse> GenerateAPIKeys([Body] GenerateAPIKeysRequest request, string entLookup, string subType, [Query] string username);
+
+		[Get("/api-management/{entLookup}/api/{subType}/keys")]
+		Task<BaseResponse<MetadataModel>> LoadAPIKeys(string entLookup, string subType, [Query] string username);
+
+		[Get("/api-management/{entLookup}/api/{subType}/keys/{apiKey}/validate")]
+		Task<BaseResponse<MetadataModel>> VerifyAPIKey(string entLookup, string subType, string apiKey);
+	}
+
     public interface IEnterprisesBootService
     {
         [Post("/boot/registry")]
         Task<BaseResponse<EnterpriseContext>> Boot([Body] BootEnterpriseRequest request, bool cleanBoot = false);
     }
+
+    public interface IEnterprisesHostingManagerService
+    {
+        [Get("/hosting/{entLookup}/hosts")]
+        Task<BaseResponse<List<Host>>> ListHosts(string entLookup);
+
+        [Get("/hosting/resolve/{host}")]
+        Task<BaseResponse<EnterpriseContext>> ResolveHost(string host);
+    }
+
     public interface IEnterprisesManagementService
     {
         //Management
@@ -168,6 +193,7 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         [Delete("/access/{entLookup}/passport/{username}")]
         Task<BaseResponse> RevokePassport(string entLookup, string username);
     }
+
     // public interface IIdentityManagerClient
     // {
 
@@ -189,14 +215,7 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     //     [Delete("/access/{entLookup}/passport/{username}")]
 	// 	Task<BaseResponse> RevokePassport(string entLookup, string username);
     // }  
-    public interface IEnterprisesHostingManagerService
-    {
-        [Get("/hosting/{entLookup}/hosts")]
-        Task<BaseResponse<List<Host>>> ListHosts(string entLookup);
 
-        [Get("/hosting/resolve/{host}")]
-        Task<BaseResponse<EnterpriseContext>> ResolveHost(string host);
-    }
     public interface ISecurityDataTokenService
     {
         [Get("/data-tokens/{tokenLookup}")]
@@ -211,20 +230,7 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
             [Query] Guid? appId = null, [Query] Guid? passportId = null, [Query] Guid? licenseId = null);
     }
     
-   	public interface IEnterprisesAPIManagementService
-	{
-		[Post("/api-management/{entLookup}/api/subscription")]
-		Task<BaseResponse> EnsureAPISubscription([Body] EnsureAPISubscriptionRequest request, string entLookup, [Query] string username);
 
-		[Post("/api-management/{entLookup}/api/{subType}/keys")]
-		Task<BaseResponse> GenerateAPIKeys([Body] GenerateAPIKeysRequest request, string entLookup, string subType, [Query] string username);
-
-		[Get("/api-management/{entLookup}/api/{subType}/keys")]
-		Task<BaseResponse<MetadataModel>> LoadAPIKeys(string entLookup, string subType, [Query] string username);
-
-		[Get("/api-management/{entLookup}/api/{subType}/keys/{apiKey}/validate")]
-		Task<BaseResponse<MetadataModel>> VerifyAPIKey(string entLookup, string subType, string apiKey);
-	}
 
     [DataContract]
     public class AccessRight : LCUVertex
@@ -557,7 +563,7 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     {
         [DataMember]
         Group = 0,
-        
+
         [DataMember]
         Individual = 1
     }

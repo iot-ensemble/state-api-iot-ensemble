@@ -35,18 +35,58 @@ namespace LCU.State.API.IoTEnsemble.Host
                 Options = new System.Collections.Generic.Dictionary<string, LCUClientOptions>()
                 {
                     {
-                        nameof(IEnterprisesManagementService),
-                        new LCUClientOptions()
-                        {
-                            BaseAddress = Environment.GetEnvironmentVariable($"{typeof(IEnterprisesManagementService).FullName}.BaseAddress")
-                        }
-                    },
-
-                    {
                         nameof(IApplicationsIoTService),
                         new LCUClientOptions()
                         {
                             BaseAddress = Environment.GetEnvironmentVariable($"{typeof(IApplicationsIoTService).FullName}.BaseAddress")
+                        }
+                    },
+
+                    {
+                        nameof(IEnterprisesAPIManagementService),
+                        new LCUClientOptions()
+                        {
+                            BaseAddress = Environment.GetEnvironmentVariable($"{typeof(IEnterprisesAPIManagementService).FullName}.BaseAddress")
+                        }
+                    },
+
+                    {
+                        nameof(IEnterprisesBootService),
+                        new LCUClientOptions()
+                        {
+                            BaseAddress = Environment.GetEnvironmentVariable($"{typeof(IEnterprisesBootService).FullName}.BaseAddress")
+                        }
+                    },
+
+                    {
+                        nameof(IEnterprisesHostingManagerService),
+                        new LCUClientOptions()
+                        {
+                            BaseAddress = Environment.GetEnvironmentVariable($"{typeof(IEnterprisesHostingManagerService).FullName}.BaseAddress")
+                        }
+                    },
+
+                    {
+                        nameof(IEnterprisesManagementService),
+                        new LCUClientOptions()
+                        {
+                            BaseAddress = Environment.GetEnvironmentVariable($"{typeof(IEnterprisesManagementService).FullName}.BaseAddress")
+                        }                 
+                    },
+
+                    {
+                        nameof(IIdentityAccessService),
+                        new LCUClientOptions()
+                        {
+                            BaseAddress = Environment.GetEnvironmentVariable($"{typeof(IIdentityAccessService).FullName}.BaseAddress")
+                        }
+                    },
+
+                    {
+                        nameof(ISecurityDataTokenService),
+                        new LCUClientOptions()
+                        {
+                            BaseAddress = Environment.GetEnvironmentVariable($"{typeof(ISecurityDataTokenService).FullName}.BaseAddress")
                         }
                     }
                 }
@@ -54,9 +94,19 @@ namespace LCU.State.API.IoTEnsemble.Host
 
             var registry = builder.Services.AddLCUPollyRegistry(httpOpts);
 
+            builder.Services.AddLCUHTTPClient<IApplicationsIoTService>(registry, httpOpts);
+
+            builder.Services.AddLCUHTTPClient<IEnterprisesAPIManagementService>(registry, httpOpts);
+
+            builder.Services.AddLCUHTTPClient<IEnterprisesBootService>(registry, httpOpts);
+
+            builder.Services.AddLCUHTTPClient<IEnterprisesHostingManagerService>(registry, httpOpts);
+
             builder.Services.AddLCUHTTPClient<IEnterprisesManagementService>(registry, httpOpts);
 
-            builder.Services.AddLCUHTTPClient<IApplicationsIoTService>(registry, httpOpts);
+            builder.Services.AddLCUHTTPClient<IIdentityAccessService>(registry, httpOpts);
+
+            builder.Services.AddLCUHTTPClient<ISecurityDataTokenService>(registry, httpOpts);
         }
         #endregion
     }
