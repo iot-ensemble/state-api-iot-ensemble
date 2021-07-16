@@ -20,6 +20,7 @@ using System.Security.Claims;
 using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -33,15 +34,19 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class EnrollDevice
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appIotArch;
 
-        public EnrollDevice(ApplicationArchitectClient appArch)
+        protected ILogger log;
+
+        public EnrollDevice(IApplicationsIoTService appIotArch, ILogger log)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
+
+            this.log = log;
         }
 
         [FunctionName("EnrollDevice")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
@@ -63,7 +68,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                         var stateDetails = StateUtils.LoadStateDetails(req);
 
-                        await harness.EnrollDevice(appArch, enrollReq.Device);
+                        await harness.EnrollDevice(appIotArch, enrollReq.Device);
 
                         harness.State.DevicesConfig.Loading = false;
 

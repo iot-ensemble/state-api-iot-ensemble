@@ -34,32 +34,44 @@ namespace LCU.State.API.IoTEnsemble.Host
 
     public class Refresh
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appIotArch;
 
-        protected EnterpriseArchitectClient entArch;
+        protected IEnterprisesAPIManagementService entApiArch;
+
+        protected IEnterprisesBootService entBootArch;
 
         protected IEnterprisesManagementService entMgr;
 
-        protected IdentityManagerClient idMgr;
+        protected IEnterprisesHostingManagerService entHostMgr;
 
-        protected SecurityManagerClient secMgr;
+        protected IIdentityAccessService idMgr;
 
-        public Refresh(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, IEnterprisesManagementService entMgr, 
-            IdentityManagerClient idMgr, SecurityManagerClient secMgr)
+        protected ILogger log;
+
+        protected ISecurityDataTokenService secMgr;
+
+        public Refresh(IApplicationsIoTService appIotArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesBootService entBootArch, IEnterprisesManagementService entMgr, IEnterprisesHostingManagerService entHostMgr, 
+            IIdentityAccessService idMgr, ILogger log, ISecurityDataTokenService secMgr)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
 
-            this.entArch = entArch;
+            this.entApiArch = entApiArch;
+
+            this.entBootArch = entBootArch;
 
             this.entMgr = entMgr;
 
+            this.entHostMgr = entHostMgr;
+
             this.idMgr = idMgr;
+
+            this.log = log;
 
             this.secMgr = secMgr;
         }
 
         [FunctionName("Refresh")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
@@ -78,7 +90,7 @@ namespace LCU.State.API.IoTEnsemble.Host
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
 
-                    await harness.Refresh(appArch, entMgr, idMgr, stateDetails.EnterpriseLookup);
+                    await harness.Refresh(appIotArch, entMgr, idMgr, stateDetails.EnterpriseLookup);
 
                     return Status.Success;
                 }, withLock: false);
@@ -90,7 +102,7 @@ namespace LCU.State.API.IoTEnsemble.Host
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
 
-                    await harness.Refresh(starter, stateDetails, actReq, appArch, entArch, entMgr, idMgr, secMgr, docClient);
+                    await harness.Refresh(starter, stateDetails, actReq, appIotArch, entApiArch, entBootArch, entHostMgr, idMgr, secMgr, docClient);
 
                     return Status.Success;
                 }, withLock: false);

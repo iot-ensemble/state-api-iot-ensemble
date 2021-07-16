@@ -15,10 +15,15 @@ using LCU.State.API.IoTEnsemble.State;
 
 namespace LCU.State.API.IoTEnsemble.Host
 {
-    public static class ConnectToState
+    public class ConnectToState
     {
+        protected ILogger log;
+        public ConnectToState(ILogger log){
+            this.log = log;
+        }
+        
         [FunctionName("ConnectToState")]
-        public static async Task<ConnectToStateResponse> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req, ILogger log,
+        public async Task<ConnectToStateResponse> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
             ClaimsPrincipal claimsPrincipal, //[LCUStateDetails]StateDetails stateDetails,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRGroupAction> signalRGroupActions,

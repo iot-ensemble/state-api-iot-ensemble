@@ -35,15 +35,14 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class GetDevicesTelemetrySync
     {
-        protected ApplicationArchitectClient appArch;
+        protected ILogger log;
 
-        public GetDevicesTelemetrySync(ApplicationArchitectClient appArch)
-        {
-            this.appArch = appArch;
+        public GetDevicesTelemetrySync(ILogger log){
+            this.log = log;
         }
 
         [FunctionName("GetDevicesTelemetrySync")]
-        public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/iotensemble/{headers.x-ms-client-principal-id}/shared", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {

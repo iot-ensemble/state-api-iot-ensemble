@@ -21,6 +21,7 @@ using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
 using Microsoft.Azure.Documents.Client;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -32,22 +33,24 @@ namespace LCU.State.API.IoTEnsemble.Shared
         public virtual string DeviceName { get; set; }
 
         [DataMember]
-        public virtual string Message { get; set; }
+        public virtual MetadataModel Message { get; set; }
     }
 
     public class SendCloudMessage
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appIotArch;
 
-        protected SecurityManagerClient secMgr;
+        protected ILogger log; 
 
-        public SendCloudMessage(ApplicationArchitectClient appArch)
+        public SendCloudMessage(IApplicationsIoTService appIotArch, ILogger log)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
+
+            this.log = log;
         }
 
         [FunctionName("SendCloudMessage")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
@@ -69,7 +72,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                         var stateDetails = StateUtils.LoadStateDetails(req);
 
-                        await harness.SendCloudMessage(appArch, dataReq.DeviceName, dataReq.Message);
+                        await harness.SendCloudMessage(appIotArch, dataReq.DeviceName, dataReq.Message);
 
                         harness.State.Telemetry.Loading = false;
 

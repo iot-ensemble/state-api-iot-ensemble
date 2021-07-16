@@ -25,6 +25,7 @@ using System.Net;
 using System.Text;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.Documents.Client;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -49,15 +50,19 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class ListAllDeviceNames
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appIotArch;
 
-        public ListAllDeviceNames(ApplicationArchitectClient appArch)
+        protected ILogger log;
+        
+        public ListAllDeviceNames(IApplicationsIoTService appIotArch, ILogger log)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
+
+            this.log = log;
         }
 
         [FunctionName("ListAllDeviceNames")]
-        public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
@@ -76,7 +81,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                     if (dataReq == null)
                         dataReq = new ListAllDeviceNamesRequest();
 
-                    queried.DeviceNames = await harness.ListAllDeviceNames(appArch, dataReq.ChildEntLookup, dataReq.Filter);
+                    queried.DeviceNames = await harness.ListAllDeviceNames(appIotArch, dataReq.ChildEntLookup, dataReq.Filter);
 
                     queried.Status = Status.Success;
 

@@ -21,6 +21,7 @@ using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
 using LCU.Personas.Client.Identity;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Admin
 {
@@ -37,26 +38,23 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
     public class UpdateActiveEnterpriseSync
     {
+        protected IApplicationsIoTService appIotArch;
 
-        protected ApplicationArchitectClient appArch;
+        protected IIdentityAccessService idMgr;
 
-        protected EnterpriseManagerClient entMgr;
-
-        protected IdentityManagerClient idMgr;
-
-
-        public UpdateActiveEnterpriseSync(EnterpriseManagerClient entMgr, 
-            ApplicationArchitectClient appArch, IdentityManagerClient idMgr)
+        protected ILogger log;
+        
+        public UpdateActiveEnterpriseSync(IApplicationsIoTService appIotArch, IIdentityAccessService idMgr, ILogger log)
         {
-            this.appArch = appArch;
-
-            this.entMgr = entMgr;
+            this.appIotArch = appIotArch;
 
             this.idMgr = idMgr;
+
+            this.log = log;
          }
 
         [FunctionName("UpdateActiveEnterpriseSync")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
@@ -67,7 +65,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                await harness.UpdateActiveEnterpriseSync(entMgr, appArch, idMgr, stateDetails.EnterpriseLookup, dataReq.Page, dataReq.PageSize);
+                await harness.UpdateActiveEnterpriseSync(appIotArch, idMgr, stateDetails.EnterpriseLookup, dataReq.Page, dataReq.PageSize);
 
                 return Status.Success;
             }, withLock: false);

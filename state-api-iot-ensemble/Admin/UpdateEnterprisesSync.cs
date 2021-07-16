@@ -21,6 +21,7 @@ using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
 using LCU.Personas.Client.Identity;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Admin
 {
@@ -38,25 +39,28 @@ namespace LCU.State.API.IoTEnsemble.Admin
     public class UpdateEnterprisesSync
     {
 
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appIotArch;
 
-        protected EnterpriseManagerClient entMgr;
+        protected IEnterprisesManagementService entMgr;
 
-        protected IdentityManagerClient idMgr;
+        protected IIdentityAccessService idMgr;
 
-
-        public UpdateEnterprisesSync(EnterpriseManagerClient entMgr, 
-            ApplicationArchitectClient appArch, IdentityManagerClient idMgr)
+        protected ILogger log;
+        
+        public UpdateEnterprisesSync(IEnterprisesManagementService entMgr, 
+            IApplicationsIoTService appIotArch, IIdentityAccessService idMgr, ILogger log)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
 
             this.entMgr = entMgr;
 
             this.idMgr = idMgr;
+
+            this.log = log;
          }
 
         [FunctionName("UpdateEnterprisesSync")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
@@ -67,7 +71,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                await harness.UpdateEnterprisesSync(entMgr, appArch, idMgr, stateDetails.EnterpriseLookup, dataReq.Page, dataReq.PageSize);
+                await harness.UpdateEnterprisesSync(entMgr, appIotArch, idMgr, stateDetails.EnterpriseLookup, dataReq.Page, dataReq.PageSize);
 
                 return Status.Success;
             }, withLock: false);

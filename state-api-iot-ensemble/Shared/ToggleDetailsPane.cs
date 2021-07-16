@@ -20,6 +20,7 @@ using System.Security.Claims;
 using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -30,15 +31,19 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class ToggleDetailsPane
     {
-        protected SecurityManagerClient secMgr;
+        protected ILogger log;
 
-        public ToggleDetailsPane(SecurityManagerClient secMgr)
+        protected ISecurityDataTokenService secMgr;
+
+        public ToggleDetailsPane(ILogger log, ISecurityDataTokenService secMgr)
         {
+            this.log = log;
+
             this.secMgr = secMgr;
         }
 
         [FunctionName("ToggleDetailsPane")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)]IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {

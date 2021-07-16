@@ -22,6 +22,7 @@ using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.Documents.Client;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -32,15 +33,19 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class ToggleEmulatedEnabled
     {
-        protected SecurityManagerClient secMgr;
+        protected ILogger log;
+        
+        protected ISecurityDataTokenService secMgr;
 
-        public ToggleEmulatedEnabled(SecurityManagerClient secMgr)
+        public ToggleEmulatedEnabled(ILogger log, ISecurityDataTokenService secMgr)
         {
+            this.log = log;
+
             this.secMgr = secMgr;
         }
 
         [FunctionName("ToggleEmulatedEnabled")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,

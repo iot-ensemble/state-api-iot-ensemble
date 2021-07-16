@@ -20,6 +20,7 @@ using System.Security.Claims;
 using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Admin
 {
@@ -33,15 +34,19 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
     public class SetActiveEnterprise
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appIotArch;
 
-        public SetActiveEnterprise(ApplicationArchitectClient appArch)
+        protected ILogger log;
+        
+        public SetActiveEnterprise(IApplicationsIoTService appIotArch, ILogger log)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
+
+            this.log = log;
          }
 
         [FunctionName("SetActiveEnterprise")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
@@ -50,7 +55,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
             {
                 log.LogInformation($"SetActiveEnterprise");
 
-                await harness.SetActiveEnterprise(appArch, dataReq.Lookup);
+                await harness.SetActiveEnterprise(appIotArch, dataReq.Lookup);
 
                 return Status.Success;
             }, withLock: false);

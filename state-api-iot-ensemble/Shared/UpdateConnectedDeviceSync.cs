@@ -25,6 +25,7 @@ using System.Net;
 using System.Text;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.Documents.Client;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
@@ -42,17 +43,19 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class UpdateConnectedDevicesSync
     {
+        protected IApplicationsIoTService appIotArch;
 
-        protected ApplicationArchitectClient appArch;
-
-        public UpdateConnectedDevicesSync(ApplicationArchitectClient appArch)
+        protected ILogger log;
+        
+        public UpdateConnectedDevicesSync(IApplicationsIoTService appIotArch, ILogger log)
         {
-            this.appArch = appArch;
+            this.appIotArch = appIotArch;
+
+            this.log = log;
         }
 
-
         [FunctionName("UpdateConnectedDevicesSync")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
@@ -79,7 +82,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                await harness.UpdateConnectedDevicesSync(appArch, dataReq.Page, dataReq.PageSize);
+                await harness.UpdateConnectedDevicesSync(appIotArch, dataReq.Page, dataReq.PageSize);
 
                 harness.State.DevicesConfig.Loading = false;
 

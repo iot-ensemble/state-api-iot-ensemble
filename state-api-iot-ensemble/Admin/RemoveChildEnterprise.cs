@@ -21,6 +21,7 @@ using LCU.Personas.Client.Enterprises;
 using LCU.State.API.IoTEnsemble.State;
 using LCU.Personas.Client.Security;
 using LCU.Personas.Client.Identity;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Admin
 {
@@ -34,29 +35,28 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
     public class RemoveChildEnterprise
     {
-        protected ApplicationArchitectClient appArch;
+        protected IApplicationsIoTService appIotArch;
 
-        protected EnterpriseArchitectClient entArch;
+        protected IEnterprisesManagementService entMgr;
 
-        protected EnterpriseManagerClient entMgr;
+        protected IIdentityAccessService idMgr;
 
-        protected IdentityManagerClient idMgr;
-        
-
-        public RemoveChildEnterprise(ApplicationArchitectClient appArch, EnterpriseArchitectClient entArch, 
-        EnterpriseManagerClient entMgr, IdentityManagerClient idMgr)
+        protected ILogger log;
+             
+        public RemoveChildEnterprise(IApplicationsIoTService appIotArch,
+        IEnterprisesManagementService entMgr, IIdentityAccessService idMgr, ILogger log)
         {
-            this.appArch = appArch;
-
-            this.entArch = entArch;
+            this.appIotArch = appIotArch;
 
             this.entMgr = entMgr;
 
             this.idMgr = idMgr;
+
+            this.log = log;
          }
 
         [FunctionName("RemoveChildEnterprise")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
@@ -67,7 +67,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                await harness.RemoveChildEnterprise(appArch, entArch, entMgr, idMgr, dataReq.ChildEntLookup, stateDetails.EnterpriseLookup);
+                await harness.RemoveChildEnterprise(appIotArch, entMgr, idMgr, dataReq.ChildEntLookup, stateDetails.EnterpriseLookup);
 
                 return Status.Success;
             }, withLock: false);

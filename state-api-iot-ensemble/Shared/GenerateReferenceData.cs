@@ -10,36 +10,42 @@ using LCU.Personas.Client.Applications;
 using LCU.Personas.Client.Enterprises;
 using LCU.Personas.Client.Identity;
 using LCU.Personas.Enterprises;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 using LCU.State.API.IoTEnsemble.State;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
+using LCU.State.API.IoTEnsemble.Host.TempRefit;
 
 namespace LCU.State.API.IoTEnsemble.Shared
 {
     public class GenerateReferenceData
     {
         #region Fields
-        protected readonly ApplicationArchitectClient appArch;
-
         protected readonly bool bypassGenerateRefData;
 
-        protected readonly EnterpriseManagerClient entMgr;
+        protected readonly IEnterprisesManagementService entMgr;
 
-        protected readonly IdentityManagerClient idMgr;
+        protected readonly IEnterprisesHostingManagerService entHostMgr;
+
+        protected readonly IIdentityAccessService idMgr;
+
+        protected ILogger log;
 
         protected readonly string parentEntLookup;
         #endregion
 
-        public GenerateReferenceData(ApplicationArchitectClient appArch, EnterpriseManagerClient entMgr, IdentityManagerClient idMgr)
+        public GenerateReferenceData(IEnterprisesManagementService entMgr, IIdentityAccessService idMgr, ILogger log, IEnterprisesHostingManagerService entHostMgr)
         {
-            this.appArch = appArch;
-
             this.entMgr = entMgr;
 
+            this.entHostMgr = entHostMgr;
+
             this.idMgr = idMgr;
+
+            this.log = log;
 
             parentEntLookup = Environment.GetEnvironmentVariable("LCU-ENTERPRISE-LOOKUP");
 
@@ -47,7 +53,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
         }
 
         [FunctionName("GenerateReferenceData")]
-        public virtual async Task Run([TimerTrigger("0 */1 * * * *")] TimerInfo myTimer, ILogger log,
+        public virtual async Task Run([TimerTrigger("0 */1 * * * *")] TimerInfo myTimer,
             [Blob("cold-storage/reference-data", FileAccess.Read, Connection = "LCU-COLD-STORAGE-CONNECTION-STRING")] CloudBlobDirectory refDataBlobDir)
         {
             var shouldGenerate = bypassGenerateRefData ? "bypass" : "generate";
@@ -74,12 +80,14 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
             var refData = new List<IoTEnsembleEnterpriseReferenceData>();
 
-            var licenses = await idMgr.ListLicenseAccessTokens(parentEntLookup, new List<string>() { "iot" });
+            var licenses = await idMgr.ListLicenses(parentEntLookup, new List<string>() { "iot" });
 
             if (childEnts.Status && licenses.Status)
                 await childEnts.Model.Each(async childEnt =>
                 {
-                    var metadata = await processChildEnt(childEnt, licenses.Model);
+                    var hosts = await entHostMgr.ListHosts(childEnt.Lookup);
+
+                    var metadata = await processChildEnt(childEnt, hosts.Model, licenses.Model);
 
                     lock (refData)
                         refData.AddRange(metadata);
@@ -88,14 +96,14 @@ namespace LCU.State.API.IoTEnsemble.Shared
             return refData;
         }
 
-        protected virtual async Task<List<IoTEnsembleEnterpriseReferenceData>> processChildEnt(Enterprise childEnt,
-            List<LicenseAccessToken> licenses)
+        protected virtual async Task<List<IoTEnsembleEnterpriseReferenceData>> processChildEnt(Host.TempRefit.Enterprise childEnt, List<Host.TempRefit.Host> hosts,
+            List<License> licenses)
         {
             var refData = new List<IoTEnsembleEnterpriseReferenceData>();
 
-            await childEnt.Hosts.Each(async childEntHost =>
+            await hosts.Each(async host =>
             {
-                var hostLookupParts = childEntHost.Split('|');
+                var hostLookupParts = host.Lookup.Split('|');
 
                 if (hostLookupParts.Length >= 2)
                 {
@@ -105,7 +113,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                     var license = licenses.FirstOrDefault(lic => lic.Username == username);
 
-                    //await idMgr.HasLicenseAccess(parentLookup, username, Personas.AllAnyTypes.All, new List<string>() { "iot" });
+                    await idMgr.HasLicenseAccess(parentLookup, username, AllAnyTypes.All, new List<string>() { "iot" });
 
                     IoTEnsembleEnterpriseReferenceData refd;
 
@@ -122,7 +130,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                     if (refd != null)
                     {
-                        refd.EnterpriseLookup = childEnt.EnterpriseLookup;
+                        refd.EnterpriseLookup = childEnt.Lookup;
 
                         refData.Add(refd);
                     }
