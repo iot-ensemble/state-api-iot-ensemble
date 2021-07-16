@@ -31,9 +31,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class ToggleDetailsPane
     {
-        protected ISecurityManagerClient secMgr;
+        protected ISecurityDataTokenService secMgr;
 
-        public ToggleDetailsPane(ISecurityManagerClient secMgr)
+        public ToggleDetailsPane(ISecurityDataTokenService secMgr)
         {
             this.secMgr = secMgr;
         }

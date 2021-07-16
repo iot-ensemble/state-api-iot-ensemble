@@ -44,12 +44,12 @@ namespace LCU.State.API.IoTEnsemble.Host
 
         protected IEnterprisesHostingManagerService entHostMgr;
 
-        protected IIdentityManagerClient idMgr;
+        protected IIdentityAccessService idMgr;
 
-        protected ISecurityManagerClient secMgr;
+        protected ISecurityDataTokenService secMgr;
 
         public Refresh(IApplicationsIoTService appIotArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesBootService entBootArch, IEnterprisesManagementService entMgr, IEnterprisesHostingManagerService entHostMgr, 
-            IIdentityManagerClient idMgr, ISecurityManagerClient secMgr)
+            IIdentityAccessService idMgr, ISecurityDataTokenService secMgr)
         {
             this.appIotArch = appIotArch;
 

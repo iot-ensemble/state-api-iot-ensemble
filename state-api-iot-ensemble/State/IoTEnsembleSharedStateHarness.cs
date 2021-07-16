@@ -156,7 +156,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return await LoadAPIKeys(entApiArch, entLookup, username);
         }
 
-        public virtual async Task EnsureDevicesDashboard(ISecurityManagerClient secMgr)
+        public virtual async Task EnsureDevicesDashboard(ISecurityDataTokenService secMgr)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -213,7 +213,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
-        public virtual async Task EnsureDrawersConfig(ISecurityManagerClient secMgr)
+        public virtual async Task EnsureDrawersConfig(ISecurityDataTokenService secMgr)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -259,7 +259,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task EnsureEmulatedDeviceInfo(IDurableOrchestrationClient starter, StateDetails stateDetails,
-            ExecuteActionRequest exActReq, ISecurityManagerClient secMgr, DocumentClient client)
+            ExecuteActionRequest exActReq, ISecurityDataTokenService secMgr, DocumentClient client)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -299,7 +299,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task EnsureTelemetry(IDurableOrchestrationClient starter, StateDetails stateDetails,
-            ExecuteActionRequest exActReq, ISecurityManagerClient secMgr, DocumentClient docClient)
+            ExecuteActionRequest exActReq, ISecurityDataTokenService secMgr, DocumentClient docClient)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -366,7 +366,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task EnsureUserEnterprise(IEnterprisesBootService entBootArch, IEnterprisesHostingManagerService entHostMgr,
-            ISecurityManagerClient secMgr, string parentEntLookup, string username)
+            ISecurityDataTokenService secMgr, string parentEntLookup, string username)
         {
             if (State.DevicesConfig != null)
                 State.DevicesConfig.Status = null;
@@ -424,14 +424,14 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to establish the user's enterprise, please try again.");
         }
 
-        public virtual async Task<Status> HasLicenseAccess(IIdentityManagerClient idMgr, string entLookup, string username)
+        public virtual async Task<Status> HasLicenseAccess(IIdentityAccessService idMgr, string entLookup, string username)
         {
             await DesignOutline.Instance.Retry()
                 .SetActionAsync(async () =>
                 {
                     try
                     {
-                        var hasAccess = await idMgr.HasLicenseAccess(entLookup, username, Personas.AllAnyTypes.All, new List<string>() { "iot" });
+                        var hasAccess = await idMgr.HasLicenseAccess(entLookup, username, AllAnyTypes.All, new List<string>() { "iot" });
 
                         State.HasAccess = hasAccess.Status;
 
@@ -580,7 +580,7 @@ namespace LCU.State.API.IoTEnsemble.State
             State.DevicesConfig.SASTokens = null;
         }
 
-        public virtual async Task<Status> LoadTelemetry(ISecurityManagerClient secMgr, DocumentClient client)
+        public virtual async Task<Status> LoadTelemetry(ISecurityDataTokenService secMgr, DocumentClient client)
         {
             var status = Status.Success;
 
@@ -619,8 +619,8 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task Refresh(IDurableOrchestrationClient starter, StateDetails stateDetails, ExecuteActionRequest exActReq,
-            IApplicationsIoTService appIotArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesBootService entBootArch, IEnterprisesHostingManagerService entHostMgr, IIdentityManagerClient idMgr,
-            ISecurityManagerClient secMgr, DocumentClient client)
+            IApplicationsIoTService appIotArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesBootService entBootArch, IEnterprisesHostingManagerService entHostMgr, IIdentityAccessService idMgr,
+            ISecurityDataTokenService secMgr, DocumentClient client)
         {
             await EnsureUserEnterprise(entBootArch, entHostMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
 
@@ -686,7 +686,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return status;
         }
 
-        public virtual async Task<Status> SendDeviceMessage(IApplicationsIoTService appIotArch, ISecurityManagerClient secMgr,
+        public virtual async Task<Status> SendDeviceMessage(IApplicationsIoTService appIotArch, ISecurityDataTokenService secMgr,
             DocumentClient client, string deviceName, MetadataModel payload)
         {
             if (payload.Metadata.ContainsKey("id"))
@@ -725,7 +725,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return status;
         }
 
-        public virtual async Task ToggleDetailsPane(ISecurityManagerClient secMgr)
+        public virtual async Task ToggleDetailsPane(ISecurityDataTokenService secMgr)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -764,7 +764,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task ToggleEmulatedEnabled(IDurableOrchestrationClient starter, StateDetails stateDetails,
-            ExecuteActionRequest exActReq, ISecurityManagerClient secMgr, DocumentClient client, bool skipTelem = false)
+            ExecuteActionRequest exActReq, ISecurityDataTokenService secMgr, DocumentClient client, bool skipTelem = false)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -818,7 +818,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task ToggleTelemetrySyncEnabled(IDurableOrchestrationClient starter, StateDetails stateDetails,
-            ExecuteActionRequest exActReq, ISecurityManagerClient secMgr, DocumentClient client)
+            ExecuteActionRequest exActReq, ISecurityDataTokenService secMgr, DocumentClient client)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -832,7 +832,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
-        public virtual async Task UpdateTelemetrySync(ISecurityManagerClient secMgr, DocumentClient client, int refreshRate, int page, int pageSize, string payloadId=null)
+        public virtual async Task UpdateTelemetrySync(ISecurityDataTokenService secMgr, DocumentClient client, int refreshRate, int page, int pageSize, string payloadId=null)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -1381,7 +1381,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return payloads;
         }
 
-        protected virtual async Task setTelemetryEnabled(ISecurityManagerClient secMgr, bool enabled)
+        protected virtual async Task setTelemetryEnabled(ISecurityDataTokenService secMgr, bool enabled)
         {
             await DesignOutline.Instance.Retry()
                 .SetActionAsync(async () =>

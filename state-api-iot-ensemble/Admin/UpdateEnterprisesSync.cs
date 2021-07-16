@@ -43,11 +43,11 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
         protected IEnterprisesManagementService entMgr;
 
-        protected IIdentityManagerClient idMgr;
+        protected IIdentityAccessService idMgr;
 
 
         public UpdateEnterprisesSync(IEnterprisesManagementService entMgr, 
-            IApplicationsIoTService appIotArch, IIdentityManagerClient idMgr)
+            IApplicationsIoTService appIotArch, IIdentityAccessService idMgr)
         {
             this.appIotArch = appIotArch;
 

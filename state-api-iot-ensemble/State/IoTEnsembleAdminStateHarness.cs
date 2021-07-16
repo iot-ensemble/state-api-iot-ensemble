@@ -62,7 +62,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #region API Methods
 
         public virtual async Task LoadChildEnterprises(IEnterprisesManagementService entMgr, string parentEntLookup,
-            IApplicationsIoTService appIotArch, IIdentityManagerClient idMgr)
+            IApplicationsIoTService appIotArch, IIdentityAccessService idMgr)
         {
             var childEntsResp = await entMgr.ListChildEnterprises(parentEntLookup);
 
@@ -77,7 +77,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 
                 var devicesResp = await appIotArch.ListEnrolledDevices(childEnt.Lookup);
 
-                var licenses = await idMgr.ListLicenses(parentEntLookup, childEnt.Name, new List<string>() { "iot" });
+                var licenses = await idMgr.ListLicensesByUsername(parentEntLookup, childEnt.Name, new List<string>() { "iot" });
 
                 DateTime? StartDate = null;
 
@@ -148,7 +148,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task Refresh(IApplicationsIoTService appIotArch, IEnterprisesManagementService entMgr,
-            IIdentityManagerClient idMgr, string parentEntLookup)
+            IIdentityAccessService idMgr, string parentEntLookup)
         {
             await LoadChildEnterprises(entMgr, parentEntLookup, appIotArch, idMgr);
 
@@ -158,7 +158,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task<Status> RemoveChildEnterprise(IApplicationsIoTService appIotArch, 
-            IEnterprisesManagementService entMgr, IIdentityManagerClient idMgr, 
+            IEnterprisesManagementService entMgr, IIdentityAccessService idMgr, 
             string childEntLookup, string parentEntLookup)
         {
             var childEnt = State.EnterpriseConfig.ChildEnterprises.FirstOrDefault(ent => 
@@ -192,7 +192,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 log.LogError($"Unable to revoke access cards: {revokeAccessCardRequest.Status.Message}");
             }
 
-            var revokeLicenceAccess = await idMgr.RevokeLicenseAccess(parentEntLookup, childEnt.Name, "iot" );
+            var revokeLicenceAccess = await idMgr.RevokeLicense(parentEntLookup, childEnt.Name, "iot" );
 
             if(revokeLicenceAccess.Status.Code == 1){
                 log.LogError($"Unable to revoke license access: {revokeLicenceAccess.Status.Message}");
@@ -216,7 +216,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task<Status> RevokeDeviceEnrollment(IApplicationsIoTService appIotArch, IEnterprisesManagementService entMgr,
-            IIdentityManagerClient idMgr, string parentEntLookup, string deviceId)
+            IIdentityAccessService idMgr, string parentEntLookup, string deviceId)
         {
             var revoked = await revokeDeviceEnrollment(appIotArch, State.ActiveEnterpriseConfig.ActiveEnterprise.Lookup, deviceId);
 
@@ -238,7 +238,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
         }
 
-        public virtual async Task UpdateActiveEnterpriseSync(IApplicationsIoTService appIotArch, IIdentityManagerClient idMgr, string parentEntLookup, 
+        public virtual async Task UpdateActiveEnterpriseSync(IApplicationsIoTService appIotArch, IIdentityAccessService idMgr, string parentEntLookup, 
             int page, int pageSize)
         {
 
@@ -259,7 +259,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task UpdateEnterprisesSync(IEnterprisesManagementService entMgr,
-            IApplicationsIoTService appIotArch, IIdentityManagerClient idMgr, string parentEntLookup, int page, int pageSize)
+            IApplicationsIoTService appIotArch, IIdentityAccessService idMgr, string parentEntLookup, int page, int pageSize)
         {
 
             if (State.EnterpriseConfig != null)

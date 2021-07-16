@@ -48,9 +48,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class UpdateTelemetrySync
     {
-        protected ISecurityManagerClient secMgr;
+        protected ISecurityDataTokenService secMgr;
 
-        public UpdateTelemetrySync(ISecurityManagerClient secMgr)
+        public UpdateTelemetrySync(ISecurityDataTokenService secMgr)
         {
             this.secMgr = secMgr;
         }

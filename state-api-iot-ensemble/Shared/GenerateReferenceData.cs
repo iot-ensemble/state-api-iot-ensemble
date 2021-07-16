@@ -30,12 +30,12 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         protected readonly IEnterprisesHostingManagerService entHostMgr;
 
-        protected readonly IIdentityManagerClient idMgr;
+        protected readonly IIdentityAccessService idMgr;
 
         protected readonly string parentEntLookup;
         #endregion
 
-        public GenerateReferenceData(IEnterprisesManagementService entMgr, IIdentityManagerClient idMgr, IEnterprisesHostingManagerService entHostMgr)
+        public GenerateReferenceData(IEnterprisesManagementService entMgr, IIdentityAccessService idMgr, IEnterprisesHostingManagerService entHostMgr)
         {
             this.entMgr = entMgr;
 
@@ -76,7 +76,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
             var refData = new List<IoTEnsembleEnterpriseReferenceData>();
 
-            var licenses = await idMgr.ListLicenseAccessTokens(parentEntLookup, new List<string>() { "iot" });
+            var licenses = await idMgr.ListLicenses(parentEntLookup, new List<string>() { "iot" });
 
             if (childEnts.Status && licenses.Status)
                 await childEnts.Model.Each(async childEnt =>
@@ -109,7 +109,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                     var license = licenses.FirstOrDefault(lic => lic.Username == username);
 
-                    await idMgr.HasLicenseAccess(parentLookup, username, Personas.AllAnyTypes.All, new List<string>() { "iot" });
+                    await idMgr.HasLicenseAccess(parentLookup, username, AllAnyTypes.All, new List<string>() { "iot" });
 
                     IoTEnsembleEnterpriseReferenceData refd;
 

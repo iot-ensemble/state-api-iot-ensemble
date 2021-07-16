@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Fathym;
 using Fathym.API;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+using Polly;
+using Polly.Registry;
 using Refit;
 
 
@@ -12,6 +16,84 @@ using Refit;
 
 namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 {
+    public static class LCUStartupServiceExtensions{
+        public static IPolicyRegistry<string> AddLCUPollyRegistry(this IServiceCollection services,
+            LCUStartupHTTPClientOptions httpOpts)
+        {
+            var registry = services.AddPolicyRegistry();
+
+            if (httpOpts != null)
+            {
+                var timeout = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(httpOpts.TimeoutSeconds));
+
+                registry.Add("regular", timeout);
+
+                var longTimeout = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(httpOpts.LongTimeoutSeconds));
+
+                registry.Add("long", longTimeout);
+            }
+
+            return registry;
+        }
+
+        public static IHttpClientBuilder AddLCUTimeoutPolicy(this IHttpClientBuilder httpClientBuilder,
+            IPolicyRegistry<string> registry)
+        {
+            return httpClientBuilder
+                .AddPolicyHandler(request =>
+                {
+                    var timeoutPolicy = "regular";
+
+                    if (request.Method != HttpMethod.Get)
+                        timeoutPolicy = "long";
+
+                    return registry.Get<IAsyncPolicy<HttpResponseMessage>>(timeoutPolicy);
+                });
+        }
+
+        public static IHttpClientBuilder AddLCUHTTPClient<TClient>(this IServiceCollection services,
+            IPolicyRegistry<string> registry, LCUStartupHTTPClientOptions httpOpts)
+            where TClient : class
+        {
+            var clientName = typeof(TClient).Name;
+
+            var clientOptions = httpOpts.Options[clientName];
+
+            return services.AddLCUHTTPClient<TClient>(registry, new Uri(clientOptions.BaseAddress));
+        }
+
+        public static IHttpClientBuilder AddLCUHTTPClient<TClient>(this IServiceCollection services,
+            IPolicyRegistry<string> registry, Uri baseAddress, int retryCycles = 3, int retrySleepDurationMilliseconds = 500,
+            int circuitFailuresAllowed = 5, int circuitBreakDurationSeconds = 5)
+            where TClient : class
+        {
+            return services
+                .AddRefitClient<TClient>(services =>
+                {
+                    return new RefitSettings()
+                    {
+                        ContentSerializer = new NewtonsoftJsonContentSerializer()
+                    };
+                })
+                .ConfigureHttpClient(client =>
+                {
+                    client.BaseAddress = baseAddress;
+                });
+                //.AddLCUTimeoutPolicy(registry)
+                //.AddTransientHttpErrorPolicy(p =>
+                //{
+                //    return p.WaitAndRetryAsync(retryCycles, _ =>
+                //    {
+                //        return TimeSpan.FromMilliseconds(retrySleepDurationMilliseconds);
+                //    });
+                //})
+                //.AddTransientHttpErrorPolicy(p =>
+                //{
+                //    return p.CircuitBreakerAsync(circuitFailuresAllowed,
+                //        TimeSpan.FromSeconds(circuitBreakDurationSeconds));
+                //});
+        }
+    }
     public interface IApplicationsIoTService
     {
         [Post("/iot/{entLookup}/devices/enroll/{attestationType}/{enrollmentType}")]
@@ -63,26 +145,50 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         Task<BaseResponse> CancelSubscriptionByUser(string username, string entLookup, string licenseType);
 	}
 
-    public interface IIdentityManagerClient
+    public interface IIdentityAccessService
     {
-        [Get("{entLookup}/license/{username}/{allAny}")]
-        Task<BaseResponse<Fathym.MetadataModel>> HasLicenseAccess(string entLookup,string username, Personas.AllAnyTypes allAny, List<string> licenseTypes);
+        [Get("/access/{entLookup}/license/{username}/{allAny}")]
+        Task<BaseResponse<MetadataModel>> HasLicenseAccess(string entLookup, string username, AllAnyTypes allAny, [Query] List<string> licenseTypes);
 
-        [Get("{entLookup}/licenses/{username}")]
-        Task<BaseResponse<List<License>>> ListLicenses(string entLookup, string username, List<string> licenseTypes = null);
+        [Get("/access/{entLookup}/{projectId}/access-rights/{username}")]
+        Task<BaseResponse<List<AccessRight>>> ListAccessRights(string entLookup, Guid projectId, string username);
 
-        [Get("{entLookup}/licenses")]
-        Task<BaseResponse<List<License>>> ListLicenseAccessTokens(string entLookup, List<string> licenseTypes);
+        [Get("/access/{entLookup}/licenses")]
+        Task<BaseResponse<List<License>>> ListLicenses(string entLookup, [Query] List<string> licenseTypes = null);
 
-        [Post("{entLookup}/revoke")]
-        Task<BaseResponse> RevokeAccessCard(RevokeAccessCardRequest request, string entLookup);
+        [Get("/access/{entLookup}/licenses/{username}")]
+        Task<BaseResponse<List<License>>> ListLicensesByUsername(string entLookup, string username, [Query] List<string> licenseTypes = null);
 
-        [Delete("{entLookup}/license/{username}/{licenseType}")]
-        Task<BaseResponse> RevokeLicenseAccess(string entLookup, string username, string licenseType);
+        [Post("/access/{entLookup}/revoke")]
+        Task<BaseResponse> RevokeAccessCard([Body] RevokeAccessCardRequest request, string entLookup);
 
-        [Delete("{entLookup}/passport/{username}")]
-		Task<BaseResponse> RevokePassport(string entLookup, string username);
-    }  
+        [Delete("/access/{entLookup}/license/{username}/{licenseType}")]
+        Task<BaseResponse> RevokeLicense(string entLookup, string username, string licenseType);
+
+        [Delete("/access/{entLookup}/passport/{username}")]
+        Task<BaseResponse> RevokePassport(string entLookup, string username);
+    }
+    // public interface IIdentityManagerClient
+    // {
+
+    //     [Get("/access/{entLookup}/{projectId}/access-rights/{username}")]
+    //     Task<BaseResponse<List<AccessRight>>> ListAccessRights(string entLookup, Guid projectId, string username);
+
+    //     [Get("/access/{entLookup}/license/{username}/{allAny}")]
+    //     Task<BaseResponse<Fathym.MetadataModel>> HasLicenseAccess(string entLookup,string username, Personas.AllAnyTypes allAny, [Query] List<string> licenseTypes);
+
+    //     [Get("/access/{entLookup}/licenses/{username}")]
+    //     Task<BaseResponse<List<License>>> ListLicenses(string entLookup, string username, [Query] List<string> licenseTypes = null);   
+
+    //     [Post("/access/{entLookup}/revoke")]
+    //     Task<BaseResponse> RevokeAccessCard([Body] RevokeAccessCardRequest request, string entLookup);
+
+    //     [Delete("/access/{entLookup}/license/{username}/{licenseType}")]
+    //     Task<BaseResponse> RevokeLicenseAccess(string entLookup, string username, string licenseType);
+
+    //     [Delete("/access/{entLookup}/passport/{username}")]
+	// 	Task<BaseResponse> RevokePassport(string entLookup, string username);
+    // }  
     public interface IEnterprisesHostingManagerService
     {
         [Get("/hosting/{entLookup}/hosts")]
@@ -91,26 +197,20 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         [Get("/hosting/resolve/{host}")]
         Task<BaseResponse<EnterpriseContext>> ResolveHost(string host);
     }
-    public interface ISecurityManagerClient
+    public interface ISecurityDataTokenService
     {
-        [Get("{tokenLookup}")]
-        Task<BaseResponse<DataToken>> GetDataToken(string tokenLookup, string entLookup = null, string email = null, Guid? projectId = null,
-        Guid? appId = null, Guid? passportId = null, Guid? licenseId = null, bool cascadeChecks = true);
+        [Get("/data-tokens/{tokenLookup}")]
+        Task<BaseResponse<DataToken>> GetDataToken(string tokenLookup,
+            [Query] string entLookup = null, [Query] string email = null, [Query] Guid? projectId = null,
+            [Query] Guid? appId = null, [Query] Guid? passportId = null, [Query] Guid? licenseId = null,
+            [Query] bool cascadeChecks = true);
 
-        [Post("")]
-        Task<BaseResponse<DataToken>> SetDataToken(DataToken dataToken, string entLookup = null, string email = null, Guid? projectId = null,
-           Guid? appId = null, Guid? passportId = null, Guid? licenseId = null)
-
-        [Get("{entLookup}/third-party")]
-        Task<BaseResponse<IDictionary<string, string>>> RetrieveThirdPartyData( string userEmail, string entLookup, List<string> lookups, bool decrypt = false);
-
-        [Get("{entLookup}/third-party")]
-		Task<BaseResponse<IDictionary<string, string>>> RetrieveThirdPartyData(string entLookup, List<string> lookups);
-
-        [Post("{entLookup}/third-party")]
-        Task<BaseResponse> SetThirdPartyData( string entLookup, Dictionary<string, string> data);
+        [Post("/data-tokens")]
+        Task<BaseResponse<DataToken>> SetDataToken([Body] DataToken dataToken,
+            [Query] string entLookup = null, [Query] string email = null, [Query] Guid? projectId = null,
+            [Query] Guid? appId = null, [Query] Guid? passportId = null, [Query] Guid? licenseId = null);
     }
-
+    
    	public interface IEnterprisesAPIManagementService
 	{
 		[Post("/api-management/{entLookup}/api/subscription")]
@@ -125,6 +225,19 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 		[Get("/api-management/{entLookup}/api/{subType}/keys/{apiKey}/validate")]
 		Task<BaseResponse<MetadataModel>> VerifyAPIKey(string entLookup, string subType, string apiKey);
 	}
+
+    [DataContract]
+    public class AccessRight : LCUVertex
+    {
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual string Lookup { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+    }
 
     [DataContract]
     public class APILowCodeUnit : LowCodeUnit
@@ -415,35 +528,37 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         [DataMember]
         public virtual string SubscriptionType { get; set; }
     }
-  
-    [DataContract]
-    public class DataToken : LCUVertex
-    {
-        [DataMember]
-        public virtual string Description { get; set; }
-
-        [DataMember]
-        public virtual string Lookup { get; set; }
-
-        [DataMember]
-        public virtual string Name { get; set; }
-
-        [DataMember]
-        public virtual string Value { get; set; }
-    }
 
     [DataContract]
     public enum DeviceAttestationTypes
     {
+        [DataMember]
         SymmetricKey = 0,
+
+        [DataMember]
         TrustedPlatformModule = 1,
+
+        [DataMember]
         X509Certificate = 2
+    }
+
+    [DataContract]
+    public enum AllAnyTypes
+    {
+        [DataMember]
+        All = 0,
+
+        [DataMember]
+        Any = 1
     }
 
     [DataContract]
     public enum DeviceEnrollmentTypes
     {
+        [DataMember]
         Group = 0,
+        
+        [DataMember]
         Individual = 1
     }
 

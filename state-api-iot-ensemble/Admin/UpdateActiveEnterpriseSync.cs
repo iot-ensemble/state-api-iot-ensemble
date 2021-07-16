@@ -40,9 +40,9 @@ namespace LCU.State.API.IoTEnsemble.Admin
     {
         protected IApplicationsIoTService appIotArch;
 
-        protected IIdentityManagerClient idMgr;
+        protected IIdentityAccessService idMgr;
 
-        public UpdateActiveEnterpriseSync(IApplicationsIoTService appIotArch, IIdentityManagerClient idMgr)
+        public UpdateActiveEnterpriseSync(IApplicationsIoTService appIotArch, IIdentityAccessService idMgr)
         {
             this.appIotArch = appIotArch;
 

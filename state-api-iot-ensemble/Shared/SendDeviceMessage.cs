@@ -40,9 +40,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
     {
         protected IApplicationsIoTService appIotArch;
 
-        protected ISecurityManagerClient secMgr;
+        protected ISecurityDataTokenService secMgr;
 
-        public SendDeviceMessage(IApplicationsIoTService appIotArch, ISecurityManagerClient secMgr)
+        public SendDeviceMessage(IApplicationsIoTService appIotArch, ISecurityDataTokenService secMgr)
         {
             this.appIotArch = appIotArch;
 

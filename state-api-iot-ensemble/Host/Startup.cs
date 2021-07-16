@@ -52,11 +52,11 @@ namespace LCU.State.API.IoTEnsemble.Host
                 }
             };
 
-            var registry = services.AddLCUPollyRegistry(httpOpts);
+            var registry = builder.Services.AddLCUPollyRegistry(httpOpts);
 
-            services.AddLCUHTTPClient<IEnterprisesManagementService>(registry, httpOpts);
+            builder.Services.AddLCUHTTPClient<IEnterprisesManagementService>(registry, httpOpts);
 
-            services.AddLCUHTTPClient<IApplicationsIoTService>(registry, httpOpts);
+            builder.Services.AddLCUHTTPClient<IApplicationsIoTService>(registry, httpOpts);
         }
         #endregion
     }
