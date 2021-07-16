@@ -33,9 +33,9 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class ToggleEmulatedEnabled
     {
-        protected ISecurityManagerClient secMgr;
+        protected ISecurityDataTokenService secMgr;
 
-        public ToggleEmulatedEnabled(ISecurityManagerClient secMgr)
+        public ToggleEmulatedEnabled(ISecurityDataTokenService secMgr)
         {
             this.secMgr = secMgr;
         }

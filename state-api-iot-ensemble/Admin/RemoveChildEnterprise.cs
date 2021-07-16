@@ -39,10 +39,10 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
         protected IEnterprisesManagementService entMgr;
 
-        protected IIdentityManagerClient idMgr;
+        protected IIdentityAccessService idMgr;
         
         public RemoveChildEnterprise(IApplicationsIoTService appIotArch,
-        IEnterprisesManagementService entMgr, IIdentityManagerClient idMgr)
+        IEnterprisesManagementService entMgr, IIdentityAccessService idMgr)
         {
             this.appIotArch = appIotArch;
 
