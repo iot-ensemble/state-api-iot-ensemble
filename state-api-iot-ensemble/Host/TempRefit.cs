@@ -79,6 +79,7 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
                 {
                     client.BaseAddress = baseAddress;
                 });
+                
                 //.AddLCUTimeoutPolicy(registry)
                 //.AddTransientHttpErrorPolicy(p =>
                 //{

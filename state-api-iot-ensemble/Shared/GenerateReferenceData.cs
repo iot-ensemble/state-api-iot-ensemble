@@ -32,10 +32,12 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         protected readonly IIdentityAccessService idMgr;
 
+        protected ILogger log;
+
         protected readonly string parentEntLookup;
         #endregion
 
-        public GenerateReferenceData(IEnterprisesManagementService entMgr, IIdentityAccessService idMgr, IEnterprisesHostingManagerService entHostMgr)
+        public GenerateReferenceData(IEnterprisesManagementService entMgr, IIdentityAccessService idMgr, ILogger log, IEnterprisesHostingManagerService entHostMgr)
         {
             this.entMgr = entMgr;
 
@@ -43,13 +45,15 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
             this.idMgr = idMgr;
 
+            this.log = log;
+
             parentEntLookup = Environment.GetEnvironmentVariable("LCU-ENTERPRISE-LOOKUP");
 
             bypassGenerateRefData = Environment.GetEnvironmentVariable("LCU-BYPASS-GENERATE-REFERENCE-DATA").As<bool>();
         }
 
         [FunctionName("GenerateReferenceData")]
-        public virtual async Task Run([TimerTrigger("0 */1 * * * *")] TimerInfo myTimer, ILogger log,
+        public virtual async Task Run([TimerTrigger("0 */1 * * * *")] TimerInfo myTimer,
             [Blob("cold-storage/reference-data", FileAccess.Read, Connection = "LCU-COLD-STORAGE-CONNECTION-STRING")] CloudBlobDirectory refDataBlobDir)
         {
             var shouldGenerate = bypassGenerateRefData ? "bypass" : "generate";

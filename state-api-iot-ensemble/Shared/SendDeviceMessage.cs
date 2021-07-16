@@ -40,17 +40,21 @@ namespace LCU.State.API.IoTEnsemble.Shared
     {
         protected IApplicationsIoTService appIotArch;
 
-        protected ISecurityDataTokenService secMgr;
+        protected ILogger log;
 
-        public SendDeviceMessage(IApplicationsIoTService appIotArch, ISecurityDataTokenService secMgr)
+        protected ISecurityDataTokenService secMgr;  
+
+        public SendDeviceMessage(IApplicationsIoTService appIotArch, ILogger log, ISecurityDataTokenService secMgr)
         {
             this.appIotArch = appIotArch;
+
+            this.log = log;
 
             this.secMgr = secMgr;
         }
 
         [FunctionName("SendDeviceMessage")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             [CosmosDB(

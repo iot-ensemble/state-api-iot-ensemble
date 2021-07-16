@@ -42,18 +42,22 @@ namespace LCU.State.API.IoTEnsemble.Host
 
         protected IIdentityAccessService idMgr;
 
+        protected ILogger log;
+
         public RevokeDeviceEnrollment(IApplicationsIoTService appIotArch, IEnterprisesManagementService entMgr,
-            IIdentityAccessService idMgr)
+            IIdentityAccessService idMgr, ILogger log)
         {
             this.appIotArch = appIotArch;
 
             this.entMgr = entMgr;
 
             this.idMgr = idMgr;
+
+            this.log = log;
         }
 
         [FunctionName("RevokeDeviceEnrollment")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {

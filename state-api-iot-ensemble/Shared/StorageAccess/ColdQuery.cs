@@ -75,11 +75,13 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
 
     public class ColdQuery
     {
-        public ColdQuery()
-        {}
+        protected ILogger log;
+        public ColdQuery(ILogger log){
+            this.log = log;
+        }
 
         [FunctionName("ColdQuery")]
-        public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             [Blob("cold-storage/data", FileAccess.Read, Connection = "LCU-COLD-STORAGE-CONNECTION-STRING")] CloudBlobDirectory coldBlob)
@@ -137,7 +139,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
                     if (dataReq.EndDate == null)
                         dataReq.EndDate = now;
 
-                    log.LogInformation($"Running cold query with: {dataReq.ToJSON()}");
+                    //log.LogInformation($"Running cold query with: {dataReq.ToJSON()}");
 
                     queried = await harness.ColdQuery(coldBlob, dataReq.SelectedDeviceIDs, dataReq.PageSize, dataReq.Page,
                         dataReq.IncludeEmulated, dataReq.StartDate, dataReq.EndDate, dataReq.ResultType, dataReq.Flatten, dataReq.DataType,

@@ -46,10 +46,12 @@ namespace LCU.State.API.IoTEnsemble.Host
 
         protected IIdentityAccessService idMgr;
 
+        protected ILogger log;
+
         protected ISecurityDataTokenService secMgr;
 
         public Refresh(IApplicationsIoTService appIotArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesBootService entBootArch, IEnterprisesManagementService entMgr, IEnterprisesHostingManagerService entHostMgr, 
-            IIdentityAccessService idMgr, ISecurityDataTokenService secMgr)
+            IIdentityAccessService idMgr, ILogger log, ISecurityDataTokenService secMgr)
         {
             this.appIotArch = appIotArch;
 
@@ -63,11 +65,13 @@ namespace LCU.State.API.IoTEnsemble.Host
 
             this.idMgr = idMgr;
 
+            this.log = log;
+
             this.secMgr = secMgr;
         }
 
         [FunctionName("Refresh")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,

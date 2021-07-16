@@ -38,15 +38,19 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class ToggleTelemetrySync
     {
+        protected ILogger log;
+             
         protected ISecurityDataTokenService secMgr;
 
-        public ToggleTelemetrySync(ISecurityDataTokenService secMgr)
+        public ToggleTelemetrySync(ILogger log, ISecurityDataTokenService secMgr)
         {
             this.secMgr = secMgr;
+
+            this.log = log;
         }
 
         [FunctionName("ToggleTelemetrySync")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,

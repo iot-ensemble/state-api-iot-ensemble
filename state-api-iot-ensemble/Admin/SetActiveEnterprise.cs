@@ -36,13 +36,17 @@ namespace LCU.State.API.IoTEnsemble.Admin
     {
         protected IApplicationsIoTService appIotArch;
 
-        public SetActiveEnterprise(IApplicationsIoTService appIotArch)
+        protected ILogger log;
+        
+        public SetActiveEnterprise(IApplicationsIoTService appIotArch, ILogger log)
         {
             this.appIotArch = appIotArch;
+
+            this.log = log;
          }
 
         [FunctionName("SetActiveEnterprise")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {

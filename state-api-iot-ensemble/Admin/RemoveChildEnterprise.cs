@@ -40,19 +40,23 @@ namespace LCU.State.API.IoTEnsemble.Admin
         protected IEnterprisesManagementService entMgr;
 
         protected IIdentityAccessService idMgr;
-        
+
+        protected ILogger log;
+             
         public RemoveChildEnterprise(IApplicationsIoTService appIotArch,
-        IEnterprisesManagementService entMgr, IIdentityAccessService idMgr)
+        IEnterprisesManagementService entMgr, IIdentityAccessService idMgr, ILogger log)
         {
             this.appIotArch = appIotArch;
 
             this.entMgr = entMgr;
 
             this.idMgr = idMgr;
+
+            this.log = log;
          }
 
         [FunctionName("RemoveChildEnterprise")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {

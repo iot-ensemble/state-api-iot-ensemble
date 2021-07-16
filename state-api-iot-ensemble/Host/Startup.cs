@@ -3,6 +3,8 @@ using LCU.StateAPI.Hosting;
 using System.Linq;
 using LCU.State.API.IoTEnsemble.Host.TempRefit;
 using System;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 [assembly: FunctionsStartup(typeof(LCU.State.API.IoTEnsemble.Host.Startup))]
 
@@ -11,6 +13,7 @@ namespace LCU.State.API.IoTEnsemble.Host
     public class Startup : StateAPIStartup
     {
         #region Fields
+
         #endregion
 
         #region Constructors
@@ -21,8 +24,9 @@ namespace LCU.State.API.IoTEnsemble.Host
         #region API Methods
         public override void Configure(IFunctionsHostBuilder builder)
         {
-            //  TODO: Refit client registration
+            base.Configure(builder);
 
+            //  TODO: Refit client registration
             // builder.Services.AddLCUPersonas(null, null, null);
             var httpOpts = new LCUStartupHTTPClientOptions()
             {
@@ -93,6 +97,24 @@ namespace LCU.State.API.IoTEnsemble.Host
             };
 
             var registry = builder.Services.AddLCUPollyRegistry(httpOpts);
+
+            // var loggerFactory = new LoggerFactory();
+
+            // loggerFactory.CreateLogger<IApplicationsIoTService>();
+
+            // loggerFactory.CreateLogger<IEnterprisesAPIManagementService>();
+
+            // loggerFactory.CreateLogger<IEnterprisesBootService>();
+
+            // loggerFactory.CreateLogger<IEnterprisesHostingManagerService>();
+
+            // loggerFactory.CreateLogger<IEnterprisesManagementService>();
+
+            // loggerFactory.CreateLogger<IIdentityAccessService>();
+
+            // loggerFactory.CreateLogger<ISecurityDataTokenService>();
+
+            // builder.Services.AddSingleton<ILoggerProvider, >(registry, httpOpts);
 
             builder.Services.AddLCUHTTPClient<IApplicationsIoTService>(registry, httpOpts);
 

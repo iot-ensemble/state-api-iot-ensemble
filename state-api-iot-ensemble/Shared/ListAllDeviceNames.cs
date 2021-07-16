@@ -52,13 +52,17 @@ namespace LCU.State.API.IoTEnsemble.Shared
     {
         protected IApplicationsIoTService appIotArch;
 
-        public ListAllDeviceNames(IApplicationsIoTService appIotArch)
+        protected ILogger log;
+        
+        public ListAllDeviceNames(IApplicationsIoTService appIotArch, ILogger log)
         {
             this.appIotArch = appIotArch;
+
+            this.log = log;
         }
 
         [FunctionName("ListAllDeviceNames")]
-        public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {

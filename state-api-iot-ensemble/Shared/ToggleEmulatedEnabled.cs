@@ -33,15 +33,19 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class ToggleEmulatedEnabled
     {
+        protected ILogger log;
+        
         protected ISecurityDataTokenService secMgr;
 
-        public ToggleEmulatedEnabled(ISecurityDataTokenService secMgr)
+        public ToggleEmulatedEnabled(ILogger log, ISecurityDataTokenService secMgr)
         {
+            this.log = log;
+
             this.secMgr = secMgr;
         }
 
         [FunctionName("ToggleEmulatedEnabled")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,

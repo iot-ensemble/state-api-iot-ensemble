@@ -31,15 +31,19 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class ToggleDetailsPane
     {
+        protected ILogger log;
+
         protected ISecurityDataTokenService secMgr;
 
-        public ToggleDetailsPane(ISecurityDataTokenService secMgr)
+        public ToggleDetailsPane(ILogger log, ISecurityDataTokenService secMgr)
         {
+            this.log = log;
+
             this.secMgr = secMgr;
         }
 
         [FunctionName("ToggleDetailsPane")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger log,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)]IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {

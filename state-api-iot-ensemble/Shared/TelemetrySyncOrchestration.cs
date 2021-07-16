@@ -36,16 +36,20 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class TelemetrySyncOrchestration
     {
+        protected ILogger log;
+        
         protected ISecurityDataTokenService secMgr;
-
-        public TelemetrySyncOrchestration(ISecurityDataTokenService secMgr)
+       
+        public TelemetrySyncOrchestration(ILogger log, ISecurityDataTokenService secMgr)
         {
+            this.log = log;
+
             this.secMgr = secMgr;
         }
 
         #region API Methods
         [FunctionName("TelemetrySyncOrchestration")]
-        public virtual async Task<Status> RunOrchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
+        public virtual async Task<Status> RunOrchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var stateCtxt = context.GetInput<StateActionContext>();
 
@@ -92,7 +96,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
         }
 
         [FunctionName("TelemetrySyncOrchestration_Sync")]
-        public virtual async Task<Status> Sync([ActivityTrigger] StateActionContext stateCtxt, ILogger log,
+        public virtual async Task<Status> Sync([ActivityTrigger] StateActionContext stateCtxt,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{stateCtxt.StateDetails.EnterpriseLookup}/{stateCtxt.StateDetails.HubName}/{stateCtxt.StateDetails.Username}/{stateCtxt.StateDetails.StateKey}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             [CosmosDB(
@@ -130,7 +134,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
         }
 
         [FunctionName("TelemetrySyncOrchestration_Disabled")]
-        public virtual async Task<Status> Disabled([ActivityTrigger] StateActionContext stateCtxt, ILogger log,
+        public virtual async Task<Status> Disabled([ActivityTrigger] StateActionContext stateCtxt,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{stateCtxt.StateDetails.EnterpriseLookup}/{stateCtxt.StateDetails.HubName}/{stateCtxt.StateDetails.Username}/{stateCtxt.StateDetails.StateKey}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
@@ -151,7 +155,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
         }
 
         [FunctionName("TelemetrySyncOrchestration_SetTimeout")]
-        public virtual async Task<Status> SetTimeout([ActivityTrigger] StateActionContext stateCtxt, ILogger log,
+        public virtual async Task<Status> SetTimeout([ActivityTrigger] StateActionContext stateCtxt,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{stateCtxt.StateDetails.EnterpriseLookup}/{stateCtxt.StateDetails.HubName}/{stateCtxt.StateDetails.Username}/{stateCtxt.StateDetails.StateKey}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob)
         {
