@@ -35,7 +35,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         protected ISecurityDataTokenService secMgr;
 
-        public ToggleDetailsPane(ILogger log, ISecurityDataTokenService secMgr)
+        public ToggleDetailsPane(ILogger<ToggleDetailsPane> log, ISecurityDataTokenService secMgr)
         {
             this.log = log;
 

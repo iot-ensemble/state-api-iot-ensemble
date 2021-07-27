@@ -38,7 +38,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
         protected ILogger log;
         
-        public SetActiveEnterprise(IApplicationsIoTService appIotArch, ILogger log)
+        public SetActiveEnterprise(IApplicationsIoTService appIotArch, ILogger<SetActiveEnterprise> log)
         {
             this.appIotArch = appIotArch;
 

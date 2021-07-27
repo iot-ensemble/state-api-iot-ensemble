@@ -54,7 +54,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         protected ILogger log;
         
-        public ListAllDeviceNames(IApplicationsIoTService appIotArch, ILogger log)
+        public ListAllDeviceNames(IApplicationsIoTService appIotArch, ILogger<ListAllDeviceNames> log)
         {
             this.appIotArch = appIotArch;
 

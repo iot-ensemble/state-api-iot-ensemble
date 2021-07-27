@@ -48,7 +48,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
         protected ILogger log;
         
         public UpdateEnterprisesSync(IEnterprisesManagementService entMgr, 
-            IApplicationsIoTService appIotArch, IIdentityAccessService idMgr, ILogger log)
+            IApplicationsIoTService appIotArch, IIdentityAccessService idMgr, ILogger<UpdateEnterprisesSync> log)
         {
             this.appIotArch = appIotArch;
 

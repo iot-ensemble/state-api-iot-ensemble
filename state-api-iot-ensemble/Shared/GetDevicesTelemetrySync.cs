@@ -37,7 +37,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
     {
         protected ILogger log;
 
-        public GetDevicesTelemetrySync(ILogger log){
+        public GetDevicesTelemetrySync(ILogger<GetDevicesTelemetrySync> log){
             this.log = log;
         }
 

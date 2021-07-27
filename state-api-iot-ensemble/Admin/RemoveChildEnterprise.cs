@@ -44,7 +44,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
         protected ILogger log;
              
         public RemoveChildEnterprise(IApplicationsIoTService appIotArch,
-        IEnterprisesManagementService entMgr, IIdentityAccessService idMgr, ILogger log)
+        IEnterprisesManagementService entMgr, IIdentityAccessService idMgr, ILogger<RemoveChildEnterprise> log)
         {
             this.appIotArch = appIotArch;
 

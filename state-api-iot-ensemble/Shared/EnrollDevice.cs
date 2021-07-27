@@ -38,7 +38,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         protected ILogger log;
 
-        public EnrollDevice(IApplicationsIoTService appIotArch, ILogger log)
+        public EnrollDevice(IApplicationsIoTService appIotArch, ILogger<EnrollDevice> log)
         {
             this.appIotArch = appIotArch;
 

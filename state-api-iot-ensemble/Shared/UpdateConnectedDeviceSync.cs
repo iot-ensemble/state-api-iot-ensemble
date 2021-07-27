@@ -47,7 +47,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         protected ILogger log;
         
-        public UpdateConnectedDevicesSync(IApplicationsIoTService appIotArch, ILogger log)
+        public UpdateConnectedDevicesSync(IApplicationsIoTService appIotArch, ILogger<UpdateConnectedDevicesSync> log)
         {
             this.appIotArch = appIotArch;
 

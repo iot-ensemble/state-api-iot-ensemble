@@ -42,7 +42,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         protected ILogger log; 
 
-        public SendCloudMessage(IApplicationsIoTService appIotArch, ILogger log)
+        public SendCloudMessage(IApplicationsIoTService appIotArch, ILogger<SendCloudMessage> log)
         {
             this.appIotArch = appIotArch;
 

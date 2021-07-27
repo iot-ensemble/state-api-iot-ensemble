@@ -45,7 +45,7 @@ namespace LCU.State.API.IoTEnsemble.Host
         protected ILogger log;
 
         public RevokeDeviceEnrollment(IApplicationsIoTService appIotArch, IEnterprisesManagementService entMgr,
-            IIdentityAccessService idMgr, ILogger log)
+            IIdentityAccessService idMgr, ILogger<RevokeDeviceEnrollment> log)
         {
             this.appIotArch = appIotArch;
 

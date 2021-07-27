@@ -41,7 +41,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         protected ILogger log;
 
-        public IssueDeviceSASToken(IApplicationsIoTService appIotArch, ILogger log)
+        public IssueDeviceSASToken(IApplicationsIoTService appIotArch, ILogger<IssueDeviceSASToken> log)
         {
             this.appIotArch = appIotArch;
 

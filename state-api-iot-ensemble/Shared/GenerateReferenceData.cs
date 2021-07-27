@@ -54,7 +54,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         [FunctionName("GenerateReferenceData")]
         public virtual async Task Run([TimerTrigger("0 */1 * * * *")] TimerInfo myTimer,
-            [Blob("cold-storage/reference-data", FileAccess.Read, Connection = "LCU-COLD-STORAGE-CONNECTION-STRING")] CloudBlobDirectory refDataBlobDir)
+            [Blob("iot-ensemble-cold-query/reference-data", FileAccess.Read, Connection = "LCU-COLD-STORAGE-CONNECTION-STRING")] CloudBlobDirectory refDataBlobDir)
         {
             var shouldGenerate = bypassGenerateRefData ? "bypass" : "generate";
 
