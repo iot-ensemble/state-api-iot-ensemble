@@ -38,15 +38,15 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
     public class UpdateActiveEnterpriseSync
     {
-        protected IApplicationsIoTService appIotArch;
+        protected IApplicationsIoTService appIoTArch;
 
         protected IIdentityAccessService idMgr;
 
         protected ILogger log;
         
-        public UpdateActiveEnterpriseSync(IApplicationsIoTService appIotArch, IIdentityAccessService idMgr, ILogger<UpdateActiveEnterpriseSync> log)
+        public UpdateActiveEnterpriseSync(IApplicationsIoTService appIoTArch, IIdentityAccessService idMgr, ILogger<UpdateActiveEnterpriseSync> log)
         {
-            this.appIotArch = appIotArch;
+            this.appIoTArch = appIoTArch;
 
             this.idMgr = idMgr;
 
@@ -65,7 +65,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                await harness.UpdateActiveEnterpriseSync(appIotArch, idMgr, stateDetails.EnterpriseLookup, dataReq.Page, dataReq.PageSize);
+                await harness.UpdateActiveEnterpriseSync(appIoTArch, idMgr, stateDetails.EnterpriseLookup, dataReq.Page, dataReq.PageSize);
 
                 return Status.Success;
             }, withLock: false);

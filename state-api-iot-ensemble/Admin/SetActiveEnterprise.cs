@@ -34,13 +34,13 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
     public class SetActiveEnterprise
     {
-        protected IApplicationsIoTService appIotArch;
+        protected IApplicationsIoTService appIoTArch;
 
         protected ILogger log;
         
-        public SetActiveEnterprise(IApplicationsIoTService appIotArch, ILogger<SetActiveEnterprise> log)
+        public SetActiveEnterprise(IApplicationsIoTService appIoTArch, ILogger<SetActiveEnterprise> log)
         {
-            this.appIotArch = appIotArch;
+            this.appIoTArch = appIoTArch;
 
             this.log = log;
          }
@@ -55,7 +55,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
             {
                 log.LogInformation($"SetActiveEnterprise");
 
-                await harness.SetActiveEnterprise(appIotArch, dataReq.Lookup);
+                await harness.SetActiveEnterprise(appIoTArch, dataReq.Lookup);
 
                 return Status.Success;
             }, withLock: false);

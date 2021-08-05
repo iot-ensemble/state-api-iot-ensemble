@@ -37,13 +37,13 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
     public class IssueDeviceSASToken
     {
-        protected IApplicationsIoTService appIotArch;
+        protected IApplicationsIoTService appIoTArch;
 
         protected ILogger log;
 
-        public IssueDeviceSASToken(IApplicationsIoTService appIotArch, ILogger<IssueDeviceSASToken> log)
+        public IssueDeviceSASToken(IApplicationsIoTService appIoTArch, ILogger<IssueDeviceSASToken> log)
         {
-            this.appIotArch = appIotArch;
+            this.appIoTArch = appIoTArch;
 
             this.log = log;
         }
@@ -69,7 +69,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
                     {
                         log.LogInformation($"IssueDeviceSASToken");
 
-                        await harness.IssueDeviceSASToken(appIotArch, dataReq.DeviceName, dataReq.ExpiryInSeconds);
+                        await harness.IssueDeviceSASToken(appIoTArch, dataReq.DeviceName, dataReq.ExpiryInSeconds);
 
                         harness.State.DevicesConfig.Loading = false;
 

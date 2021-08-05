@@ -98,24 +98,6 @@ namespace LCU.State.API.IoTEnsemble.Host
 
             var registry = builder.Services.AddLCUPollyRegistry(httpOpts);
 
-            // var loggerFactory = new LoggerFactory();
-
-            // loggerFactory.CreateLogger<IApplicationsIoTService>();
-
-            // loggerFactory.CreateLogger<IEnterprisesAPIManagementService>();
-
-            // loggerFactory.CreateLogger<IEnterprisesBootService>();
-
-            // loggerFactory.CreateLogger<IEnterprisesHostingManagerService>();
-
-            // loggerFactory.CreateLogger<IEnterprisesManagementService>();
-
-            // loggerFactory.CreateLogger<IIdentityAccessService>();
-
-            // loggerFactory.CreateLogger<ISecurityDataTokenService>();
-
-            // builder.Services.AddSingleton<ILoggerProvider, >(registry, httpOpts);
-
             builder.Services.AddLCUHTTPClient<IApplicationsIoTService>(registry, httpOpts);
 
             builder.Services.AddLCUHTTPClient<IEnterprisesAPIManagementService>(registry, httpOpts);

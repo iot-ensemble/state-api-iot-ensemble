@@ -66,7 +66,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #endregion
 
         #region API Methods
-        public virtual async Task<bool> EnrollDevice(IApplicationsIoTService appIotArch, IoTEnsembleDeviceEnrollment device)
+        public virtual async Task<bool> EnrollDevice(IApplicationsIoTService appIoTArch, IoTEnsembleDeviceEnrollment device)
         {
             var enrollResp = new EnrollDeviceResponse();
 
@@ -81,7 +81,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         try
                         {
-                            enrollResp = await appIotArch.EnrollDevice(new EnrollDeviceRequest()
+                            enrollResp = await appIoTArch.EnrollDevice(new EnrollDeviceRequest()
                             {
                                 DeviceID = deviceId,
                                 EnrollmentOptions = new
@@ -120,7 +120,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
             await Task.Delay(2500);
 
-            await LoadDevices(appIotArch);
+            await LoadDevices(appIoTArch);
 
             return false;
         }
@@ -380,8 +380,9 @@ namespace LCU.State.API.IoTEnsemble.State
                         {
                             var hostLookup = $"{parentEntLookup}|{username}";
 
-                            if (deviceEnv != "prd")
-                                hostLookup += $"|{deviceEnv}";
+                            // Note: Not needed if we are separating into two separate iot hubs, one per env
+                            // if (deviceEnv != "prd")
+                            //     hostLookup += $"|{deviceEnv}";
 
                             log.LogInformation($"Ensuring user enterprise for {hostLookup}...");
 
@@ -391,15 +392,22 @@ namespace LCU.State.API.IoTEnsemble.State
                             {
                                 var createResp = await entBootArch.Boot(new BootEnterpriseRequest()
                                 {
-                                    Name = username,                                   
-                                    Description = username,
+                                    Name = $"{username} Enterprise",
+                                    Description = $"{username} Enterprise",
                                     ParentEnterpriseLookup = parentEntLookup,
-                                    Hosts = new List<string>(){
-                                        hostLookup
-                                    }                                  
+                                    Hosts = new[] { hostLookup }.ToList(),
+                                    Projects = new Dictionary<string, BootProject>(),
+                                    Environment = new LCUEnvironment()
+                                    {
+                                        Name = $"{username} Environment",
+                                        Description = $"{username} Environment",
+                                        Lookup = hostLookup
+                                    }
                                 });
 
-                                if (createResp.Status)
+                                getResp = await entHostMgr.ResolveHost(hostLookup);
+
+                                if (createResp.Status && getResp.Status)
                                     State.UserEnterpriseLookup = createResp.Model.Lookup;
                             }
                             else
@@ -477,14 +485,14 @@ namespace LCU.State.API.IoTEnsemble.State
             return Status.Success;
         }
 
-        public virtual async Task IssueDeviceSASToken(IApplicationsIoTService appIotArch, string deviceName, int expiryInSeconds)
+        public virtual async Task IssueDeviceSASToken(IApplicationsIoTService appIoTArch, string deviceName, int expiryInSeconds)
         {
             await DesignOutline.Instance.Retry()
                 .SetActionAsync(async () =>
                 {
                     try
                     {
-                        var deviceSasResp = await appIotArch.IssueDeviceSASToken(State.UserEnterpriseLookup, deviceName, expiryInSeconds: expiryInSeconds,
+                        var deviceSasResp = await appIoTArch.IssueDeviceSASToken(State.UserEnterpriseLookup, deviceName, expiryInSeconds: expiryInSeconds,
                             envLookup: null);
 
                         if (deviceSasResp.Status)
@@ -510,11 +518,11 @@ namespace LCU.State.API.IoTEnsemble.State
                 .Run();
         }
 
-        public virtual async Task<List<string>> ListAllDeviceNames(IApplicationsIoTService appIotArch, string childEntLookup, string filter)
+        public virtual async Task<List<string>> ListAllDeviceNames(IApplicationsIoTService appIoTArch, string childEntLookup, string filter)
         {
             var deviceNames = new List<string>();
 
-            var devices = await loadDevices(appIotArch, childEntLookup, 1, 100);
+            var devices = await loadDevices(appIoTArch, childEntLookup, 1, 100);
 
             deviceNames = devices?.Items?.Select(device => device.DeviceName).Where(deviceName =>
             {
@@ -567,9 +575,9 @@ namespace LCU.State.API.IoTEnsemble.State
             return Status.Success;
         }
 
-        public virtual async Task LoadDevices(IApplicationsIoTService appIotArch)
+        public virtual async Task LoadDevices(IApplicationsIoTService appIoTArch)
         {
-            var devices = await loadDevices(appIotArch, State.UserEnterpriseLookup, State.DevicesConfig.Page, State.DevicesConfig.PageSize);
+            var devices = await loadDevices(appIoTArch, State.UserEnterpriseLookup, State.DevicesConfig.Page, State.DevicesConfig.PageSize);
             if (devices != null)
             {
                 State.DevicesConfig.Devices = devices.Items.ToList();
@@ -619,13 +627,13 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task Refresh(IDurableOrchestrationClient starter, StateDetails stateDetails, ExecuteActionRequest exActReq,
-            IApplicationsIoTService appIotArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesBootService entBootArch, IEnterprisesHostingManagerService entHostMgr, IIdentityAccessService idMgr,
+            IApplicationsIoTService appIoTArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesBootService entBootArch, IEnterprisesHostingManagerService entHostMgr, IIdentityAccessService idMgr,
             ISecurityDataTokenService secMgr, DocumentClient client)
         {
             await EnsureUserEnterprise(entBootArch, entHostMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
 
             await Task.WhenAll(
-                LoadDevices(appIotArch),
+                LoadDevices(appIoTArch),
                 HasLicenseAccess(idMgr, stateDetails.EnterpriseLookup, stateDetails.Username),
                 EnsureEmulatedDeviceInfo(starter, stateDetails, exActReq, secMgr, client)
             );
@@ -647,16 +655,16 @@ namespace LCU.State.API.IoTEnsemble.State
             State.Telemetry.Loading = false;
         }
 
-        public virtual async Task<bool> RevokeDeviceEnrollment(IApplicationsIoTService appIotArch, string deviceId)
+        public virtual async Task<bool> RevokeDeviceEnrollment(IApplicationsIoTService appIoTArch, string deviceId)
         {
-            var revoked = await revokeDeviceEnrollment(appIotArch, State.UserEnterpriseLookup, deviceId);
+            var revoked = await revokeDeviceEnrollment(appIoTArch, State.UserEnterpriseLookup, deviceId);
 
-            await LoadDevices(appIotArch);
+            await LoadDevices(appIoTArch);
 
             return revoked;
         }
 
-        public virtual async Task<Status> SendCloudMessage(IApplicationsIoTService appIotArch, string deviceName, MetadataModel message)
+        public virtual async Task<Status> SendCloudMessage(IApplicationsIoTService appIoTArch, string deviceName, MetadataModel message)
         {
             var status = Status.Initialized;
 
@@ -665,7 +673,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     try
                     {
-                        var sendResp = await appIotArch.SendCloudMessage(message, State.UserEnterpriseLookup, deviceName, envLookup: null);
+                        var sendResp = await appIoTArch.SendCloudMessage(message, State.UserEnterpriseLookup, deviceName, envLookup: null);
 
                         status = sendResp.Status;
 
@@ -686,7 +694,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return status;
         }
 
-        public virtual async Task<Status> SendDeviceMessage(IApplicationsIoTService appIotArch, ISecurityDataTokenService secMgr,
+        public virtual async Task<Status> SendDeviceMessage(IApplicationsIoTService appIoTArch, ISecurityDataTokenService secMgr,
             DocumentClient client, string deviceName, MetadataModel payload)
         {
             if (payload.Metadata.ContainsKey("id"))
@@ -699,7 +707,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     try
                     {
-                        var sendResp = await appIotArch.SendDeviceMessage(payload, State.UserEnterpriseLookup,
+                        var sendResp = await appIoTArch.SendDeviceMessage(payload, State.UserEnterpriseLookup,
                             deviceName, envLookup: null);
 
                         log.LogInformation($"Send Device ({deviceName}) Message Response {sendResp?.Status?.ToJSON()}: {payload?.ToJSON()}");
@@ -853,7 +861,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
         }
 
-        public virtual async Task UpdateConnectedDevicesSync(IApplicationsIoTService appIotArch, int page, int pageSize)
+        public virtual async Task UpdateConnectedDevicesSync(IApplicationsIoTService appIoTArch, int page, int pageSize)
         {
             if (!State.UserEnterpriseLookup.IsNullOrEmpty())
             {
@@ -861,7 +869,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                 State.DevicesConfig.PageSize = pageSize;
 
-                await LoadDevices(appIotArch);
+                await LoadDevices(appIoTArch);
             }
             else
                 throw new Exception("Unable to load the user's enterprise, please try again or contact support.");
@@ -1217,7 +1225,7 @@ namespace LCU.State.API.IoTEnsemble.State
             // return "{\r\n\t\"version\": 1,\r\n\t\"allow_edit\": true,\r\n\t\"plugins\": [],\r\n\t\"panes\": [\r\n\t\t{\r\n\t\t\t\"width\": 1,\r\n\t\t\t\"row\": {\r\n\t\t\t\t\"3\": 1\r\n\t\t\t},\r\n\t\t\t\"col\": {\r\n\t\t\t\t\"3\": 1\r\n\t\t\t},\r\n\t\t\t\"col_width\": 3,\r\n\t\t\t\"widgets\": [\r\n\t\t\t\t{\r\n\t\t\t\t\t\"type\": \"text_widget\",\r\n\t\t\t\t\t\"settings\": {\r\n\t\t\t\t\t\t\"size\": \"regular\",\r\n\t\t\t\t\t\t\"value\": \"Device Insights & Monitoring\",\r\n\t\t\t\t\t\t\"animate\": true\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t]\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"title\": \"Last Processed Device Data\",\r\n\t\t\t\"width\": 1,\r\n\t\t\t\"row\": {\r\n\t\t\t\t\"3\": 5\r\n\t\t\t},\r\n\t\t\t\"col\": {\r\n\t\t\t\t\"3\": 1\r\n\t\t\t},\r\n\t\t\t\"col_width\": 2,\r\n\t\t\t\"widgets\": [\r\n\t\t\t\t{\r\n\t\t\t\t\t\"type\": \"text_widget\",\r\n\t\t\t\t\t\"settings\": {\r\n\t\t\t\t\t\t\"size\": \"regular\",\r\n\t\t\t\t\t\t\"value\": \"datasources[\\\"Query\\\"][datasources[\\\"Query\\\"].length - 1][\\\"DeviceID\\\"]\",\r\n\t\t\t\t\t\t\"animate\": true\r\n\t\t\t\t\t}\r\n\t\t\t\t},\r\n\t\t\t\t{\r\n\t\t\t\t\t\"type\": \"html\",\r\n\t\t\t\t\t\"settings\": {\r\n\t\t\t\t\t\t\"html\": \"JSON.stringify(datasources[\\\"Query\\\"][datasources[\\\"Query\\\"].length - 1])\",\r\n\t\t\t\t\t\t\"height\": 4\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t]\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"title\": \"Connected Devices (Last 3 Days)\",\r\n\t\t\t\"width\": 1,\r\n\t\t\t\"row\": {\r\n\t\t\t\t\"3\": 5\r\n\t\t\t},\r\n\t\t\t\"col\": {\r\n\t\t\t\t\"3\": 3\r\n\t\t\t},\r\n\t\t\t\"col_width\": 1,\r\n\t\t\t\"widgets\": [\r\n\t\t\t\t{\r\n\t\t\t\t\t\"type\": \"html\",\r\n\t\t\t\t\t\"settings\": {\r\n\t\t\t\t\t\t\"html\": \"JSON.stringify(Array.from(new Set(datasources[\\\"Query\\\"].map((q) => q.DeviceID))))\",\r\n\t\t\t\t\t\t\"height\": 4\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t]\r\n\t\t}\r\n\t],\r\n\t\"datasources\": [\r\n\t\t{\r\n\t\t\t\"name\": \"Query\",\r\n\t\t\t\"type\": \"JSON\",\r\n\t\t\t\"settings\": {\r\n\t\t\t\t\"url\": \"\\/api\\/iot-ensemble\\/devices\\/telemetry\",\r\n\t\t\t\t\"use_thingproxy\": false,\r\n\t\t\t\t\"refresh\": 30,\r\n\t\t\t\t\"method\": \"GET\"\r\n\t\t\t}\r\n\t\t}\r\n\t],\r\n\t\"columns\": 3\r\n}".FromJSON<MetadataModel>();
         }
 
-        protected virtual async Task<Pageable<IoTEnsembleDeviceInfo>> loadDevices(IApplicationsIoTService appIotArch, string entLookup,
+        protected virtual async Task<Pageable<IoTEnsembleDeviceInfo>> loadDevices(IApplicationsIoTService appIoTArch, string entLookup,
             int page, int pageSize)
         {
             var devices = new Pageable<IoTEnsembleDeviceInfo>()
@@ -1231,7 +1239,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     try
                     {
-                        var devicesResp = await appIotArch.ListEnrolledDevices(entLookup, envLookup: null,
+                        var devicesResp = await appIoTArch.ListEnrolledDevices(entLookup, envLookup: null,
                             page: page, pageSize: pageSize);
 
                         if (devicesResp.Status)

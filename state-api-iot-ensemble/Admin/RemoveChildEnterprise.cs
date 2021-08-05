@@ -35,7 +35,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
     public class RemoveChildEnterprise
     {
-        protected IApplicationsIoTService appIotArch;
+        protected IApplicationsIoTService appIoTArch;
 
         protected IEnterprisesManagementService entMgr;
 
@@ -43,10 +43,10 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
         protected ILogger log;
              
-        public RemoveChildEnterprise(IApplicationsIoTService appIotArch,
+        public RemoveChildEnterprise(IApplicationsIoTService appIoTArch,
         IEnterprisesManagementService entMgr, IIdentityAccessService idMgr, ILogger<RemoveChildEnterprise> log)
         {
-            this.appIotArch = appIotArch;
+            this.appIoTArch = appIoTArch;
 
             this.entMgr = entMgr;
 
@@ -67,7 +67,7 @@ namespace LCU.State.API.IoTEnsemble.Admin
 
                 var stateDetails = StateUtils.LoadStateDetails(req);
 
-                await harness.RemoveChildEnterprise(appIotArch, entMgr, idMgr, dataReq.ChildEntLookup, stateDetails.EnterpriseLookup);
+                await harness.RemoveChildEnterprise(appIoTArch, entMgr, idMgr, dataReq.ChildEntLookup, stateDetails.EnterpriseLookup);
 
                 return Status.Success;
             }, withLock: false);
