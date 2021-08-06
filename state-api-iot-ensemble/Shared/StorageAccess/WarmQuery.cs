@@ -54,7 +54,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
     public class WarmQuery
     {
         protected ILogger log;
-        public WarmQuery(ILogger log){
+        public WarmQuery(ILogger<WarmQuery> log){
             this.log = log;
         }
 

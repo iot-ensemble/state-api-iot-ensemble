@@ -76,7 +76,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
     public class ColdQuery
     {
         protected ILogger log;
-        public ColdQuery(ILogger log){
+        public ColdQuery(ILogger<ColdQuery> log){
             this.log = log;
         }
 
@@ -84,7 +84,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
         public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
-            [Blob("cold-storage/data", FileAccess.Read, Connection = "LCU-COLD-STORAGE-CONNECTION-STRING")] CloudBlobDirectory coldBlob)
+            [Blob("iot-ensemble-cold-query/data", FileAccess.Read, Connection = "LCU-COLD-STORAGE-CONNECTION-STRING")] CloudBlobDirectory coldBlob)
         {
             var queried = new HttpResponseMessage(); ;
 

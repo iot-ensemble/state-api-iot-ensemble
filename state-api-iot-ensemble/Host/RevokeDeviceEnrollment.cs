@@ -36,7 +36,7 @@ namespace LCU.State.API.IoTEnsemble.Host
 
     public class RevokeDeviceEnrollment
     {
-        protected IApplicationsIoTService appIotArch;
+        protected IApplicationsIoTService appIoTArch;
 
         protected IEnterprisesManagementService entMgr;
 
@@ -44,10 +44,10 @@ namespace LCU.State.API.IoTEnsemble.Host
 
         protected ILogger log;
 
-        public RevokeDeviceEnrollment(IApplicationsIoTService appIotArch, IEnterprisesManagementService entMgr,
-            IIdentityAccessService idMgr, ILogger log)
+        public RevokeDeviceEnrollment(IApplicationsIoTService appIoTArch, IEnterprisesManagementService entMgr,
+            IIdentityAccessService idMgr, ILogger<RevokeDeviceEnrollment> log)
         {
-            this.appIotArch = appIotArch;
+            this.appIoTArch = appIoTArch;
 
             this.entMgr = entMgr;
 
@@ -90,7 +90,7 @@ namespace LCU.State.API.IoTEnsemble.Host
 
                         var stateDetails = StateUtils.LoadStateDetails(req);
 
-                        await harness.RevokeDeviceEnrollment(appIotArch, entMgr, idMgr, stateDetails.EnterpriseLookup, enrollReq.DeviceID);
+                        await harness.RevokeDeviceEnrollment(appIoTArch, entMgr, idMgr, stateDetails.EnterpriseLookup, enrollReq.DeviceID);
 
                         harness.State.Loading = false;
 
@@ -121,7 +121,7 @@ namespace LCU.State.API.IoTEnsemble.Host
 
                         var stateDetails = StateUtils.LoadStateDetails(req);
 
-                        await harness.RevokeDeviceEnrollment(appIotArch, enrollReq.DeviceID);
+                        await harness.RevokeDeviceEnrollment(appIoTArch, enrollReq.DeviceID);
 
                         harness.State.DevicesConfig.Loading = false;
 

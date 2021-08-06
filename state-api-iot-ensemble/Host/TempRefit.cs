@@ -112,7 +112,7 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         [Delete("/iot/{entLookup}/devices/{deviceId}/revoke")]
         Task<BaseResponse> RevokeDeviceEnrollment(string deviceId, string entLookup, [Query] string envLookup = null);
 
-        [Post("{/iot/entLookup}/devices/from/{deviceName}/send")]
+        [Post("/iot/{entLookup}/devices/from/{deviceName}/send")]
         Task<BaseResponse> SendDeviceMessage([Body] MetadataModel payload, string entLookup, string deviceName,
             [Query] string connStrType = "primary", [Query] string envLookup = null);
 

@@ -40,7 +40,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
         
         protected ISecurityDataTokenService secMgr;
        
-        public TelemetrySyncOrchestration(ILogger log, ISecurityDataTokenService secMgr)
+        public TelemetrySyncOrchestration(ILogger<TelemetrySyncOrchestration> log, ISecurityDataTokenService secMgr)
         {
             this.log = log;
 

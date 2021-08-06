@@ -37,7 +37,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
         
         protected ISecurityDataTokenService secMgr;
 
-        public ToggleEmulatedEnabled(ILogger log, ISecurityDataTokenService secMgr)
+        public ToggleEmulatedEnabled(ILogger<ToggleEmulatedEnabled> log, ISecurityDataTokenService secMgr)
         {
             this.log = log;
 

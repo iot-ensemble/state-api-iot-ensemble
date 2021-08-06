@@ -18,7 +18,7 @@ namespace LCU.State.API.IoTEnsemble.Host
     public class ConnectToState
     {
         protected ILogger log;
-        public ConnectToState(ILogger log){
+        public ConnectToState(ILogger<ConnectToState> log){
             this.log = log;
         }
         

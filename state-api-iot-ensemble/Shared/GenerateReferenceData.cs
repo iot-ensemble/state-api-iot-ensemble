@@ -37,7 +37,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
         protected readonly string parentEntLookup;
         #endregion
 
-        public GenerateReferenceData(IEnterprisesManagementService entMgr, IIdentityAccessService idMgr, ILogger log, IEnterprisesHostingManagerService entHostMgr)
+        public GenerateReferenceData(IEnterprisesManagementService entMgr, IIdentityAccessService idMgr, ILogger<GenerateReferenceData> log, IEnterprisesHostingManagerService entHostMgr)
         {
             this.entMgr = entMgr;
 
@@ -54,7 +54,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
         [FunctionName("GenerateReferenceData")]
         public virtual async Task Run([TimerTrigger("0 */1 * * * *")] TimerInfo myTimer,
-            [Blob("cold-storage/reference-data", FileAccess.Read, Connection = "LCU-COLD-STORAGE-CONNECTION-STRING")] CloudBlobDirectory refDataBlobDir)
+            [Blob("iot-ensemble-cold-query/reference-data", FileAccess.Read, Connection = "LCU-COLD-STORAGE-CONNECTION-STRING")] CloudBlobDirectory refDataBlobDir)
         {
             var shouldGenerate = bypassGenerateRefData ? "bypass" : "generate";
 
@@ -113,7 +113,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
                     var license = licenses.FirstOrDefault(lic => lic.Username == username);
 
-                    await idMgr.HasLicenseAccess(parentLookup, username, AllAnyTypes.All, new List<string>() { "iot" });
+                    await idMgr.HasLicenseAccess(parentLookup, username, Host.TempRefit.AllAnyTypes.All, new List<string>() { "iot" });
 
                     IoTEnsembleEnterpriseReferenceData refd;
 
