@@ -150,7 +150,7 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
             var refDataBlob = timeBlobDir.GetBlockBlobReference("enterprise.ref-data.json");
 
-            await refDataBlob.UploadTextAsync(refData.ToJSON());
+            await refDataBlob.UploadTextAsync(refData.ToJSON()); 
         }
         #endregion
     }
