@@ -10,8 +10,12 @@ on:
     - 'integration'
     
 env:
-  AZURE_FUNCTIONAPP_NAME: fathym-cloud-int-personas-state-api-iotensemble  # set this to your application's name
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'state-api-iot-ensemble'    # set this to the path to your web app project, defaults to the repository root  
+  AZURE_FUNCTIONAPP_NAME: 'fathym-cloud-int-personas-state-api-iotensemble'  # set this to your application's name
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'state-api-iot-ensemble'    # set this to the path to your web app project, defaults to the repository root 
+  project_file: 'state-api-iot-ensemble/state-api-iot-ensemble.csproj'
+  nuget_feed_name: 'LCU'
+  nuget_feed_source: 'https://fathym.pkgs.visualstudio.com/_packaging/LCU%40Prerelease/nuget/v3/index.json'
+  nuget_config: 'nuget.Config'
 
 jobs:
   build:
@@ -51,6 +55,12 @@ jobs:
       uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
+        
+    - name: Auth NuGet
+      run: nuget sources add -Name ${{ env.nuget_feed_name }} -Source ${{ env.nuget_feed_source }} -username "azuredevops2" -password ${{ secrets.AZDEVOPS_PAT }} -ConfigFile ${{ env.nuget_config }}
+     
+    - name: Restore NuGet Packages
+      run: nuget restore ${{ env.project_file }}        
 
     - name: 'Resolve Project Dependencies Using Dotnet'
       shell: pwsh
@@ -67,3 +77,4 @@ jobs:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
         package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
         publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+
