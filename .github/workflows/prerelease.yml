@@ -15,7 +15,7 @@ env:
   project_file: 'state-api-iot-ensemble/state-api-iot-ensemble.csproj'
   nuget_feed_name: 'LCU'
   nuget_feed_source: 'https://fathym.pkgs.visualstudio.com/_packaging/LCU/nuget/v3/index.json'
-  nuget_config: '../../nuget.config'
+  nuget_config: 'nuget.config'
 
 jobs:
   build:
@@ -57,7 +57,7 @@ jobs:
         dotnet-version: ${{ matrix.dotnet-version }}
         
     - name: Auth NuGet
-      run: nuget sources add -Name ${{ env.nuget_feed_name }} -Source ${{ env.nuget_feed_source }} -username "azuredevops2" -password ${{ secrets.AZDEVOPS_PAT }} -ConfigFile ${{ env.nuget_config }}
+      run: nuget sources add -Name ${{ env.nuget_feed_name }} -Source ${{ env.nuget_feed_source }} -username "azuredevops2" -password ${{ secrets.AZDEVOPS_PAT }}
      
     - name: Restore NuGet Packages
       run: nuget restore ${{ env.project_file }}        
