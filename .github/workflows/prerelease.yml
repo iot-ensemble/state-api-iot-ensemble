@@ -15,7 +15,7 @@ env:
   project_file: 'state-api-iot-ensemble/state-api-iot-ensemble.csproj'
   nuget_feed_name: 'LCU'
   nuget_feed_source: 'https://fathym.pkgs.visualstudio.com/_packaging/LCU/nuget/v3/index.json'
-  nuget_config: 'nuget.Config'
+  nuget_config: '../nuget.Config'
 
 jobs:
   build:
