@@ -56,8 +56,8 @@ jobs:
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
         
-    # - name: Auth NuGet
-    #   run: nuget sources add -Name ${{ env.nuget_feed_name }} -Source ${{ env.nuget_feed_source }} -username "azuredevops2" -password ${{ secrets.AZDEVOPS_PAT }}
+    - name: Auth NuGet
+      run: nuget sources add -Name ${{ env.nuget_feed_name }} -Source ${{ env.nuget_feed_source }} -username "github_actions" -password ${{ secrets.AZDEVOPS_PAT }}
      
     - name: Restore NuGet Packages
       run: nuget restore ${{ env.project_file }}        
