@@ -24,7 +24,7 @@ jobs:
     environment: integration
     strategy:
       matrix:
-        dotnet: [ '3.0', '3.1.x', '5.0.x' ]    
+        dotnet: [ '3.1.x' ]    
     steps:
     # checkout repository
     - uses: actions/checkout@v2
