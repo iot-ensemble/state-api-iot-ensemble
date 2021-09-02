@@ -365,7 +365,7 @@ namespace LCU.State.API.IoTEnsemble.State
             }
         }
 
-        public virtual async Task EnsureUserEnterprise(IEnterprisesBootService entBootArch, IEnterprisesHostingManagerService entHostMgr,
+        public virtual async Task EnsureUserEnterprise(IEnterprisesAsCodeService entEacArch, IEnterprisesHostingManagerService entHostMgr,
             ISecurityDataTokenService secMgr, string parentEntLookup, string username)
         {
             if (State.DevicesConfig != null)
@@ -390,8 +390,11 @@ namespace LCU.State.API.IoTEnsemble.State
 
                             if (!getResp.Status || getResp.Model == null)
                             {
-                                var createResp = await entBootArch.Boot(new BootEnterpriseRequest()
+                                var createResp = await entEacArch.Commit(new CommitEnterpriseAsCodeRequest()
                                 {
+                                    EaC = new EnterpriseAsCode(){
+
+                                    }
                                     Name = $"{username} Enterprise",
                                     Description = $"{username} Enterprise",
                                     ParentEnterpriseLookup = parentEntLookup,
@@ -627,10 +630,10 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task Refresh(IDurableOrchestrationClient starter, StateDetails stateDetails, ExecuteActionRequest exActReq,
-            IApplicationsIoTService appIoTArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesBootService entBootArch, IEnterprisesHostingManagerService entHostMgr, IIdentityAccessService idMgr,
+            IApplicationsIoTService appIoTArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesAsCodeService entEacArch, IEnterprisesHostingManagerService entHostMgr, IIdentityAccessService idMgr,
             ISecurityDataTokenService secMgr, DocumentClient client)
         {
-            await EnsureUserEnterprise(entBootArch, entHostMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
+            await EnsureUserEnterprise(entEacArch, entHostMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
 
             await Task.WhenAll(
                 LoadDevices(appIoTArch),
