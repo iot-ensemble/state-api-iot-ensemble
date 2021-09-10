@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Fathym;
 using Fathym.API;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json.Converters;
 using Polly;
 using Polly.Registry;
 using Refit;
@@ -136,11 +138,20 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 		Task<BaseResponse<MetadataModel>> VerifyAPIKey(string entLookup, string subType, string apiKey);
 	}
 
-    public interface IEnterprisesBootService
+    public interface IEnterprisesAsCodeService 
     {
-        [Post("/boot/registry")]
-        Task<BaseResponse<EnterpriseContext>> Boot([Body] BootEnterpriseRequest request, bool cleanBoot = false);
+        [Post("/eac/commit")]
+        Task<BaseResponse> Commit([Body] CommitEnterpriseAsCodeRequest request);
+
+        [Get("/eac/export/{entLookup}")]
+        Task<BaseResponse<EnterpriseAsCode>> Export(string entLookup);
     }
+
+    // public interface IEnterprisesBootService
+    // {
+    //     [Post("/boot/registry")]
+    //     Task<BaseResponse<EnterpriseContext>> Boot([Body] BootEnterpriseRequest request, bool cleanBoot = false);
+    // }
 
     public interface IEnterprisesHostingManagerService
     {
@@ -815,5 +826,493 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     {
         [DataMember]
         public virtual string ZipFile { get; set; }
+    }
+
+    [DataContract]
+    public class CommitEnterpriseAsCodeRequest : BaseRequest
+    {
+        [DataMember]
+        public virtual EnterpriseAsCode EaC { get; set; }
+    }
+
+    [DataContract]
+    public class EnterpriseAsCode
+    {
+        [DataMember]
+        public virtual Dictionary<string, EaCAccessRight> AccessRights { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCApplicationAsCode> Applications { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCDataToken> DataTokens { get; set; }
+
+        [DataMember]
+        public virtual EaCEnterpriseDetails Enterprise { get; set; }
+
+        [DataMember]
+        public virtual string EnterpriseLookup { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCEnvironmentAsCode> Environments { get; set; }
+
+        [DataMember]
+        public virtual List<string> Hosts { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCLicenseConfiguration> LicenseConfigurations { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCDFSModifier> Modifiers { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCProjectAsCode> Projects { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCProvider> Providers { get; set; }
+    }
+
+    [DataContract]
+    public class EaCDFSModifier
+    {
+        [DataMember]
+        public virtual string Details { get; set; }
+
+        [DataMember]
+        public virtual bool Enabled { get; set; }
+
+        [DataMember]
+        public virtual string PathFilterRegex { get; set; }
+
+        [DataMember]
+        public virtual int Priority { get; set; }
+
+        [DataMember]
+        public virtual string Type { get; set; }
+    }
+
+    [DataContract]
+    public class EaCEnterpriseDetails
+    {
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual string ParentEnterpriseLookup { get; set; }
+
+        [DataMember]
+        public virtual string PrimaryEnvironment { get; set; }
+
+        [DataMember]
+        public virtual string PrimaryHost { get; set; }
+    }
+
+    [DataContract]
+    public class EaCLicenseConfiguration
+    {
+        [DataMember]
+        public virtual Dictionary<string, EaCPlan> Plans { get; set; }
+    }
+
+    [DataContract]
+    public class EaCAccessRight
+    {
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+    }
+
+    [DataContract]
+    public class EaCDataToken
+    {
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual Guid ID { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual string Value { get; set; }
+    }
+
+    [DataContract]
+    public class EaCPlan
+    {
+        [DataMember]
+        public virtual string Details { get; set; }
+
+        [DataMember]
+        public virtual string[] Features { get; set; }
+
+        [DataMember]
+        public virtual bool Featured { get; set; }
+
+        [DataMember]
+        public virtual string HeaderName { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCPrice> Prices { get; set; }
+
+        [DataMember]
+        public virtual string Popular { get; set; }
+
+        [DataMember]
+        public virtual int Priorty { get; set; }
+
+        [DataMember]
+        public virtual string SuccessRedirect { get; set; }
+    }
+
+    [DataContract]
+    public class EaCPrice
+    {
+        [DataMember]
+        public virtual string Currency { get; set; }
+
+        [DataMember]
+        public virtual float Discount { get; set; }
+
+        [DataMember]
+        public virtual string Interval { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual float Value { get; set; }
+    }
+
+    [DataContract]
+    public class EaCEnvironmentAsCode
+    {
+        [DataMember]
+        public virtual Dictionary<string, EaCArtifact> Artifacts { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCCloud> Clouds { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCDevOpsAction> DevOpsActions { get; set; }
+
+        [DataMember]
+        public virtual EaCEnvironmentDetails Environment { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCSecret> Secrets { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCSnapshotConfiguration> SnapshotConfigurations { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCSourceControl> Sources { get; set; }
+    }
+
+    [DataContract]
+    public class EaCEnvironmentDetails
+    {
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+    }
+
+    [DataContract]
+    public class EaCCloud : MetadataModel
+    {
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual string Type { get; set; }
+    }
+
+    [DataContract]
+    public class EaCDevOpsAction
+    {
+        [DataMember]
+        public virtual List<string> ArtifactLookups { get; set; }
+
+        [DataMember]
+        public virtual List<string> DevOpsActionTriggerLookups { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual string Path { get; set; }
+
+        [DataMember]
+        public virtual List<string> SecretLookups { get; set; }
+
+        [DataMember]
+        public virtual List<string> Templates { get; set; }
+    }
+
+    [DataContract]
+    public class EaCArtifact : MetadataModel
+    {
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual string Output { get; set; }
+
+        [DataMember]
+        public virtual string Type { get; set; }
+    }
+
+    [DataContract]
+    public class EaCSecret : MetadataModel
+    {
+        [DataMember]
+        public virtual string DataTokenLookup { get; set; }
+
+        [DataMember]
+        public virtual string KnownAs { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+    }
+
+    [DataContract]
+    public class EaCSnapshotConfiguration
+    {
+        [DataMember]
+        public virtual bool AllowRun { get; set; }
+
+        [DataMember]
+        public virtual string BlobConnection { get; set; }
+
+        [DataMember]
+        public virtual string BlobContainer { get; set; }
+
+        [DataMember]
+        public virtual string CosmosConnection { get; set; }
+
+        [DataMember]
+        public virtual string CosmosDatabase { get; set; }
+
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+    }
+
+    [DataContract]
+    public class EaCSourceControl : MetadataModel
+    {
+        [DataMember]
+        public virtual List<string> DevOpsActionTriggerLookups { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual string Type { get; set; }
+    }
+
+    [DataContract]
+    public class EaCProjectAsCode
+    {
+        [DataMember]
+        public virtual List<string> ApplicationLookups { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCDataToken> DataTokens { get; set; }
+
+        [DataMember]
+        public virtual List<string> Hosts { get; set; }
+
+        [DataMember]
+        public virtual List<string> ModifierLookups { get; set; }
+
+        [DataMember]
+        public virtual EaCProjectDetails Project { get; set; }
+
+        [DataMember]
+        public virtual EaCRelyingParty RelyingParty { get; set; }
+    }
+
+    [DataContract]
+    public class EaCProjectDetails
+    {
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual bool IsInheritable { get; set; }
+
+        [DataMember]
+        public virtual bool IsInheritableByChild { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual bool PreventInheritedApplications { get; set; }
+    }
+
+    [DataContract]
+    public class EaCRelyingParty
+    {
+        [DataMember]
+        public virtual List<string> AccessRightLookups { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCAccessConfiguration> AccessConfigurations { get; set; }
+
+        [DataMember]
+        public virtual string DefaultAccessConfigurationLookup { get; set; }
+
+        [DataMember]
+        public virtual List<string> TrustedProviderLookups { get; set; }
+    }
+
+    [DataContract]
+    public class EaCAccessConfiguration
+    {
+        [DataMember]
+        public virtual List<string> AccessRightLookups { get; set; }
+
+        [DataMember]
+        public virtual List<string> ProviderLookups { get; set; }
+
+        [DataMember]
+        public virtual List<string> Usernames { get; set; }
+    }
+
+    [DataContract]
+    public class EaCProvider : MetadataModel
+    {
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual string Type { get; set; }
+    }
+
+    [DataContract]
+    public class EaCApplicationAsCode
+    {
+        [DataMember]
+        public virtual List<string> AccessRightLookups { get; set; }
+
+        [DataMember]
+        public virtual EaCApplicationDetails Application { get; set; }
+
+        [DataMember]
+        public virtual Dictionary<string, EaCDataToken> DataTokens { get; set; }
+
+        [DataMember]
+        public virtual List<string> LicenseConfigurationLookups { get; set; }
+
+        [DataMember]
+        public virtual EaCApplicationLookupConfiguration LookupConfig { get; set; }
+
+        [DataMember]
+        public virtual List<string> ModifierLookups { get; set; }
+
+        [DataMember]
+        public virtual EaCProcessor Processor { get; set; }
+    }
+
+    [DataContract]
+    public class EaCApplicationLookupConfiguration
+    {
+        [DataMember]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public virtual AllAnyTypes AccessRightsAllAny { get; set; }
+
+        [DataMember]
+        public virtual List<string> AllowedMethods { get; set; }
+
+        [DataMember]
+        public virtual string HeaderRegex { get; set; }
+
+        [DataMember]
+        public virtual bool IsPrivate { get; set; }
+
+        [DataMember]
+        public virtual bool IsTriggerSignIn { get; set; }
+
+        [DataMember]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public virtual AllAnyTypes LicensesAllAny { get; set; }
+
+        [DataMember]
+        public virtual string PathRegex { get; set; }
+
+        [DataMember]
+        public virtual string QueryRegex { get; set; }
+
+        [DataMember]
+        public virtual string UserAgentRegex { get; set; }
+
+        #region Constructors
+        public EaCApplicationLookupConfiguration()
+        {
+            AccessRightsAllAny = AllAnyTypes.Any;
+
+            LicensesAllAny = AllAnyTypes.All;
+        }
+        #endregion
+    }
+
+    [DataContract]
+    public class EaCApplicationDetails
+    {
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual int Priority { get; set; }
+    }
+
+    [DataContract]
+    public class EaCProcessor : MetadataModel
+    {
+        [DataMember]
+        public virtual string CacheControl { get; set; }
+
+        [DataMember]
+        public virtual EaCLowCodeUnit LowCodeUnit { get; set; }
+
+        [DataMember]
+        public virtual List<string> ModifierLookups { get; set; }
+
+        [DataMember]
+        public virtual int Priority { get; set; }
+
+        [DataMember]
+        public virtual string Type { get; set; }
+    }
+
+    [DataContract]
+    public class EaCLowCodeUnit : MetadataModel
+    {
+        [DataMember]
+        public virtual string Type { get; set; }
     }
 }

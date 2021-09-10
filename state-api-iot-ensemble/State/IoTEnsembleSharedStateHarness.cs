@@ -365,8 +365,8 @@ namespace LCU.State.API.IoTEnsemble.State
             }
         }
 
-        public virtual async Task EnsureUserEnterprise(IEnterprisesAsCodeService entEacArch, IEnterprisesHostingManagerService entHostMgr,
-            ISecurityDataTokenService secMgr, string parentEntLookup, string username)
+        public virtual async Task EnsureUserEnterprise(IEnterprisesAsCodeService eacSvc, IEnterprisesHostingManagerService hostMgrSvc,
+            ISecurityDataTokenService dataTokenSvc, string parentEntLookup, string username)
         {
             if (State.DevicesConfig != null)
                 State.DevicesConfig.Status = null;
@@ -377,52 +377,150 @@ namespace LCU.State.API.IoTEnsemble.State
                     .SetActionAsync(async () =>
                     {
                         try
-                        {
-                            var hostLookup = $"{parentEntLookup}|{username}";
-
-                            // Note: Not needed if we are separating into two separate iot hubs, one per env
-                            // if (deviceEnv != "prd")
-                            //     hostLookup += $"|{deviceEnv}";
-
-                            log.LogInformation($"Ensuring user enterprise for {hostLookup}...");
-
-                            var getResp = await entHostMgr.ResolveHost(hostLookup);
-
-                            if (!getResp.Status || getResp.Model == null)
                             {
-                                var createResp = await entEacArch.Commit(new CommitEnterpriseAsCodeRequest()
+                            var userHost = $"{parentEntLookup}|{username}";
+
+                            log.LogInformation($"Ensuring child enterprise for {userHost}.");
+
+                            var hostResp = await hostMgrSvc.ResolveHost(userHost);
+
+                            if (hostResp.Model == null)
+                            {
+                                var commitReq = new CommitEnterpriseAsCodeRequest()
                                 {
-                                    EaC = new EnterpriseAsCode(){
-
-                                    }
-                                    Name = $"{username} Enterprise",
-                                    Description = $"{username} Enterprise",
-                                    ParentEnterpriseLookup = parentEntLookup,
-                                    Hosts = new[] { hostLookup }.ToList(),
-                                    Projects = new Dictionary<string, BootProject>(),
-                                    Environment = new LCUEnvironment()
+                                    EaC = new EnterpriseAsCode()
                                     {
-                                        Name = $"{username} Environment",
-                                        Description = $"{username} Environment",
-                                        Lookup = hostLookup
+                                        Enterprise = new EaCEnterpriseDetails()
+                                        {
+                                            Name = $"{username} Enterprise",
+                                            Description = $"{username} Enterprise",
+                                            ParentEnterpriseLookup = parentEntLookup,
+                                        },
+                                        Hosts = new[] { userHost }.ToList(),
+                                        AccessRights = new Dictionary<string, EaCAccessRight>()
+                                        {
+                                            {
+                                                "Fathym.Global.Admin",
+                                                new EaCAccessRight()
+                                                {
+                                                    Name = "Fathym.Global.Admin",
+                                                    Description = "Fathym.Global.Admin",
+                                                }
+                                            },
+                                            {
+                                                "Fathym.User",
+                                                new EaCAccessRight()
+                                                {
+                                                    Name = "Fathym.User",
+                                                    Description = "Fathym.User",
+                                                }
+                                            }
+                                        },
+                                        DataTokens = new Dictionary<string, EaCDataToken>(),
+                                        Providers = new Dictionary<string, EaCProvider>()
+                                        {
+                                            {
+                                                "ADB2C", 
+                                                new EaCProvider()
+                                                {
+                                                    Name = "ADB2C",
+                                                    Description = "ADB2C Provider",
+                                                    Type = "ADB2C"
+                                                } 
+                                            }
+                                        },
+                                        Environments = new Dictionary<string, EaCEnvironmentAsCode>()
+                                        {
+                                            {
+                                                userHost,
+                                                new EaCEnvironmentAsCode()
+                                                {
+                                                    Environment = new EaCEnvironmentDetails()
+                                                    {
+                                                        Name = $"{username} Environment",
+                                                        Description = $"{username} Environment"
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
-                                });
+                                };
 
-                                getResp = await entHostMgr.ResolveHost(hostLookup);
+                                // string adb2cAppId = null;
 
-                                if (createResp.Status && getResp.Status)
-                                    State.UserEnterpriseLookup = createResp.Model.Lookup;
+                                // if (hostResp.Status)
+                                // {
+                                //     var adB2cAppIdToken = await dataTokenSvc.GetDataToken(EnterpriseContext.AD_B2C_APPLICATION_ID_LOOKUP, entLookup: hostResp.Model?.Lookup);
+
+                                //     adb2cAppId = adB2cAppIdToken?.Model?.Value;
+                                // }
+
+                                // if (adb2cAppId.IsNullOrEmpty() && !parentEntLookup.IsNullOrEmpty())
+                                // {
+                                //     //  TODO:  Create unique application in ADB2C to allow for multi tenant control of sign in
+
+                                //     var adB2cAppIdToken = await dataTokenSvc.GetDataToken(EnterpriseContext.AD_B2C_APPLICATION_ID_LOOKUP, entLookup: parentEntLookup);
+
+                                //     adb2cAppId = adB2cAppIdToken?.Model?.Value;
+
+                                //     commitReq.EaC.Providers.Add("ADB2C", new EaCProvider()
+                                //     {
+                                //         Name = "ADB2C",
+                                //         Description = "ADB2C Provider",
+                                //         Type = "ADB2C",
+                                //         Metadata = new Dictionary<string, JToken>()
+                                //         {
+                                //             { "ApplicationID", EnterpriseContext.AD_B2C_APPLICATION_ID_LOOKUP },
+                                //             { "Authority", "fathymcloudprd.onmicrosoft.com" }
+                                //         }
+                                //     });
+
+                                //     commitReq.EaC.DataTokens[EnterpriseContext.AD_B2C_APPLICATION_ID_LOOKUP] = new EaCDataToken()
+                                //     {
+                                //         Value = adb2cAppId,
+                                //         Name = "AD B2C Application ID",
+                                //         Description = "The AD B2C application ID used with authentication."
+                                //     };
+                                // }
+
+                                var commitResp = await eacSvc.Commit(commitReq);
+
+                                if (commitResp.Status)
+                                {
+                                    log.LogInformation($"Ensured child enterprise for {userHost}.");
+
+                                    hostResp = await hostMgrSvc.ResolveHost(userHost);
+
+                                    var parentGitHubDataToken = await dataTokenSvc.GetDataToken("LCU-GITHUB-ACCESS-TOKEN", entLookup: parentEntLookup, email: username);
+
+                                    if (parentGitHubDataToken.Model != null)
+                                    {
+                                        log.LogInformation($"Transferring GitHub access to child enterprise for {hostResp.Model.Lookup}.");
+
+                                        var setDTResp = await dataTokenSvc.SetDataToken(new DataToken()
+                                        {
+                                            Name = parentGitHubDataToken.Model.Name,
+                                            Description = parentGitHubDataToken.Model.Description,
+                                            Lookup = parentGitHubDataToken.Model.Lookup,
+                                            Value = parentGitHubDataToken.Model.Value
+                                        }, entLookup: hostResp.Model.Lookup, email: username);
+                                    }
+                                    State.UserEnterpriseLookup = hostResp.Model.Lookup;
+                                }
                             }
-                            else
-                                State.UserEnterpriseLookup = getResp.Model.Lookup;
 
-                            return State.UserEnterpriseLookup.IsNullOrEmpty();
+                            log.LogInformation($"Ensuring child enterprise for {userHost}");
+
+                            State.UserEnterpriseLookup = hostResp.Model.Lookup;
+
+                            return true;
                         }
+
                         catch (Exception ex)
                         {
                             log.LogError(ex, "Failed ensuring user enterprise");
 
-                            return true;
+                            return false;
                         }
                     })
                     .SetCycles(5)
@@ -630,10 +728,10 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task Refresh(IDurableOrchestrationClient starter, StateDetails stateDetails, ExecuteActionRequest exActReq,
-            IApplicationsIoTService appIoTArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesAsCodeService entEacArch, IEnterprisesHostingManagerService entHostMgr, IIdentityAccessService idMgr,
+            IApplicationsIoTService appIoTArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesAsCodeService eacSvc, IEnterprisesHostingManagerService entHostMgr, IIdentityAccessService idMgr,
             ISecurityDataTokenService secMgr, DocumentClient client)
         {
-            await EnsureUserEnterprise(entEacArch, entHostMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
+            await EnsureUserEnterprise(eacSvc, entHostMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
 
             await Task.WhenAll(
                 LoadDevices(appIoTArch),
