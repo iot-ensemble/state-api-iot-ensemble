@@ -55,10 +55,10 @@ namespace LCU.State.API.IoTEnsemble.Host
                     },
 
                     {
-                        nameof(IEnterprisesBootService),
+                        nameof(IEnterprisesAsCodeService),
                         new LCUClientOptions()
                         {
-                            BaseAddress = Environment.GetEnvironmentVariable($"{typeof(IEnterprisesBootService).FullName}.BaseAddress")
+                            BaseAddress = Environment.GetEnvironmentVariable($"{typeof(IEnterprisesAsCodeService).FullName}.BaseAddress")
                         }
                     },
 
@@ -102,7 +102,7 @@ namespace LCU.State.API.IoTEnsemble.Host
 
             builder.Services.AddLCUHTTPClient<IEnterprisesAPIManagementService>(registry, httpOpts);
 
-            builder.Services.AddLCUHTTPClient<IEnterprisesBootService>(registry, httpOpts);
+            builder.Services.AddLCUHTTPClient<IEnterprisesAsCodeService>(registry, httpOpts);
 
             builder.Services.AddLCUHTTPClient<IEnterprisesHostingManagerService>(registry, httpOpts);
 
