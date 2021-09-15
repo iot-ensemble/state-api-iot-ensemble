@@ -396,7 +396,16 @@ namespace LCU.State.API.IoTEnsemble.State
                                             Description = $"{username} Enterprise",
                                             ParentEnterpriseLookup = parentEntLookup,
                                         },
-                                        Hosts = new[] { userHost }.ToList(),
+                                        Hosts = new Dictionary<string, EaCHost>()
+                                        {
+                                            {
+                                                $"{userHost}", 
+                                                new EaCHost()
+                                                {
+                                                    Verified = false
+                                                } 
+                                            }
+                                        },
                                         AccessRights = new Dictionary<string, EaCAccessRight>()
                                         {
                                             {

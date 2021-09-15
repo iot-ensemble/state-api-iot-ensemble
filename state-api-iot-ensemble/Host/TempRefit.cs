@@ -833,6 +833,9 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     {
         [DataMember]
         public virtual EnterpriseAsCode EaC { get; set; }
+
+        [DataMember]
+        public virtual string Username { get; set; }
     }
 
     [DataContract]
@@ -857,7 +860,7 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual Dictionary<string, EaCEnvironmentAsCode> Environments { get; set; }
 
         [DataMember]
-        public virtual List<string> Hosts { get; set; }
+        public virtual Dictionary<string, EaCHost> Hosts { get; set; }
 
         [DataMember]
         public virtual Dictionary<string, EaCLicenseConfiguration> LicenseConfigurations { get; set; }
@@ -871,6 +874,17 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         [DataMember]
         public virtual Dictionary<string, EaCProvider> Providers { get; set; }
     }
+
+    [DataContract]
+    public class EaCHost
+    {
+        [DataMember]
+        public virtual string HostDNSInstance { get; set; }
+
+        [DataMember]
+        public virtual bool Verified { get; set; }
+    }
+
 
     [DataContract]
     public class EaCDFSModifier
@@ -1038,7 +1052,20 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual string Name { get; set; }
 
         [DataMember]
+        public virtual Dictionary<string, EaCCloudResourceGroup> ResourceGroups { get; set; }
+
+        [DataMember]
         public virtual string Type { get; set; }
+    }
+
+    [DataContract]
+    public class EaCCloudResourceGroup
+    {
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
     }
 
     [DataContract]
@@ -1312,6 +1339,9 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     [DataContract]
     public class EaCLowCodeUnit : MetadataModel
     {
+        [DataMember]
+        public virtual string SourceControlLookup { get; set; }
+
         [DataMember]
         public virtual string Type { get; set; }
     }
