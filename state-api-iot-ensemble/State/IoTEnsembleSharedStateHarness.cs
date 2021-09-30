@@ -452,7 +452,9 @@ namespace LCU.State.API.IoTEnsemble.State
                                                 }
                                             }
                                         }
-                                    }
+                                    },
+                                    
+                                    Username = username
                                 };
 
                                 // string adb2cAppId = null;
