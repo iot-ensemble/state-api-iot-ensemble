@@ -3,11 +3,10 @@ name: Build Prerelease
 on:
   push:
     branches:
-    - 'integration'
-    - 'feature/**'
+    - 'integration_v2'
   pull_request:
     branches:
-    - 'integration'
+    - 'integration_v2'
 
 jobs:
   build:
