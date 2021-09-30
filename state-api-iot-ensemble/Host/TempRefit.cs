@@ -62,7 +62,7 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
             var clientOptions = httpOpts.Options[clientName];
 
             return services.AddLCUHTTPClient<TClient>(registry, new Uri(clientOptions.BaseAddress));
-        }
+        } 
 
         public static IHttpClientBuilder AddLCUHTTPClient<TClient>(this IServiceCollection services,
             IPolicyRegistry<string> registry, Uri baseAddress, int retryCycles = 3, int retrySleepDurationMilliseconds = 500,
