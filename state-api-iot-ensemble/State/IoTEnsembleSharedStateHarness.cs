@@ -395,16 +395,12 @@ namespace LCU.State.API.IoTEnsemble.State
                                             Name = $"{username} Enterprise",
                                             Description = $"{username} Enterprise",
                                             ParentEnterpriseLookup = parentEntLookup,
+                                            PrimaryEnvironment = userHost,
+                                            PrimaryHost = userHost
                                         },
                                         Hosts = new Dictionary<string, EaCHost>()
                                         {
-                                            {
-                                                $"{userHost}", 
-                                                new EaCHost()
-                                                {
-                                                    Verified = false
-                                                } 
-                                            }
+                                            {userHost, new EaCHost()}                                           
                                         },
                                         AccessRights = new Dictionary<string, EaCAccessRight>()
                                         {
@@ -453,7 +449,7 @@ namespace LCU.State.API.IoTEnsemble.State
                                             }
                                         }
                                     },
-                                    
+
                                     Username = username
                                 };
 
@@ -682,7 +678,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task<Status> LoadAPIOptions()
         {
-            State.Storage.OpenAPISource = "https://www.iot-ensemble.com/open-api/iot-ensemble.openapi.json";
+            State.Storage.OpenAPISource = Environment.GetEnvironmentVariable("OPEN-API-SOURCE-URL");
 
             return Status.Success;
         }
