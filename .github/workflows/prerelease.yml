@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - 'integration'
+    - 'feature/**'
   pull_request:
     branches:
     - 'integration'
