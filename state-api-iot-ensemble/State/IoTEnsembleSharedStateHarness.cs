@@ -1323,7 +1323,7 @@ namespace LCU.State.API.IoTEnsemble.State
         {
             var client = new HttpClient();
 
-            var freeboardConfigStr = await client.GetStringAsync("https://www.iot-ensemble.com/templates/freeboard/DeviceDemoDashboard.fathymcloudint.json");
+            var freeboardConfigStr = await client.GetStringAsync(Environment.GetEnvironmentVariable("FREEBOARD-CONFIG"));
 
             return freeboardConfigStr?.FromJSON<MetadataModel>();
 
