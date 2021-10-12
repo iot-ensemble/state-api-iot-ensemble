@@ -5,9 +5,6 @@ on:
     branches:
     - 'integration'
     - 'feature/**'
-  pull_request:
-    branches:
-    - 'integration'
     
 env:
   AZURE_FUNCTIONAPP_NAME: 'fathym-cloud-int-personas-state-api-iotensemble'  # set this to your application's name
