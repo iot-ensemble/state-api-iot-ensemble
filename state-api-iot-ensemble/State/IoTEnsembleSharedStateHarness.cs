@@ -1504,7 +1504,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     try
                     {
-                        var resp = await secMgr.SetDataToken(new DataToken()
+                        var resp = await secMgr.SaveDataToken(new DataToken()
                         {
                             Lookup="TELEMETRY_SYNC_ENABLED",
                             Value=enabled.ToString()
