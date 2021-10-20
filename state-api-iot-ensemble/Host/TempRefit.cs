@@ -232,18 +232,20 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     {
         [Get("/data-tokens/{tokenLookup}")]
         Task<BaseResponse<DataToken>> GetDataToken(string tokenLookup,
-            [Query] string entLookup = null, [Query] string email = null, [Query] Guid? projectId = null,
-            [Query] Guid? appId = null, [Query] Guid? passportId = null, [Query] Guid? licenseId = null,
-            [Query] bool cascadeChecks = true);
+        [Query] string entLookup = null, [Query] string email = null, [Query] Guid? projectId = null,
+        [Query] Guid? appId = null, [Query] Guid? passportId = null, [Query] Guid? licenseId = null,
+        [Query] bool cascadeChecks = true);
+
+        [Post("/data-tokens/save")]
+        Task<BaseResponse<DataToken>> SaveDataToken([Body] DataToken dataToken,
+        [Query] string entLookup = null, [Query] string email = null);
 
         [Post("/data-tokens")]
         Task<BaseResponse<DataToken>> SetDataToken([Body] DataToken dataToken,
-            [Query] string entLookup = null, [Query] string email = null, [Query] Guid? projectId = null,
-            [Query] Guid? appId = null, [Query] Guid? passportId = null, [Query] Guid? licenseId = null);
+        [Query] string entLookup = null, [Query] string email = null, [Query] Guid? projectId = null,
+        [Query] Guid? appId = null, [Query] Guid? passportId = null, [Query] Guid? licenseId = null);
     }
     
-
-
     [DataContract]
     public class AccessRight : LCUVertex
     {
