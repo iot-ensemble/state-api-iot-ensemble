@@ -186,7 +186,7 @@ namespace LCU.State.API.IoTEnsemble.State
                                 {
                                     var freeboardConfig = await loadDefaultFreeboardConfig();
 
-                                    var resp = await secMgr.SaveDataToken(new DataToken()
+                                    var resp = await secMgr.SetDataToken(new DataToken()
                                     {
                                         Lookup="DEVICE_DASHBOARD_FREEBOARD_CONFIG", 
                                         Value= freeboardConfig.ToJSON()
@@ -228,7 +228,7 @@ namespace LCU.State.API.IoTEnsemble.State
                                 State.Drawers.DetailsActive = tpd.Model.Value.As<bool>();
                             else
                             {
-                                var resp = await secMgr.SaveDataToken(new DataToken()
+                                var resp = await secMgr.SetDataToken(new DataToken()
                                 {
                                     Lookup="DETAILS_PANE_ENABLED",
                                     Value="true"
@@ -421,7 +421,25 @@ namespace LCU.State.API.IoTEnsemble.State
                                                 }
                                             }
                                         },
-                                        DataTokens = new Dictionary<string, EaCDataToken>(),
+                                        DataTokens = new Dictionary<string, EaCDataToken>()
+                                        {
+                                            {
+                                                "EMULATED_DEVICE_ENABLED",
+                                                new EaCDataToken()
+                                                {
+                                                    Value = "false",
+                                                    Name = "EMULATED_DEVICE_ENABLED"                                                   
+                                                }
+                                            },
+                                            {
+                                                "TELEMETRY_SYNC_ENABLED",
+                                                new EaCDataToken()
+                                                {
+                                                    Value = "false",
+                                                    Name = "TELEMETRY_SYNC_ENABLED"                                                   
+                                                }                                                
+                                            }
+                                        },
                                         Providers = new Dictionary<string, EaCProvider>()
                                         {
                                             {
@@ -852,7 +870,7 @@ namespace LCU.State.API.IoTEnsemble.State
                         {
                             var active = !State.Drawers.DetailsActive;
 
-                            var resp = await secMgr.SaveDataToken(new DataToken()
+                            var resp = await secMgr.SetDataToken(new DataToken()
                             {
                                 Lookup= "DETAILS_PANE_ENABLED", 
                                 Value= active.ToString()
@@ -893,7 +911,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         try
                         {
-                            var resp = await secMgr.SaveDataToken(new DataToken()
+                            var resp = await secMgr.SetDataToken(new DataToken()
                             {
                                 Lookup="EMULATED_DEVICE_ENABLED", 
                                 Value=enabled.ToString()
@@ -1504,7 +1522,7 @@ namespace LCU.State.API.IoTEnsemble.State
                 {
                     try
                     {
-                        var resp = await secMgr.SaveDataToken(new DataToken()
+                        var resp = await secMgr.SetDataToken(new DataToken()
                         {
                             Lookup="TELEMETRY_SYNC_ENABLED",
                             Value=enabled.ToString()
