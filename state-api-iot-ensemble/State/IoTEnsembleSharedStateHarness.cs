@@ -421,6 +421,33 @@ namespace LCU.State.API.IoTEnsemble.State
                                                 }
                                             }
                                         },
+                                        Modifiers = new Dictionary<string, EaCDFSModifier>()
+                                        {
+                                            {
+                                                "html-base",
+                                                new EaCDFSModifier()
+                                                {
+                                                    Type = "LCU.Runtime.Applications.Modifiers.HTMLBaseDFSModifierManager, LCU.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+                                                    Name = "HTML Base",
+                                                    Priority = 10000,
+                                                    Enabled = true,
+                                                    Details = new {}.ToJSON(),
+                                                    PathFilterRegex = ".*index.html"
+                                                }
+                                            },
+                                            {
+                                                "lcu-reg",
+                                                new EaCDFSModifier()
+                                                {
+                                                    Type = "LCU.Runtime.Applications.Modifiers.LCURegDFSModifierManager, LCU.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+                                                    Name = "LCU Reg",
+                                                    Priority = 9000,
+                                                    Enabled = true,
+                                                    Details = new { StateDataToken = "lcu-state-config" }.ToJSON(),
+                                                    PathFilterRegex = ".*index.html"
+                                                }
+                                            }
+                                        },
                                         DataTokens = new Dictionary<string, EaCDataToken>()
                                         {
                                             {

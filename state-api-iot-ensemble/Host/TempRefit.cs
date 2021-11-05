@@ -898,6 +898,12 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual bool Enabled { get; set; }
 
         [DataMember]
+        public virtual string Lookup { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
         public virtual string PathFilterRegex { get; set; }
 
         [DataMember]
