@@ -439,12 +439,12 @@ namespace LCU.State.API.IoTEnsemble.State
                                                 "lcu-reg",
                                                 new EaCDFSModifier()
                                                 {
-                                                Type = "LCU.Runtime.Applications.Modifiers.LCURegDFSModifierManager, LCU.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
-                                                Name = "LCU Reg",
-                                                Priority = 9000,
-                                                Enabled = true,
-                                                Details = new { StateDataToken = "lcu-state-config" }.ToJSON(),
-                                                PathFilterRegex = ".*index.html"
+                                                    Type = "LCU.Runtime.Applications.Modifiers.LCURegDFSModifierManager, LCU.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+                                                    Name = "LCU Reg",
+                                                    Priority = 9000,
+                                                    Enabled = true,
+                                                    Details = new { StateDataToken = "lcu-state-config" }.ToJSON(),
+                                                    PathFilterRegex = ".*index.html"
                                                 }
                                             }
                                         },
