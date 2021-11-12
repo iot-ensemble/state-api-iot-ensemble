@@ -898,6 +898,12 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual bool Enabled { get; set; }
 
         [DataMember]
+        public virtual string Lookup { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
         public virtual string PathFilterRegex { get; set; }
 
         [DataMember]
@@ -1258,10 +1264,16 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual EaCApplicationLookupConfiguration LookupConfig { get; set; }
 
         [DataMember]
+        public virtual EaCLowCodeUnit LowCodeUnit { get; set; }
+
+        [DataMember]
         public virtual List<string> ModifierLookups { get; set; }
 
         [DataMember]
         public virtual EaCProcessor Processor { get; set; }
+
+        [DataMember]
+        public virtual string SourceControlLookup { get; set; }
     }
 
     [DataContract]
@@ -1326,9 +1338,6 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual string CacheControl { get; set; }
 
         [DataMember]
-        public virtual EaCLowCodeUnit LowCodeUnit { get; set; }
-
-        [DataMember]
         public virtual List<string> ModifierLookups { get; set; }
 
         [DataMember]
@@ -1341,9 +1350,6 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     [DataContract]
     public class EaCLowCodeUnit : MetadataModel
     {
-        [DataMember]
-        public virtual string SourceControlLookup { get; set; }
-
         [DataMember]
         public virtual string Type { get; set; }
     }

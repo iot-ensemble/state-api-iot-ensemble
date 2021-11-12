@@ -63,13 +63,13 @@ namespace LCU.State.API.IoTEnsemble.Shared
 
             if (!bypassGenerateRefData)
             {
-                log.LogInformation($"Generating reference data");
+                // log.LogInformation($"Generating reference data");
 
-                var refData = await loadReferenceData();
+                // var refData = await loadReferenceData();
 
-                log.LogInformation($"Loaded {refData?.Count ?? 0} reference data records");
+                // log.LogInformation($"Loaded {refData?.Count ?? 0} reference data records");
 
-                await uploadReferenceData(refDataBlobDir, refData);
+                // await uploadReferenceData(refDataBlobDir, refData);
             }
         }
 
