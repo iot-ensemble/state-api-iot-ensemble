@@ -71,7 +71,7 @@ namespace LCU.State.API.IoTEnsemble.Host
         }
 
         [FunctionName("Refresh")]
-        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req,
+        public virtual async Task<Status> Run([HttpTrigger] HttpRequest req, ILogger logger,
             [DurableClient] IDurableOrchestrationClient starter,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
@@ -86,7 +86,7 @@ namespace LCU.State.API.IoTEnsemble.Host
                 return await stateBlob.WithStateHarness<IoTEnsembleAdminState, RefreshRequest, IoTEnsembleAdminStateHarness>(req, signalRMessages, log,
                     async (harness, refreshReq, actReq) =>
                 {
-                    log.LogInformation($"Refreshing admin state");
+                    logger.LogInformation($"Refreshing admin state");
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
 
@@ -98,11 +98,11 @@ namespace LCU.State.API.IoTEnsemble.Host
                 return await stateBlob.WithStateHarness<IoTEnsembleSharedState, RefreshRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
                     async (harness, refreshReq, actReq) =>
                 {
-                    log.LogInformation($"Refreshing Shared State");
+                    logger.LogInformation($"Refreshing Shared State");
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
 
-                    await harness.Refresh(starter, stateDetails, actReq, appIoTArch, entApiArch, eacSvc, entHostMgr, idMgr, secMgr, docClient);
+                    await harness.Refresh(logger, starter, stateDetails, actReq, appIoTArch, entApiArch, eacSvc, entHostMgr, idMgr, secMgr, docClient);
 
                     return Status.Success;
                 }, withLock: false);

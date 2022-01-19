@@ -81,7 +81,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
         }
 
         [FunctionName("ColdQuery")]
-        public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req,
+        public virtual async Task<HttpResponseMessage> Run([HttpTrigger] HttpRequest req, ILogger logger,
             [SignalR(HubName = IoTEnsembleState.HUB_NAME)] IAsyncCollector<SignalRMessage> signalRMessages,
             [Blob("state-api/{headers.lcu-ent-lookup}/{headers.lcu-hub-name}/{headers.x-ms-client-principal-id}/{headers.lcu-state-key}", FileAccess.ReadWrite)] CloudBlockBlob stateBlob,
             [Blob("iot-ensemble-cold-query/data", FileAccess.Read, Connection = "LCU-COLD-STORAGE-CONNECTION-STRING")] CloudBlobDirectory coldBlob)
@@ -91,7 +91,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
             var status = await stateBlob.WithStateHarness<IoTEnsembleSharedState, ColdQueryRequest, IoTEnsembleSharedStateHarness>(req, signalRMessages, log,
                 async (harness, dataReq, actReq) =>
                 {
-                    log.LogInformation($"Running a ColdQuery: {dataReq.ToJSON()}");
+                    logger.LogInformation($"Running a ColdQuery: {dataReq.ToJSON()}");
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
 
@@ -141,7 +141,7 @@ namespace LCU.State.API.IoTEnsemble.Shared.StorageAccess
 
                     //log.LogInformation($"Running cold query with: {dataReq.ToJSON()}");
 
-                    queried = await harness.ColdQuery(coldBlob, dataReq.SelectedDeviceIDs, dataReq.PageSize, dataReq.Page,
+                    queried = await harness.ColdQuery(logger, coldBlob, dataReq.SelectedDeviceIDs, dataReq.PageSize, dataReq.Page,
                         dataReq.IncludeEmulated, dataReq.StartDate, dataReq.EndDate, dataReq.ResultType, dataReq.Flatten, dataReq.DataType,
                         dataReq.Zip, dataReq.AsFile);
 
