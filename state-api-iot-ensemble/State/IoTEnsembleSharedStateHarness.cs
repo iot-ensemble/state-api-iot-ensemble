@@ -1222,12 +1222,12 @@ namespace LCU.State.API.IoTEnsemble.State
                                 logger.LogInformation($"Listing blob segments for {entLookup} and continuation {contToken}...");
 
                                 var blobSeg = await entColdBlob.ListBlobsSegmentedAsync(true, BlobListingDetails.Metadata, null, contToken, null, null);
+                                logger.LogInformation($"blobSeg.Results count: {blobSeg?.Results?.Count()}");
+                                contToken = blobSeg.ContinuationToken == null ? null : blobSeg.ContinuationToken;
 
-                                contToken = blobSeg.ContinuationToken;
-
-                                logger.LogInformation($"blobSeg.ContinuationToken: {blobSeg.ContinuationToken.NextMarker}");
-                                logger.LogInformation($"blobSeg.Results count: {blobSeg.Results.Count()}");
-                                // foreach (var item in blobSeg.Results)
+                                logger.LogInformation($"blobSeg.ContinuationToken: {blobSeg?.ContinuationToken?.NextMarker}");
+                                
+                                if(blobSeg != null){
                                 await blobSeg.Results.Each(async item =>
                                 {
                                     var blob = (CloudBlockBlob)item;
@@ -1255,6 +1255,12 @@ namespace LCU.State.API.IoTEnsemble.State
                                         }
                                     }
                                 }, parallel: true);
+                                }
+                                else{
+                                    logger.LogError("BlobSeg is null");
+                                }
+                                // foreach (var item in blobSeg.Results)
+
                             } while (contToken != null);
                         }, parallel: true);
 
