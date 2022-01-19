@@ -365,9 +365,10 @@ namespace LCU.State.API.IoTEnsemble.State
             }
         }
 
-        public virtual async Task EnsureUserEnterprise(IEnterprisesAsCodeService eacSvc, IEnterprisesHostingManagerService hostMgrSvc,
+        public virtual async Task EnsureUserEnterprise(ILogger logger, IEnterprisesAsCodeService eacSvc, IEnterprisesHostingManagerService hostMgrSvc,
             ISecurityDataTokenService dataTokenSvc, string parentEntLookup, string username)
         {
+            logger.LogInformation("Ensuring User Enterprise");
             if (State.DevicesConfig != null)
                 State.DevicesConfig.Status = null;
 
@@ -380,7 +381,7 @@ namespace LCU.State.API.IoTEnsemble.State
                             {
                             var userHost = $"{parentEntLookup}|{username}";
 
-                            log.LogInformation($"Ensuring child enterprise for {userHost}.");
+                            logger.LogInformation($"Ensuring child enterprise for {userHost}.");
 
                             var hostResp = await hostMgrSvc.ResolveHost(userHost);
 
@@ -539,7 +540,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                                 if (commitResp.Status)
                                 {
-                                    log.LogInformation($"Ensured child enterprise for {userHost}.");
+                                    logger.LogInformation($"Ensured child enterprise for {userHost}.");
 
                                     hostResp = await hostMgrSvc.ResolveHost(userHost);
 
@@ -547,7 +548,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                                     if (parentGitHubDataToken.Model != null)
                                     {
-                                        log.LogInformation($"Transferring GitHub access to child enterprise for {hostResp.Model.Lookup}.");
+                                        logger.LogInformation($"Transferring GitHub access to child enterprise for {hostResp.Model.Lookup}.");
 
                                         var setDTResp = await dataTokenSvc.SetDataToken(new DataToken()
                                         {
@@ -561,7 +562,7 @@ namespace LCU.State.API.IoTEnsemble.State
                                 }
                             }
 
-                            log.LogInformation($"Ensuring child enterprise for {userHost}");
+                            logger.LogInformation($"Ensuring child enterprise for {userHost}");
 
                             State.UserEnterpriseLookup = hostResp.Model.Lookup;
 
@@ -570,7 +571,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                         catch (Exception ex)
                         {
-                            log.LogError(ex, "Failed ensuring user enterprise");
+                            logger.LogError(ex, "Failed ensuring user enterprise");
 
                             return false;
                         }
@@ -779,11 +780,11 @@ namespace LCU.State.API.IoTEnsemble.State
             return status;
         }
 
-        public virtual async Task Refresh(IDurableOrchestrationClient starter, StateDetails stateDetails, ExecuteActionRequest exActReq,
+        public virtual async Task Refresh(ILogger logger, IDurableOrchestrationClient starter, StateDetails stateDetails, ExecuteActionRequest exActReq,
             IApplicationsIoTService appIoTArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesAsCodeService eacSvc, IEnterprisesHostingManagerService entHostMgr, IIdentityAccessService idMgr,
             ISecurityDataTokenService secMgr, DocumentClient client)
         {
-            await EnsureUserEnterprise(eacSvc, entHostMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
+            await EnsureUserEnterprise(logger, eacSvc, entHostMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
 
             await Task.WhenAll(
                 LoadDevices(appIoTArch),
@@ -1029,7 +1030,7 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         #region Storage Access
-        public virtual async Task<HttpResponseMessage> ColdQuery(CloudBlobDirectory coldBlob, List<string> selectedDeviceIds, int pageSize, int page,
+        public virtual async Task<HttpResponseMessage> ColdQuery(ILogger logger, CloudBlobDirectory coldBlob, List<string> selectedDeviceIds, int pageSize, int page,
             bool includeEmulated, DateTime? startDate, DateTime? endDate, ColdQueryResultTypes resultType, bool flatten,
             ColdQueryDataTypes dataType, bool zip, bool asFile)
         {
@@ -1045,20 +1046,20 @@ namespace LCU.State.API.IoTEnsemble.State
 
                     var fileName = buildFileName(dataType, startDate.Value, endDate.Value, fileExtension);
 
-                    log.LogInformation($"Loading {fileName} with extension {fileExtension}");
+                    logger.LogInformation($"Loading {fileName} with extension {fileExtension}");
 
                     var entLookups = new List<string>() { State.UserEnterpriseLookup };
 
                     if (includeEmulated)
                         entLookups.Add("EMULATED");
 
-                    var downloadedData = await downloadData(coldBlob, dataType, entLookups, startDate, endDate);
+                    var downloadedData = await downloadData(logger, coldBlob, dataType, entLookups, startDate, endDate);
 
-                    log.LogInformation($"Downloaded data records: {downloadedData.Count}");
+                    logger.LogInformation($"Downloaded data records: {downloadedData.Count}");
 
                     if (flatten)
                     {
-                        log.LogInformation($"Flattening Downloaded Telemetry");
+                        logger.LogInformation($"Flattening Downloaded Telemetry");
 
                         downloadedData = flattenDownloadedData(downloadedData);
                     }
@@ -1076,7 +1077,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                     if (zip)
                     {
-                        log.LogInformation($"Zipping response data");
+                        logger.LogInformation($"Zipping response data");
 
                         bytes = await zipFileContent(bytes, fileName, fileExtension);
 
@@ -1120,7 +1121,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
             var statusCode = status ? HttpStatusCode.OK : HttpStatusCode.InternalServerError;
 
-            log.LogInformation($"Returning content message with status {statusCode}");
+            logger.LogInformation($"Returning content message with status {statusCode}");
 
             response = new HttpResponseMessage(statusCode)
             {
@@ -1191,7 +1192,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return $"{State.AccessLicenseType}-{State.AccessPlanGroup}".ToLower();
         }
 
-        protected virtual async Task<List<JObject>> downloadData(CloudBlobDirectory coldBlob, ColdQueryDataTypes dataType, List<string> entLookups,
+        protected virtual async Task<List<JObject>> downloadData(ILogger logger, CloudBlobDirectory coldBlob, ColdQueryDataTypes dataType, List<string> entLookups,
             DateTime? startDate, DateTime? endDate)
         {
             BlobContinuationToken contToken = null;
@@ -1210,18 +1211,22 @@ namespace LCU.State.API.IoTEnsemble.State
                             do
                             {
                                 if (entLookup.IsNullOrEmpty()){
-                                    Console.WriteLine("EntLookup is Null!");
+                                    logger.LogInformation("EntLookup is Null!");
                                 }
                                 var dataTypeColdBlob = coldBlob.GetDirectoryReference(dataType.ToString().ToLower());
 
                                 var entColdBlob = dataTypeColdBlob.GetDirectoryReference(entLookup);
+
+                                logger.LogInformation($"entColdBlob: {entColdBlob}");
                                
-                                log.LogInformation($"Listing blob segments for {entLookup} and continuation {contToken}...");
+                                logger.LogInformation($"Listing blob segments for {entLookup} and continuation {contToken}...");
 
                                 var blobSeg = await entColdBlob.ListBlobsSegmentedAsync(true, BlobListingDetails.Metadata, null, contToken, null, null);
 
                                 contToken = blobSeg.ContinuationToken;
 
+                                logger.LogInformation($"blobSeg.ContinuationToken: {blobSeg.ContinuationToken.NextMarker}");
+                                logger.LogInformation($"blobSeg.Results count: {blobSeg.Results.Count()}");
                                 // foreach (var item in blobSeg.Results)
                                 await blobSeg.Results.Each(async item =>
                                 {
@@ -1235,7 +1240,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                                     if ((startDate <= minTime && minTime <= endDate) || (startDate <= maxTime && maxTime <= endDate))
                                     {
-                                        log.LogInformation($"Adding blobs for {entLookup} and continuation {contToken} to downloads at {minTime}/{maxTime}");
+                                        logger.LogInformation($"Adding blobs for {entLookup} and continuation {contToken} to downloads at {minTime}/{maxTime}");
 
                                         var blobContents = await blob.DownloadTextAsync();
 
@@ -1260,7 +1265,7 @@ namespace LCU.State.API.IoTEnsemble.State
                     catch (Exception ex)
                     {
                         Console.WriteLine(ex.ToString());
-                        log.LogError(ex, "Failed downloading telemetry");
+                        logger.LogError(ex, "Failed downloading telemetry");
 
                         // return true;
                     }
