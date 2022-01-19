@@ -1262,7 +1262,7 @@ namespace LCU.State.API.IoTEnsemble.State
                                 // foreach (var item in blobSeg.Results)
 
                             } while (contToken != null);
-                        }, parallel: true);
+                        });
 
                         downloadedData = downloadedDataDict.OrderBy(dd => dd.Key).SelectMany(dd => dd.Value).ToList();
 
