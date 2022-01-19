@@ -1198,9 +1198,9 @@ namespace LCU.State.API.IoTEnsemble.State
 
             var downloadedData = new List<JObject>();
 
-            await DesignOutline.Instance.Retry()
-                .SetActionAsync(async () =>
-                {
+            // await DesignOutline.Instance.Retry()
+            //     .SetActionAsync(async () =>
+            //     {
                     try
                     {
                         var downloadedDataDict = new Dictionary<DateTime, List<JObject>>();
@@ -1209,10 +1209,13 @@ namespace LCU.State.API.IoTEnsemble.State
                         {
                             do
                             {
+                                if (entLookup.IsNullOrEmpty()){
+                                    Console.WriteLine("EntLookup is Null!");
+                                }
                                 var dataTypeColdBlob = coldBlob.GetDirectoryReference(dataType.ToString().ToLower());
 
                                 var entColdBlob = dataTypeColdBlob.GetDirectoryReference(entLookup);
-
+                               
                                 log.LogInformation($"Listing blob segments for {entLookup} and continuation {contToken}...");
 
                                 var blobSeg = await entColdBlob.ListBlobsSegmentedAsync(true, BlobListingDetails.Metadata, null, contToken, null, null);
@@ -1252,19 +1255,20 @@ namespace LCU.State.API.IoTEnsemble.State
 
                         downloadedData = downloadedDataDict.OrderBy(dd => dd.Key).SelectMany(dd => dd.Value).ToList();
 
-                        return false;
+                        // return downloadedData;
                     }
                     catch (Exception ex)
                     {
+                        Console.WriteLine(ex.ToString());
                         log.LogError(ex, "Failed downloading telemetry");
 
-                        return true;
+                        // return true;
                     }
-                })
-                .SetCycles(5)
-                .SetThrottle(25)
-                .SetThrottleScale(2)
-                .Run();
+                // })
+                // .SetCycles(5)
+                // .SetThrottle(25)
+                // .SetThrottleScale(2)
+                // .Run();
 
             return downloadedData;
         }
