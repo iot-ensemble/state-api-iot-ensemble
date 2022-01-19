@@ -173,7 +173,7 @@ namespace LCU.State.API.IoTEnsemble.State
         #region Constructors
         public IoTEnsembleConnectedDevicesConfig()
         {
-            MaxDevicesCount = 1;
+            MaxDevicesCount = 50;
 
             Page = 1;
 
