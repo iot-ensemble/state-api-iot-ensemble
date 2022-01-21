@@ -1232,8 +1232,6 @@ namespace LCU.State.API.IoTEnsemble.State
                                 {
                                     var blob = (CloudBlockBlob)item;
 
-                                    await blob.FetchAttributesAsync();
-
                                     var minTime = DateTime.Parse(blob.Metadata["MinTime"]);
 
                                     var maxTime = DateTime.Parse(blob.Metadata["MaxTime"]);
