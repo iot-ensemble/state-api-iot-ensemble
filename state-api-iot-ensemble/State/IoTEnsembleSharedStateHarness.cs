@@ -125,7 +125,7 @@ namespace LCU.State.API.IoTEnsemble.State
             return false;
         }
 
-        public virtual async Task<Status> EnsureAPISubscription(IEnterprisesAPIManagementService entApiArch, string entLookup, string username)
+        public virtual async Task<Status> EnsureAPISubscription(IEnterprisesAPIManagementService entApiArch, string entLookup, string username, Guid projectId)
         {
             await DesignOutline.Instance.Retry()
                 .SetActionAsync(async () =>
@@ -134,7 +134,8 @@ namespace LCU.State.API.IoTEnsemble.State
                     {
                         var resp = await entApiArch.EnsureAPISubscription(new EnsureAPISubscriptionRequest()
                         {
-                            SubscriptionType = buildSubscriptionType()
+                            SubscriptionType = buildSubscriptionType(),
+                            ProjectID = projectId
                         }, entLookup, username);
 
                         //  TODO:  Handle API error
@@ -782,7 +783,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
         public virtual async Task Refresh(ILogger logger, IDurableOrchestrationClient starter, StateDetails stateDetails, ExecuteActionRequest exActReq,
             IApplicationsIoTService appIoTArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesAsCodeService eacSvc, IEnterprisesHostingManagerService entHostMgr, IIdentityAccessService idMgr,
-            ISecurityDataTokenService secMgr, DocumentClient client)
+            ISecurityDataTokenService secMgr, DocumentClient client, Guid projectId)
         {
             await EnsureUserEnterprise(logger, eacSvc, entHostMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
 
@@ -793,7 +794,7 @@ namespace LCU.State.API.IoTEnsemble.State
             );
 
             await Task.WhenAll(
-                EnsureAPISubscription(entApiArch, stateDetails.EnterpriseLookup, stateDetails.Username),
+                EnsureAPISubscription(entApiArch, stateDetails.EnterpriseLookup, stateDetails.Username, projectId),
                 EnsureDevicesDashboard(secMgr),
                 EnsureDrawersConfig(secMgr),
                 LoadAPIOptions(),

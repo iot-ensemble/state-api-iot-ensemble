@@ -82,6 +82,8 @@ namespace LCU.State.API.IoTEnsemble.Host
         {
             var stateDetails = StateUtils.LoadStateDetails(req);
 
+            var projectId = req.Headers["lcu-project-id"];
+
             if (stateDetails.StateKey.StartsWith("admin"))
                 return await stateBlob.WithStateHarness<IoTEnsembleAdminState, RefreshRequest, IoTEnsembleAdminStateHarness>(req, signalRMessages, log,
                     async (harness, refreshReq, actReq) =>
@@ -102,7 +104,7 @@ namespace LCU.State.API.IoTEnsemble.Host
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
 
-                    await harness.Refresh(logger, starter, stateDetails, actReq, appIoTArch, entApiArch, eacSvc, entHostMgr, idMgr, secMgr, docClient);
+                    await harness.Refresh(logger, starter, stateDetails, actReq, appIoTArch, entApiArch, eacSvc, entHostMgr, idMgr, secMgr, docClient, Guid.Parse(projectId));
 
                     return Status.Success;
                 }, withLock: false);

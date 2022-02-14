@@ -547,6 +547,9 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     {
         [DataMember]
         public virtual string SubscriptionType { get; set; }
+
+        [DataMember]
+        public virtual Guid ProjectID { get; set; }
     }
 
     [DataContract]
