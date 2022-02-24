@@ -993,7 +993,7 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual string Popular { get; set; }
 
         [DataMember]
-        public virtual int Priorty { get; set; }
+        public virtual int Priority { get; set; }
 
         [DataMember]
         public virtual string SuccessRedirect { get; set; }
