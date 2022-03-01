@@ -143,8 +143,14 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         [Post("/eac/commit")]
         Task<BaseResponse> Commit([Body] CommitEnterpriseAsCodeRequest request);
 
-        [Get("/eac/export/{entLookup}")]
-        Task<BaseResponse<EnterpriseAsCode>> Export(string entLookup);
+        [Post("/eac/export/{entLookup}")]
+        Task<BaseResponse<EnterpriseAsCode>> Export([Body] ExportEnterpriseAsCodeRequest request, string entLookup);
+
+        [Get("/eac/resolve/{host}")]
+        Task<BaseResponse<EnterpriseContext>> ResolveHost(string host, [Query] bool includeEaC = true);
+
+        [Post("/eac/resubmit")]
+        Task<BaseResponse> Resubmit([Body] ResubmitEnterpriseAsCodeRequest request);
     }
 
     // public interface IEnterprisesBootService
@@ -157,9 +163,6 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     {
         [Get("/hosting/{entLookup}/hosts")]
         Task<BaseResponse<List<Host>>> ListHosts(string entLookup);
-
-        [Get("/hosting/resolve/{host}")]
-        Task<BaseResponse<EnterpriseContext>> ResolveHost(string host);
     }
 
     public interface IEnterprisesManagementService
@@ -1400,5 +1403,28 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     {
         [DataMember]
         public virtual string Type { get; set; }
+    }
+
+    [DataContract]
+    public class ExportEnterpriseAsCodeRequest : BaseRequest
+    {
+        [DataMember]
+        public virtual bool ForceCache { get; set; }
+
+        [DataMember]
+        public virtual MetadataModel Query { get; set; }
+    }
+
+    [DataContract]
+    public class ResubmitEnterpriseAsCodeRequest : BaseRequest
+    {
+        [DataMember]
+        public virtual string EnterpriseLookup { get; set; }
+
+        [DataMember]
+        public virtual bool EstablishEnterprise { get; set; }
+
+        [DataMember]
+        public virtual string Username { get; set; }
     }
 }
