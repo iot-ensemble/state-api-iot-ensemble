@@ -7,7 +7,7 @@ on:
       - 'master'
       
 env:
-  AZURE_FUNCTIONAPP_NAME: 'fathym-cloud-prd-personas-state-api-iotensemble'  # set this to your application's name
+  AZURE_FUNCTIONAPP_NAME: 'fcp-iotensemble'  # set this to your application's name
   AZURE_FUNCTIONAPP_PACKAGE_PATH: 'state-api-iot-ensemble'    # set this to the path to your web app project, defaults to the repository root 
   project_file: 'state-api-iot-ensemble/state-api-iot-ensemble.csproj'
   nuget_feed_name: 'LCU'
