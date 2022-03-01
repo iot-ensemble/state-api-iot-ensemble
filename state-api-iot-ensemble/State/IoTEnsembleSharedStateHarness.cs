@@ -386,7 +386,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                             var hostResp = await eacSvc.ResolveHost(userHost);
 
-                            if (hostResp.Model == null)
+                            if (hostResp?.Model == null)
                             {
                                 var commitReq = new CommitEnterpriseAsCodeRequest()
                                 {
@@ -496,46 +496,7 @@ namespace LCU.State.API.IoTEnsemble.State
                                             }
                                         }
                                     },
-
-                                    Username = username
                                 };
-
-                                // string adb2cAppId = null;
-
-                                // if (hostResp.Status)
-                                // {
-                                //     var adB2cAppIdToken = await dataTokenSvc.GetDataToken(EnterpriseContext.AD_B2C_APPLICATION_ID_LOOKUP, entLookup: hostResp.Model?.Lookup);
-
-                                //     adb2cAppId = adB2cAppIdToken?.Model?.Value;
-                                // }
-
-                                // if (adb2cAppId.IsNullOrEmpty() && !parentEntLookup.IsNullOrEmpty())
-                                // {
-                                //     //  TODO:  Create unique application in ADB2C to allow for multi tenant control of sign in
-
-                                //     var adB2cAppIdToken = await dataTokenSvc.GetDataToken(EnterpriseContext.AD_B2C_APPLICATION_ID_LOOKUP, entLookup: parentEntLookup);
-
-                                //     adb2cAppId = adB2cAppIdToken?.Model?.Value;
-
-                                //     commitReq.EaC.Providers.Add("ADB2C", new EaCProvider()
-                                //     {
-                                //         Name = "ADB2C",
-                                //         Description = "ADB2C Provider",
-                                //         Type = "ADB2C",
-                                //         Metadata = new Dictionary<string, JToken>()
-                                //         {
-                                //             { "ApplicationID", EnterpriseContext.AD_B2C_APPLICATION_ID_LOOKUP },
-                                //             { "Authority", "fathymcloudprd.onmicrosoft.com" }
-                                //         }
-                                //     });
-
-                                //     commitReq.EaC.DataTokens[EnterpriseContext.AD_B2C_APPLICATION_ID_LOOKUP] = new EaCDataToken()
-                                //     {
-                                //         Value = adb2cAppId,
-                                //         Name = "AD B2C Application ID",
-                                //         Description = "The AD B2C application ID used with authentication."
-                                //     };
-                                // }
 
                                 var commitResp = await eacSvc.Commit(commitReq);
 
@@ -545,27 +506,27 @@ namespace LCU.State.API.IoTEnsemble.State
 
                                     hostResp = await eacSvc.ResolveHost(userHost);
 
-                                    var parentGitHubDataToken = await dataTokenSvc.GetDataToken("LCU-GITHUB-ACCESS-TOKEN", entLookup: parentEntLookup, email: username);
+                                    // var parentGitHubDataToken = await dataTokenSvc.GetDataToken("LCU-GITHUB-ACCESS-TOKEN", entLookup: parentEntLookup, email: username);
 
-                                    if (parentGitHubDataToken.Model != null)
-                                    {
-                                        logger.LogInformation($"Transferring GitHub access to child enterprise for {hostResp.Model.Lookup}.");
+                                    // if (parentGitHubDataToken.Model != null)
+                                    // {
+                                    //     logger.LogInformation($"Transferring GitHub access to child enterprise for {hostResp.Model.EnterpriseLookup}.");
 
-                                        var setDTResp = await dataTokenSvc.SetDataToken(new DataToken()
-                                        {
-                                            Name = parentGitHubDataToken.Model.Name,
-                                            Description = parentGitHubDataToken.Model.Description,
-                                            Lookup = parentGitHubDataToken.Model.Lookup,
-                                            Value = parentGitHubDataToken.Model.Value
-                                        }, entLookup: hostResp.Model.Lookup, email: username);
-                                    }
-                                    State.UserEnterpriseLookup = hostResp.Model.Lookup;
+                                    //     var setDTResp = await dataTokenSvc.SetDataToken(new DataToken()
+                                    //     {
+                                    //         Name = parentGitHubDataToken.Model.Name,
+                                    //         Description = parentGitHubDataToken.Model.Description,
+                                    //         Lookup = parentGitHubDataToken.Model.Lookup,
+                                    //         Value = parentGitHubDataToken.Model.Value
+                                    //     }, entLookup: hostResp.Model.EnterpriseLookup, email: username);
+                                    // }
+                                    State.UserEnterpriseLookup = hostResp?.Model.EnterpriseLookup;
                                 }
                             }
 
                             logger.LogInformation($"Ensuring child enterprise for {userHost}");
 
-                            State.UserEnterpriseLookup = hostResp.Model.Lookup;
+                            State.UserEnterpriseLookup = hostResp?.Model.EnterpriseLookup;
 
                             return true;
                         }
