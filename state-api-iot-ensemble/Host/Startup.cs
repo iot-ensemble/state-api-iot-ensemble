@@ -106,6 +106,8 @@ namespace LCU.State.API.IoTEnsemble.Host
 
             builder.Services.AddLCUHTTPClient<IEnterprisesHostingManagerService>(registry, httpOpts);
 
+            builder.Services.AddLCUHTTPClient<IEnterprisesProjectsManagerService>(registry, httpOpts);
+
             builder.Services.AddLCUHTTPClient<IEnterprisesManagementService>(registry, httpOpts);
 
             builder.Services.AddLCUHTTPClient<IIdentityAccessService>(registry, httpOpts);
