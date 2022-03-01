@@ -153,12 +153,6 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         Task<BaseResponse> Resubmit([Body] ResubmitEnterpriseAsCodeRequest request);
     }
 
-    // public interface IEnterprisesBootService
-    // {
-    //     [Post("/boot/registry")]
-    //     Task<BaseResponse<EnterpriseContext>> Boot([Body] BootEnterpriseRequest request, bool cleanBoot = false);
-    // }
-
     public interface IEnterprisesHostingManagerService
     {
         [Get("/hosting/{entLookup}/hosts")]
@@ -691,8 +685,11 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         #region Constants
         public const string LOOKUP = "<DAF:Enterprise>";
 
-        public const string AD_B2C_APPLICATION_ID_LOOKUP = "AD-B2C-APPLICATION-ID";
+        // public const string AD_B2C_APPLICATION_ID_LOOKUP = "AD-B2C-APPLICATION-ID";
         #endregion
+
+        [DataMember]
+        public virtual EnterpriseAsCode EaC { get; set; }
 
         [DataMember]
         public virtual string ADB2CApplicationID { get; set; }
@@ -704,13 +701,10 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual string Host { get; set; }
 
         [DataMember]
-        public virtual Guid ID { get; set; }
+        public virtual string EnterpriseLookup { get; set; }
 
         [DataMember]
-        public virtual string Lookup { get; set; }
-
-        [DataMember]
-        public virtual Guid? ProjectID { get; set; }
+        public virtual string ProjectLookup { get; set; }
     }
 
     public class License : LCUVertex
@@ -949,9 +943,6 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual bool Enabled { get; set; }
 
         [DataMember]
-        public virtual string Lookup { get; set; }
-
-        [DataMember]
         public virtual string Name { get; set; }
 
         [DataMember]
@@ -1188,10 +1179,16 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         public virtual string BlobContainer { get; set; }
 
         [DataMember]
-        public virtual string CosmosConnection { get; set; }
+        public virtual string CosmosContainer { get; set; }
+
+        [DataMember]
+        public virtual string CosmosHost { get; set; }
 
         [DataMember]
         public virtual string CosmosDatabase { get; set; }
+
+        [DataMember]
+        public virtual string CosmosAuthKey { get; set; }
 
         [DataMember]
         public virtual string Description { get; set; }
@@ -1322,9 +1319,6 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 
         [DataMember]
         public virtual EaCProcessor Processor { get; set; }
-
-        [DataMember]
-        public virtual string SourceControlLookup { get; set; }
     }
 
     [DataContract]
@@ -1380,6 +1374,9 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 
         [DataMember]
         public virtual int Priority { get; set; }
+
+        [DataMember]
+        public virtual int PriorityShift { get; set; }
     }
 
     [DataContract]
@@ -1403,6 +1400,9 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
     {
         [DataMember]
         public virtual string Type { get; set; }
+
+        [DataMember]
+        public virtual string SourceControlLookup { get; set; }
     }
 
     [DataContract]
