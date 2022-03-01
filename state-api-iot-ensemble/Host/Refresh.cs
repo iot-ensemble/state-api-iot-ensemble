@@ -44,6 +44,8 @@ namespace LCU.State.API.IoTEnsemble.Host
 
         protected IEnterprisesHostingManagerService entHostMgr;
 
+        protected IEnterprisesProjectsManagerService entProjMgr;
+
         protected IIdentityAccessService idMgr;
 
         protected ILogger log;
@@ -51,7 +53,7 @@ namespace LCU.State.API.IoTEnsemble.Host
         protected ISecurityDataTokenService secMgr;
 
         public Refresh(IApplicationsIoTService appIoTArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesAsCodeService eacSvc, IEnterprisesManagementService entMgr, IEnterprisesHostingManagerService entHostMgr, 
-            IIdentityAccessService idMgr, ILogger<Refresh> log, ISecurityDataTokenService secMgr)
+            IIdentityAccessService idMgr, ILogger<Refresh> log, ISecurityDataTokenService secMgr, IEnterprisesProjectsManagerService entProjMgr)
         {
             this.appIoTArch = appIoTArch;
 
@@ -62,6 +64,8 @@ namespace LCU.State.API.IoTEnsemble.Host
             this.entMgr = entMgr;
 
             this.entHostMgr = entHostMgr;
+
+            this.entProjMgr = entProjMgr;
 
             this.idMgr = idMgr;
 
@@ -82,7 +86,7 @@ namespace LCU.State.API.IoTEnsemble.Host
         {
             var stateDetails = StateUtils.LoadStateDetails(req);
 
-            var projectId = req.Headers["lcu-project-id"];
+            var projectLookup = req.Headers["lcu-project-id"];
 
             if (stateDetails.StateKey.StartsWith("admin"))
                 return await stateBlob.WithStateHarness<IoTEnsembleAdminState, RefreshRequest, IoTEnsembleAdminStateHarness>(req, signalRMessages, log,
@@ -104,7 +108,7 @@ namespace LCU.State.API.IoTEnsemble.Host
 
                     var stateDetails = StateUtils.LoadStateDetails(req);
 
-                    await harness.Refresh(logger, starter, stateDetails, actReq, appIoTArch, entApiArch, eacSvc, entHostMgr, idMgr, secMgr, docClient, Guid.Parse(projectId));
+                    await harness.Refresh(logger, starter, stateDetails, actReq, appIoTArch, entApiArch, eacSvc, entHostMgr, entProjMgr, idMgr, secMgr, docClient, projectLookup);
 
                     return Status.Success;
                 }, withLock: false);

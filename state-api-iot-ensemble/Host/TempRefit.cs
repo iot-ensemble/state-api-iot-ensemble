@@ -182,6 +182,26 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
         Task<BaseResponse> CancelSubscriptionByUser(string username, string entLookup, string licenseType);
 	}
 
+    public interface IEnterprisesProjectsManagerService
+    {
+        [Delete("/{entLookup}/manage/projects/{projectId}")]
+        Task<BaseResponse> DeleteProject(string entLookup, Guid projectId);
+
+        [Delete("/{entLookup}/manage/projects/looukp/{projectLookup}")]
+        Task<BaseResponse> DeleteProjectByLookup(string entLookup, string projectLookup);
+
+        [Get("/{entLookup}/manage/projects/{projectId}")]
+        Task<BaseResponse<Project>> GetProject(string entLookup, Guid projectId);
+
+        [Get("/{entLookup}/manage/projects/lookup/{projectLookup}")]
+        Task<BaseResponse<Project>> GetProjectByLookup(string entLookup, string projectLookup);
+
+        [Get("/{entLookup}/manage/projects")]
+        Task<BaseResponse<List<Project>>> ListProjects(string entLookup);
+
+        [Post("/{entLookup}/manage/projects")]
+        Task<BaseResponse<Project>> SaveProject(string entLookup, [Body] Project project);
+    }
     public interface IIdentityAccessService
     {
         [Get("/access/{entLookup}/license/{username}/{allAny}")]
@@ -344,6 +364,31 @@ namespace LCU.State.API.IoTEnsemble.Host.TempRefit
 
         [DataMember]
         public virtual string Name { get; set; }
+    }
+
+    [DataContract]
+    public class Project
+    {
+        [DataMember]
+        public virtual string Description { get; set; }
+
+        [DataMember]
+        public virtual bool IsInheritable { get; set; }
+
+        [DataMember]
+        public virtual bool IsInheritableByChild { get; set; }
+
+        [DataMember]
+        public virtual string Lookup { get; set; }
+
+        [DataMember]
+        public virtual Guid ID { get; set; }
+
+        [DataMember]
+        public virtual string Name { get; set; }
+
+        [DataMember]
+        public virtual bool PreventInheritedApplications { get; set; }
     }
 
     [DataContract]
