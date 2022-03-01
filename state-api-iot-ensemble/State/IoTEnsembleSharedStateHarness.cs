@@ -384,7 +384,7 @@ namespace LCU.State.API.IoTEnsemble.State
 
                             logger.LogInformation($"Ensuring child enterprise for {userHost}.");
 
-                            var hostResp = await hostMgrSvc.ResolveHost(userHost);
+                            var hostResp = await eacSvc.ResolveHost(userHost);
 
                             if (hostResp.Model == null)
                             {
@@ -543,7 +543,7 @@ namespace LCU.State.API.IoTEnsemble.State
                                 {
                                     logger.LogInformation($"Ensured child enterprise for {userHost}.");
 
-                                    hostResp = await hostMgrSvc.ResolveHost(userHost);
+                                    hostResp = await eacSvc.ResolveHost(userHost);
 
                                     var parentGitHubDataToken = await dataTokenSvc.GetDataToken("LCU-GITHUB-ACCESS-TOKEN", entLookup: parentEntLookup, email: username);
 
