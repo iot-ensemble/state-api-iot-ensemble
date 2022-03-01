@@ -71,7 +71,7 @@ namespace LCU.State.API.IoTEnsemble.Host
                     },
 
                     {
-                        nameof(IEnterprisesHostingManagerService),
+                        nameof(IEnterprisesProjectsManagerService),
                         new LCUClientOptions()
                         {
                             BaseAddress = Environment.GetEnvironmentVariable($"{typeof(IEnterprisesProjectsManagerService).FullName}.BaseAddress")
