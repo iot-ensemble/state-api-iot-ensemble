@@ -782,10 +782,12 @@ namespace LCU.State.API.IoTEnsemble.State
         }
 
         public virtual async Task Refresh(ILogger logger, IDurableOrchestrationClient starter, StateDetails stateDetails, ExecuteActionRequest exActReq,
-            IApplicationsIoTService appIoTArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesAsCodeService eacSvc, IEnterprisesHostingManagerService entHostMgr, IIdentityAccessService idMgr,
-            ISecurityDataTokenService secMgr, DocumentClient client, Guid projectId)
+            IApplicationsIoTService appIoTArch, IEnterprisesAPIManagementService entApiArch, IEnterprisesAsCodeService eacSvc, IEnterprisesHostingManagerService entHostMgr, IEnterprisesProjectsManagerService entProjMgr, IIdentityAccessService idMgr,
+            ISecurityDataTokenService secMgr, DocumentClient client, string projectLookup)
         {
             await EnsureUserEnterprise(logger, eacSvc, entHostMgr, secMgr, stateDetails.EnterpriseLookup, stateDetails.Username);
+
+            var projectId = await entProjMgr.GetProjectByLookup(stateDetails.EnterpriseLookup, projectLookup);
 
             await Task.WhenAll(
                 LoadDevices(appIoTArch),
@@ -794,7 +796,7 @@ namespace LCU.State.API.IoTEnsemble.State
             );
 
             await Task.WhenAll(
-                EnsureAPISubscription(entApiArch, stateDetails.EnterpriseLookup, stateDetails.Username, projectId),
+                EnsureAPISubscription(entApiArch, stateDetails.EnterpriseLookup, stateDetails.Username, projectId.Model.ID),
                 EnsureDevicesDashboard(secMgr),
                 EnsureDrawersConfig(secMgr),
                 LoadAPIOptions(),
